@@ -8,6 +8,10 @@ Filbert is a KSeF (Polish e-invoicing system) invoice management application for
 
 **Tech Stack:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, Supabase (Auth + PostgreSQL)
 
+## Development Workflow
+
+**Commit frequently.** After completing each logical unit of work (a feature, bug fix, or significant change), commit and push. Don't wait until the end of a session.
+
 ## Commands
 
 ```bash
