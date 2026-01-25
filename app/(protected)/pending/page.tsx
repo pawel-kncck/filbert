@@ -51,7 +51,7 @@ export default function PendingPage() {
       .single()
 
     if (membership) {
-      router.push('/dashboard')
+      router.push('/companies')
       return
     }
 

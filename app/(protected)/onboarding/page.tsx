@@ -49,17 +49,6 @@ export default function OnboardingPage() {
       return
     }
 
-    // Check if user already has any company
-    const { data: existingMemberships } = await supabase
-      .from('user_companies')
-      .select('company_id')
-      .eq('user_id', user.id)
-
-    if (existingMemberships && existingMemberships.length > 0) {
-      router.push('/dashboard')
-      return
-    }
-
     // Check if NIP already exists
     const { data: existingCompany } = await supabase
       .from('companies')
@@ -121,7 +110,7 @@ export default function OnboardingPage() {
       return
     }
 
-    router.push('/dashboard')
+    router.push('/companies')
   }
 
   const handleNipChange = (e: React.ChangeEvent<HTMLInputElement>) => {

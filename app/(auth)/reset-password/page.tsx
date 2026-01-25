@@ -94,7 +94,7 @@ export default function ResetPasswordPage() {
               Twoje hasło zostało pomyślnie zmienione.
             </p>
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push('/companies')}
               className="mt-6 inline-block rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
               Przejdź do aplikacji

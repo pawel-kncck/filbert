@@ -9,9 +9,9 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Redirect authenticated users to dashboard
+  // Redirect authenticated users to companies
   if (user) {
-    redirect('/dashboard')
+    redirect('/companies')
   }
 
   return (

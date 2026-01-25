@@ -8,7 +8,7 @@ type Props = {
   searchParams: Promise<{ company?: string }>
 }
 
-export default async function DashboardPage({ searchParams }: Props) {
+export default async function CompaniesPage({ searchParams }: Props) {
   const params = await searchParams
   const supabase = await createClient()
 
@@ -49,13 +49,24 @@ export default async function DashboardPage({ searchParams }: Props) {
       currentCompanyId={currentCompanyId}
     >
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-            Panel główny
-          </h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            Wybierz firmę i przeglądaj faktury
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
+              Firmy
+            </h1>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+              Wybierz firmę i przeglądaj faktury
+            </p>
+          </div>
+          <Link
+            href="/onboarding"
+            className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Dodaj firmę
+          </Link>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
