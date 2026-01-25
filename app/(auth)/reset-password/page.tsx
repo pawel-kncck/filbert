@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { translateAuthError } from '@/lib/utils/auth-errors'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -36,8 +37,8 @@ export default function ResetPasswordPage() {
       return
     }
 
-    if (password.length < 6) {
-      setError('Hasło musi mieć co najmniej 6 znaków')
+    if (password.length < 12) {
+      setError('Hasło musi mieć co najmniej 12 znaków')
       setLoading(false)
       return
     }
@@ -49,7 +50,7 @@ export default function ResetPasswordPage() {
     })
 
     if (error) {
-      setError(error.message)
+      setError(translateAuthError(error.message))
       setLoading(false)
       return
     }
@@ -139,7 +140,7 @@ export default function ResetPasswordPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
-                placeholder="Min. 6 znaków"
+                placeholder="Min. 12 znaków, wielkie/małe litery, cyfra, znak specjalny"
               />
             </div>
 
