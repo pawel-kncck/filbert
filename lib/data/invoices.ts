@@ -1,6 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { Invoice } from '@/lib/types/database'
 
+export type InvoiceFilters = {
+  search?: string
+  dateFrom?: string
+  dateTo?: string
+}
+
 export type InvoiceQueryResult = {
   invoices: Invoice[]
   totalCount: number
@@ -9,25 +15,49 @@ export type InvoiceQueryResult = {
   totalGross: number
 }
 
+export const PAGE_SIZE = 25
+
 export async function getInvoices(
   companyId: string,
   type: 'sales' | 'purchase',
   options: {
-    limit?: number
-    offset?: number
+    page?: number
+    filters?: InvoiceFilters
   } = {}
 ): Promise<InvoiceQueryResult> {
   const supabase = await createClient()
-  const { limit = 50, offset = 0 } = options
+  const { page = 1, filters = {} } = options
+  const offset = (page - 1) * PAGE_SIZE
 
-  // Get invoices
-  const { data: invoices, error } = await supabase
+  // Build query for invoices
+  let query = supabase
     .from('invoices')
-    .select('*')
+    .select('*', { count: 'exact' })
     .eq('company_id', companyId)
     .eq('type', type)
+
+  // Apply search filter
+  if (filters.search) {
+    const searchTerm = `%${filters.search}%`
+    query = query.or(
+      `invoice_number.ilike.${searchTerm},vendor_name.ilike.${searchTerm},customer_name.ilike.${searchTerm}`
+    )
+  }
+
+  // Apply date filters
+  if (filters.dateFrom) {
+    query = query.gte('issue_date', filters.dateFrom)
+  }
+  if (filters.dateTo) {
+    query = query.lte('issue_date', filters.dateTo)
+  }
+
+  // Order and paginate
+  query = query
     .order('issue_date', { ascending: false })
-    .range(offset, offset + limit - 1)
+    .range(offset, offset + PAGE_SIZE - 1)
+
+  const { data: invoices, error, count } = await query
 
   if (error) {
     console.error('Error fetching invoices:', error)
@@ -40,12 +70,27 @@ export async function getInvoices(
     }
   }
 
-  // Calculate totals
-  const { data: totals } = await supabase
+  // Build query for totals (with same filters but no pagination)
+  let totalsQuery = supabase
     .from('invoices')
     .select('net_amount, vat_amount, gross_amount')
     .eq('company_id', companyId)
     .eq('type', type)
+
+  if (filters.search) {
+    const searchTerm = `%${filters.search}%`
+    totalsQuery = totalsQuery.or(
+      `invoice_number.ilike.${searchTerm},vendor_name.ilike.${searchTerm},customer_name.ilike.${searchTerm}`
+    )
+  }
+  if (filters.dateFrom) {
+    totalsQuery = totalsQuery.gte('issue_date', filters.dateFrom)
+  }
+  if (filters.dateTo) {
+    totalsQuery = totalsQuery.lte('issue_date', filters.dateTo)
+  }
+
+  const { data: totals } = await totalsQuery
 
   const totalNet = (totals || []).reduce((sum, inv) => sum + Number(inv.net_amount), 0)
   const totalVat = (totals || []).reduce((sum, inv) => sum + Number(inv.vat_amount), 0)
@@ -53,9 +98,68 @@ export async function getInvoices(
 
   return {
     invoices: invoices || [],
-    totalCount: totals?.length || 0,
+    totalCount: count || 0,
     totalNet,
     totalVat,
     totalGross,
   }
+}
+
+export async function getInvoiceById(
+  invoiceId: string,
+  companyId: string
+): Promise<Invoice | null> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('*')
+    .eq('id', invoiceId)
+    .eq('company_id', companyId)
+    .single()
+
+  if (error) {
+    console.error('Error fetching invoice:', error)
+    return null
+  }
+
+  return data
+}
+
+export async function getAllInvoicesForExport(
+  companyId: string,
+  type: 'sales' | 'purchase',
+  filters: InvoiceFilters = {}
+): Promise<Invoice[]> {
+  const supabase = await createClient()
+
+  let query = supabase
+    .from('invoices')
+    .select('*')
+    .eq('company_id', companyId)
+    .eq('type', type)
+
+  if (filters.search) {
+    const searchTerm = `%${filters.search}%`
+    query = query.or(
+      `invoice_number.ilike.${searchTerm},vendor_name.ilike.${searchTerm},customer_name.ilike.${searchTerm}`
+    )
+  }
+  if (filters.dateFrom) {
+    query = query.gte('issue_date', filters.dateFrom)
+  }
+  if (filters.dateTo) {
+    query = query.lte('issue_date', filters.dateTo)
+  }
+
+  query = query.order('issue_date', { ascending: false })
+
+  const { data, error } = await query
+
+  if (error) {
+    console.error('Error fetching invoices for export:', error)
+    return []
+  }
+
+  return data || []
 }

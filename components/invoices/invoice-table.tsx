@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { Invoice } from '@/lib/types/database'
 
 type Props = {
@@ -23,6 +24,8 @@ function formatDate(dateString: string): string {
 }
 
 export function InvoiceTable({ invoices, type }: Props) {
+  const router = useRouter()
+
   if (invoices.length === 0) {
     return (
       <div className="rounded-lg border border-zinc-200 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-800">
@@ -44,11 +47,15 @@ export function InvoiceTable({ invoices, type }: Props) {
         </h3>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           {type === 'sales'
-            ? 'Nie znaleziono faktur sprzedażowych dla wybranej firmy.'
-            : 'Nie znaleziono faktur zakupowych dla wybranej firmy.'}
+            ? 'Nie znaleziono faktur sprzedażowych dla wybranych kryteriów.'
+            : 'Nie znaleziono faktur zakupowych dla wybranych kryteriów.'}
         </p>
       </div>
     )
+  }
+
+  const handleRowClick = (invoiceId: string) => {
+    router.push(`/${type === 'sales' ? 'sales' : 'purchases'}/${invoiceId}`)
   }
 
   return (
@@ -86,7 +93,8 @@ export function InvoiceTable({ invoices, type }: Props) {
           {invoices.map((invoice) => (
             <tr
               key={invoice.id}
-              className="hover:bg-zinc-50 dark:hover:bg-zinc-700/50"
+              onClick={() => handleRowClick(invoice.id)}
+              className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50"
             >
               <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-zinc-900 dark:text-white">
                 {invoice.invoice_number}
