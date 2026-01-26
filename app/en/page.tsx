@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { LandingPage } from '@/components/landing-page'
 
-export default async function Home() {
+export default async function EnglishHome() {
   const supabase = await createClient()
 
   const {

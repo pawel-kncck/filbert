@@ -1,0 +1,252 @@
+{
+  "common": {
+    "login": "Sign in",
+    "logout": "Sign out",
+    "signup": "Sign up",
+    "email": "Email",
+    "password": "Password",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "back": "Back",
+    "open": "Open",
+    "search": "Search",
+    "clearFilters": "Clear filters",
+    "from": "From",
+    "to": "To",
+    "actions": "Actions",
+    "status": "Status",
+    "role": "Role",
+    "date": "Date",
+    "you": "You"
+  },
+  "metadata": {
+    "title": "Filbert - KSeF Invoice Management",
+    "description": "Application for managing invoices in the KSeF system"
+  },
+  "landing": {
+    "hero": {
+      "title": "Manage KSeF invoices",
+      "description": "Filbert is an application for managing invoices in the Polish National e-Invoice System. Browse sales and purchase invoices, control VAT and export data.",
+      "startFree": "Start for free"
+    },
+    "features": {
+      "salesInvoices": {
+        "title": "Sales invoices",
+        "description": "Browse issued invoices with automatic amount summaries"
+      },
+      "purchaseInvoices": {
+        "title": "Purchase invoices",
+        "description": "Control costs and VAT charged by suppliers"
+      },
+      "multipleCompanies": {
+        "title": "Multiple companies",
+        "description": "Manage invoices of multiple companies from one account"
+      }
+    },
+    "footer": "Filbert - KSeF Invoice Management"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to your account",
+      "forgotPassword": "Forgot your password?",
+      "submitting": "Signing in...",
+      "noAccount": "Don't have an account?"
+    },
+    "signup": {
+      "title": "Create a new account",
+      "confirmPassword": "Confirm password",
+      "passwordHint": "Min. 12 characters, uppercase/lowercase letters, digit, special character",
+      "submitting": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "success": {
+        "title": "Check your inbox",
+        "message": "We sent an activation link to {email}. Click the link to complete registration.",
+        "backToLogin": "Back to login"
+      }
+    },
+    "forgotPassword": {
+      "title": "Reset your password",
+      "submitting": "Sending...",
+      "submit": "Send reset link",
+      "rememberPassword": "Remember your password?",
+      "success": "If an account with {email} exists, we sent a password reset link."
+    },
+    "resetPassword": {
+      "title": "Set new password",
+      "newPassword": "New password",
+      "confirmNewPassword": "Confirm new password",
+      "submitting": "Saving...",
+      "submit": "Save new password",
+      "expired": {
+        "title": "Link expired",
+        "message": "This password reset link has expired or is invalid.",
+        "requestNew": "Request a new link"
+      },
+      "success": {
+        "title": "Password changed",
+        "message": "Your password has been successfully changed.",
+        "goToApp": "Go to application"
+      }
+    },
+    "validation": {
+      "passwordsNotMatch": "Passwords don't match",
+      "passwordMinLength": "Password must be at least 12 characters"
+    },
+    "errors": {
+      "invalidCredentials": "Invalid email or password",
+      "emailNotConfirmed": "Email not confirmed. Check your mailbox.",
+      "userExists": "User with this email already exists",
+      "passwordRequirements": "Password must have at least 12 characters and contain: lowercase letter, uppercase letter, digit, special character",
+      "rateLimitExceeded": "Too many attempts. Try again shortly.",
+      "invalidEmail": "Invalid email address"
+    }
+  },
+  "navigation": {
+    "invoices": "Invoices",
+    "sales": "Sales",
+    "purchases": "Purchases",
+    "settings": "Settings",
+    "members": "Members",
+    "companies": "Companies"
+  },
+  "companies": {
+    "title": "Companies",
+    "subtitle": "Select a company and view invoices",
+    "addCompany": "Add company",
+    "roles": {
+      "admin": "Role: Administrator",
+      "member": "Role: Member",
+      "viewer": "Role: Viewer"
+    },
+    "pendingApproval": "Pending approval",
+    "awaitingAdminApproval": "Awaiting admin approval"
+  },
+  "onboarding": {
+    "title": "Add company",
+    "subtitle": "Enter your company details to start using Filbert",
+    "companyName": "Company name",
+    "companyNamePlaceholder": "Example LLC",
+    "nipHint": "10 digits, e.g. 123-456-78-90 or 1234567890",
+    "submitting": "Processing...",
+    "errors": {
+      "invalidNip": "Invalid NIP number",
+      "sessionExpired": "Session expired. Please log in again.",
+      "joiningCompany": "Error joining company: {error}",
+      "creatingCompany": "Error creating company: {error}",
+      "assigningToCompany": "Error assigning to company: {error}"
+    }
+  },
+  "pending": {
+    "title": "Awaiting approval",
+    "message": "Your request to join company {company} has been sent to the administrator.",
+    "explanation": "The administrator must approve your account before you can access company data.",
+    "checking": "Checking...",
+    "checkStatus": "Check status",
+    "demoHint": "In the meantime, you can view demo data in the demo company."
+  },
+  "invoices": {
+    "sales": {
+      "title": "Sales invoices",
+      "emptyMessage": "No sales invoices found for selected criteria."
+    },
+    "purchases": {
+      "title": "Purchase invoices",
+      "emptyMessage": "No purchase invoices found for selected criteria."
+    },
+    "table": {
+      "empty": "No invoices",
+      "invoiceNumber": "Invoice number",
+      "date": "Date",
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "net": "Net",
+      "vat": "VAT",
+      "gross": "Gross",
+      "ksef": "KSeF"
+    },
+    "filters": {
+      "searchPlaceholder": "Invoice number, counterparty name..."
+    },
+    "stats": {
+      "count": "Number of invoices",
+      "sumNet": "Sum net",
+      "sumVat": "Sum VAT",
+      "sumGross": "Sum gross"
+    },
+    "pagination": {
+      "showing": "Showing {start}-{end} of {total} invoices",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "export": {
+      "exporting": "Exporting...",
+      "exportCsv": "Export CSV",
+      "columns": {
+        "invoiceNumber": "Invoice number",
+        "issueDate": "Issue date",
+        "buyer": "Buyer",
+        "seller": "Seller",
+        "net": "Net",
+        "vat": "VAT",
+        "gross": "Gross",
+        "currency": "Currency",
+        "ksef": "KSeF"
+      }
+    },
+    "detail": {
+      "backToList": "Back to list",
+      "salesInvoice": "Sales invoice",
+      "purchaseInvoice": "Purchase invoice",
+      "issueDate": "Issue date",
+      "seller": "Seller",
+      "buyer": "Buyer",
+      "amounts": "Amounts",
+      "net": "Net",
+      "gross": "Gross",
+      "additionalInfo": "Additional information",
+      "currency": "Currency",
+      "source": "Source",
+      "sources": {
+        "manual": "Manual",
+        "demo": "Demo",
+        "ksef": "KSeF"
+      },
+      "added": "Added"
+    }
+  },
+  "members": {
+    "title": "Manage members",
+    "demoCompanyMessage": "Member management is not available for demo company.",
+    "adminOnlyMessage": "Only administrators can manage company members.",
+    "pendingRequests": "Pending requests ({count})",
+    "activeMembers": "Active members ({count})",
+    "userId": "User ID",
+    "requestDate": "Request date",
+    "joined": "Joined",
+    "statusActive": "Active",
+    "statusPending": "Pending",
+    "noMembers": "No members",
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "removeConfirm": "Are you sure you want to remove this member?",
+      "removeMember": "Remove member"
+    },
+    "roles": {
+      "admin": "Administrator",
+      "member": "Member",
+      "viewer": "Viewer"
+    },
+    "errors": {
+      "generic": "An error occurred",
+      "connection": "Connection error"
+    }
+  },
+  "languageSwitcher": {
+    "language": "Language",
+    "polish": "Polski",
+    "english": "English"
+  }
+}

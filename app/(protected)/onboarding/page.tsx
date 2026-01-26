@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const t = useTranslations()
   const [companyName, setCompanyName] = useState('')
   const [nip, setNip] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +36,7 @@ export default function OnboardingPage() {
     const cleanNip = nip.replace(/[\s-]/g, '')
 
     if (!validateNip(cleanNip)) {
-      setError('Nieprawidłowy numer NIP')
+      setError(t('onboarding.errors.invalidNip'))
       setLoading(false)
       return
     }
@@ -44,7 +46,7 @@ export default function OnboardingPage() {
     // Get current user
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      setError('Sesja wygasła. Zaloguj się ponownie.')
+      setError(t('onboarding.errors.sessionExpired'))
       setLoading(false)
       return
     }
@@ -68,7 +70,7 @@ export default function OnboardingPage() {
         })
 
       if (joinError) {
-        setError('Błąd podczas dołączania do firmy: ' + joinError.message)
+        setError(t('onboarding.errors.joiningCompany', { error: joinError.message }))
         setLoading(false)
         return
       }
@@ -89,7 +91,7 @@ export default function OnboardingPage() {
       .single()
 
     if (createError) {
-      setError('Błąd podczas tworzenia firmy: ' + createError.message)
+      setError(t('onboarding.errors.creatingCompany', { error: createError.message }))
       setLoading(false)
       return
     }
@@ -105,7 +107,7 @@ export default function OnboardingPage() {
       })
 
     if (memberError) {
-      setError('Błąd podczas przypisywania do firmy: ' + memberError.message)
+      setError(t('onboarding.errors.assigningToCompany', { error: memberError.message }))
       setLoading(false)
       return
     }
@@ -124,10 +126,10 @@ export default function OnboardingPage() {
       <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg dark:bg-zinc-800">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
-            Dodaj firmę
+            {t('onboarding.title')}
           </h1>
           <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-            Wprowadź dane swojej firmy, aby rozpocząć korzystanie z Filbert
+            {t('onboarding.subtitle')}
           </p>
         </div>
 
@@ -144,7 +146,7 @@ export default function OnboardingPage() {
                 htmlFor="companyName"
                 className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
               >
-                Nazwa firmy
+                {t('onboarding.companyName')}
               </label>
               <input
                 id="companyName"
@@ -154,7 +156,7 @@ export default function OnboardingPage() {
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
-                placeholder="Przykładowa Sp. z o.o."
+                placeholder={t('onboarding.companyNamePlaceholder')}
               />
             </div>
 
@@ -177,7 +179,7 @@ export default function OnboardingPage() {
                 placeholder="123-456-78-90"
               />
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                10 cyfr, np. 123-456-78-90 lub 1234567890
+                {t('onboarding.nipHint')}
               </p>
             </div>
           </div>
@@ -187,7 +189,7 @@ export default function OnboardingPage() {
             disabled={loading}
             className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
           >
-            {loading ? 'Przetwarzanie...' : 'Kontynuuj'}
+            {loading ? t('onboarding.submitting') : t('common.continue')}
           </button>
         </form>
       </div>

@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
-import { translateAuthError } from '@/lib/utils/auth-errors'
+import { getAuthErrorKey } from '@/lib/utils/auth-errors'
 
 export default function LoginPage() {
   const router = useRouter()
+  const t = useTranslations()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -26,7 +28,8 @@ export default function LoginPage() {
     })
 
     if (error) {
-      setError(translateAuthError(error.message))
+      const errorKey = getAuthErrorKey(error.message)
+      setError(errorKey ? t(`auth.errors.${errorKey}`) : error.message)
       setLoading(false)
       return
     }
@@ -43,7 +46,7 @@ export default function LoginPage() {
             Filbert
           </h1>
           <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-            Zaloguj się do swojego konta
+            {t('auth.login.title')}
           </p>
         </div>
 
@@ -60,7 +63,7 @@ export default function LoginPage() {
                 htmlFor="email"
                 className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
               >
-                Email
+                {t('common.email')}
               </label>
               <input
                 id="email"
@@ -79,7 +82,7 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
               >
-                Hasło
+                {t('common.password')}
               </label>
               <input
                 id="password"
@@ -98,7 +101,7 @@ export default function LoginPage() {
               href="/forgot-password"
               className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400"
             >
-              Zapomniałeś hasła?
+              {t('auth.login.forgotPassword')}
             </Link>
           </div>
 
@@ -107,16 +110,16 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
           >
-            {loading ? 'Logowanie...' : 'Zaloguj się'}
+            {loading ? t('auth.login.submitting') : t('common.login')}
           </button>
 
           <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-            Nie masz konta?{' '}
+            {t('auth.login.noAccount')}{' '}
             <Link
               href="/signup"
               className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
             >
-              Zarejestruj się
+              {t('common.signup')}
             </Link>
           </p>
         </form>

@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
-import { translateAuthError } from '@/lib/utils/auth-errors'
+import { getAuthErrorKey } from '@/lib/utils/auth-errors'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
+  const t = useTranslations()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -32,13 +34,13 @@ export default function ResetPasswordPage() {
     setError(null)
 
     if (password !== confirmPassword) {
-      setError('Hasła nie są identyczne')
+      setError(t('auth.validation.passwordsNotMatch'))
       setLoading(false)
       return
     }
 
     if (password.length < 12) {
-      setError('Hasło musi mieć co najmniej 12 znaków')
+      setError(t('auth.validation.passwordMinLength'))
       setLoading(false)
       return
     }
@@ -50,7 +52,8 @@ export default function ResetPasswordPage() {
     })
 
     if (error) {
-      setError(translateAuthError(error.message))
+      const errorKey = getAuthErrorKey(error.message)
+      setError(errorKey ? t(`auth.errors.${errorKey}`) : error.message)
       setLoading(false)
       return
     }
@@ -65,16 +68,16 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg dark:bg-zinc-800">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-              Link wygasł
+              {t('auth.resetPassword.expired.title')}
             </h1>
             <p className="mt-4 text-zinc-600 dark:text-zinc-400">
-              Ten link do resetowania hasła wygasł lub jest nieprawidłowy.
+              {t('auth.resetPassword.expired.message')}
             </p>
             <Link
               href="/forgot-password"
               className="mt-6 inline-block text-blue-600 hover:text-blue-500 dark:text-blue-400"
             >
-              Poproś o nowy link
+              {t('auth.resetPassword.expired.requestNew')}
             </Link>
           </div>
         </div>
@@ -88,16 +91,16 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg dark:bg-zinc-800">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-              Hasło zmienione
+              {t('auth.resetPassword.success.title')}
             </h1>
             <p className="mt-4 text-zinc-600 dark:text-zinc-400">
-              Twoje hasło zostało pomyślnie zmienione.
+              {t('auth.resetPassword.success.message')}
             </p>
             <button
               onClick={() => router.push('/companies')}
               className="mt-6 inline-block rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
-              Przejdź do aplikacji
+              {t('auth.resetPassword.success.goToApp')}
             </button>
           </div>
         </div>
@@ -113,7 +116,7 @@ export default function ResetPasswordPage() {
             Filbert
           </h1>
           <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-            Ustaw nowe hasło
+            {t('auth.resetPassword.title')}
           </p>
         </div>
 
@@ -130,7 +133,7 @@ export default function ResetPasswordPage() {
                 htmlFor="password"
                 className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
               >
-                Nowe hasło
+                {t('auth.resetPassword.newPassword')}
               </label>
               <input
                 id="password"
@@ -140,7 +143,7 @@ export default function ResetPasswordPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
-                placeholder="Min. 12 znaków, wielkie/małe litery, cyfra, znak specjalny"
+                placeholder={t('auth.signup.passwordHint')}
               />
             </div>
 
@@ -149,7 +152,7 @@ export default function ResetPasswordPage() {
                 htmlFor="confirmPassword"
                 className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
               >
-                Potwierdź nowe hasło
+                {t('auth.resetPassword.confirmNewPassword')}
               </label>
               <input
                 id="confirmPassword"
@@ -168,7 +171,7 @@ export default function ResetPasswordPage() {
             disabled={loading}
             className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
           >
-            {loading ? 'Zapisywanie...' : 'Zapisz nowe hasło'}
+            {loading ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
           </button>
         </form>
       </div>

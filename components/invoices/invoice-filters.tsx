@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 
 type Props = {
   type: 'sales' | 'purchase'
@@ -11,6 +12,7 @@ export function InvoiceFilters({ type }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
+  const t = useTranslations()
 
   const [search, setSearch] = useState(searchParams.get('search') || '')
   const [dateFrom, setDateFrom] = useState(searchParams.get('from') || '')
@@ -67,14 +69,14 @@ export function InvoiceFilters({ type }: Props) {
       {/* Search */}
       <form onSubmit={handleSearchSubmit} className="flex-1">
         <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Szukaj
+          {t('common.search')}
         </label>
         <div className="mt-1 flex gap-2">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Numer faktury, nazwa kontrahenta..."
+            placeholder={t('invoices.filters.searchPlaceholder')}
             className="block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
           />
           <button
@@ -82,7 +84,7 @@ export function InvoiceFilters({ type }: Props) {
             disabled={isPending}
             className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {isPending ? '...' : 'Szukaj'}
+            {isPending ? '...' : t('common.search')}
           </button>
         </div>
       </form>
@@ -91,7 +93,7 @@ export function InvoiceFilters({ type }: Props) {
       <div className="flex gap-2">
         <div>
           <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Od
+            {t('common.from')}
           </label>
           <input
             type="date"
@@ -102,7 +104,7 @@ export function InvoiceFilters({ type }: Props) {
         </div>
         <div>
           <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Do
+            {t('common.to')}
           </label>
           <input
             type="date"
@@ -120,7 +122,7 @@ export function InvoiceFilters({ type }: Props) {
           disabled={isPending}
           className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
         >
-          Wyczyść filtry
+          {t('common.clearFilters')}
         </button>
       )}
     </div>

@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 
 export default function PendingPage() {
   const router = useRouter()
+  const t = useTranslations()
   const [companyName, setCompanyName] = useState<string | null>(null)
   const [checking, setChecking] = useState(false)
 
@@ -85,15 +87,15 @@ export default function PendingPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-            Oczekiwanie na zatwierdzenie
+            {t('pending.title')}
           </h1>
           {companyName && (
             <p className="mt-4 text-zinc-600 dark:text-zinc-400">
-              Twoja prośba o dołączenie do firmy <strong>{companyName}</strong> została wysłana do administratora.
+              {t('pending.message', { company: companyName })}
             </p>
           )}
           <p className="mt-4 text-zinc-600 dark:text-zinc-400">
-            Administrator musi zatwierdzić Twoje konto, zanim uzyskasz dostęp do danych firmy.
+            {t('pending.explanation')}
           </p>
         </div>
 
@@ -103,18 +105,18 @@ export default function PendingPage() {
             disabled={checking}
             className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
           >
-            {checking ? 'Sprawdzanie...' : 'Sprawdź status'}
+            {checking ? t('pending.checking') : t('pending.checkStatus')}
           </button>
           <button
             onClick={handleLogout}
             className="w-full rounded-md border border-zinc-300 px-4 py-2 text-zinc-700 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
           >
-            Wyloguj się
+            {t('common.logout')}
           </button>
         </div>
 
         <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
-          W międzyczasie możesz przeglądać dane demonstracyjne w firmie demo.
+          {t('pending.demoHint')}
         </p>
       </div>
     </div>

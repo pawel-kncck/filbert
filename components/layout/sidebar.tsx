@@ -2,42 +2,44 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-const invoicesNavigation = [
-  {
-    name: 'Sprzedaż',
-    href: '/sales',
-    icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    ),
-  },
-  {
-    name: 'Zakupy',
-    href: '/purchases',
-    icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-      </svg>
-    ),
-  },
-]
-
-const settingsNavigation = [
-  {
-    name: 'Członkowie',
-    href: '/settings/members',
-    icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-    ),
-  },
-]
+import { useTranslations } from 'next-intl'
 
 export function Sidebar() {
   const pathname = usePathname()
+  const t = useTranslations('navigation')
+
+  const invoicesNavigation = [
+    {
+      name: t('sales'),
+      href: '/sales',
+      icon: (
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+    },
+    {
+      name: t('purchases'),
+      href: '/purchases',
+      icon: (
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+    },
+  ]
+
+  const settingsNavigation = [
+    {
+      name: t('members'),
+      href: '/settings/members',
+      icon: (
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ),
+    },
+  ]
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-60 border-r border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
@@ -50,13 +52,13 @@ export function Sidebar() {
       <nav className="mt-6 px-3">
         <div>
           <h3 className="px-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            Faktury
+            {t('invoices')}
           </h3>
           <ul className="mt-2 space-y-1">
             {invoicesNavigation.map((item) => {
               const isActive = pathname.startsWith(item.href)
               return (
-                <li key={item.name}>
+                <li key={item.href}>
                   <Link
                     href={item.href}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -76,13 +78,13 @@ export function Sidebar() {
 
         <div className="mt-8">
           <h3 className="px-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            Ustawienia
+            {t('settings')}
           </h3>
           <ul className="mt-2 space-y-1">
             {settingsNavigation.map((item) => {
               const isActive = pathname.startsWith(item.href)
               return (
-                <li key={item.name}>
+                <li key={item.href}>
                   <Link
                     href={item.href}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -113,7 +115,7 @@ export function Sidebar() {
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
-          Firmy
+          {t('companies')}
         </Link>
       </div>
     </aside>

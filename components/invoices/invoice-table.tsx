@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { Invoice } from '@/lib/types/database'
 
 type Props = {
@@ -8,23 +9,25 @@ type Props = {
   type: 'sales' | 'purchase'
 }
 
-function formatCurrency(amount: number, currency: string = 'PLN'): string {
-  return new Intl.NumberFormat('pl-PL', {
-    style: 'currency',
-    currency,
-  }).format(amount)
-}
-
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('pl-PL', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
-}
-
 export function InvoiceTable({ invoices, type }: Props) {
   const router = useRouter()
+  const t = useTranslations()
+  const locale = useLocale()
+
+  const formatCurrency = (amount: number, currency: string = 'PLN') => {
+    return new Intl.NumberFormat(locale === 'pl' ? 'pl-PL' : 'en-US', {
+      style: 'currency',
+      currency,
+    }).format(amount)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString(locale === 'pl' ? 'pl-PL' : 'en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+  }
 
   if (invoices.length === 0) {
     return (
@@ -43,12 +46,12 @@ export function InvoiceTable({ invoices, type }: Props) {
           />
         </svg>
         <h3 className="mt-4 text-lg font-medium text-zinc-900 dark:text-white">
-          Brak faktur
+          {t('invoices.table.empty')}
         </h3>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           {type === 'sales'
-            ? 'Nie znaleziono faktur sprzedażowych dla wybranych kryteriów.'
-            : 'Nie znaleziono faktur zakupowych dla wybranych kryteriów.'}
+            ? t('invoices.sales.emptyMessage')
+            : t('invoices.purchases.emptyMessage')}
         </p>
       </div>
     )
@@ -64,28 +67,28 @@ export function InvoiceTable({ invoices, type }: Props) {
         <thead className="bg-zinc-50 dark:bg-zinc-700/50">
           <tr>
             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Numer faktury
+              {t('invoices.table.invoiceNumber')}
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Data
+              {t('invoices.table.date')}
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              {type === 'sales' ? 'Nabywca' : 'Sprzedawca'}
+              {type === 'sales' ? t('invoices.table.buyer') : t('invoices.table.seller')}
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               NIP
             </th>
             <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Netto
+              {t('invoices.table.net')}
             </th>
             <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              VAT
+              {t('invoices.table.vat')}
             </th>
             <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Brutto
+              {t('invoices.table.gross')}
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              KSeF
+              {t('invoices.table.ksef')}
             </th>
           </tr>
         </thead>

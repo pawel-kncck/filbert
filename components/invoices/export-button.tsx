@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations, useLocale } from 'next-intl'
 import { Invoice } from '@/lib/types/database'
 
 type Props = {
@@ -9,31 +10,33 @@ type Props = {
   companyName: string
 }
 
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('pl-PL')
-}
-
-function formatCurrency(amount: number): string {
-  return amount.toFixed(2).replace('.', ',')
-}
-
 export function ExportButton({ invoices, type, companyName }: Props) {
   const [isExporting, setIsExporting] = useState(false)
+  const t = useTranslations('invoices.export')
+  const locale = useLocale()
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString(locale === 'pl' ? 'pl-PL' : 'en-US')
+  }
+
+  const formatCurrency = (amount: number) => {
+    return amount.toFixed(2).replace('.', locale === 'pl' ? ',' : '.')
+  }
 
   const exportToCsv = () => {
     setIsExporting(true)
 
     try {
       const headers = [
-        'Numer faktury',
-        'Data wystawienia',
-        type === 'sales' ? 'Nabywca' : 'Sprzedawca',
+        t('columns.invoiceNumber'),
+        t('columns.issueDate'),
+        type === 'sales' ? t('columns.buyer') : t('columns.seller'),
         'NIP',
-        'Netto',
-        'VAT',
-        'Brutto',
-        'Waluta',
-        'KSeF',
+        t('columns.net'),
+        t('columns.vat'),
+        t('columns.gross'),
+        t('columns.currency'),
+        t('columns.ksef'),
       ]
 
       const rows = invoices.map((inv) => [
@@ -60,8 +63,8 @@ export function ExportButton({ invoices, type, companyName }: Props) {
       link.href = url
 
       const dateStr = new Date().toISOString().split('T')[0]
-      const typeStr = type === 'sales' ? 'sprzedaz' : 'zakupy'
-      link.download = `faktury_${typeStr}_${companyName.replace(/\s+/g, '_')}_${dateStr}.csv`
+      const typeStr = type === 'sales' ? 'sales' : 'purchases'
+      link.download = `invoices_${typeStr}_${companyName.replace(/\s+/g, '_')}_${dateStr}.csv`
 
       document.body.appendChild(link)
       link.click()
@@ -88,7 +91,7 @@ export function ExportButton({ invoices, type, companyName }: Props) {
           d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
         />
       </svg>
-      {isExporting ? 'Eksportowanie...' : 'Eksportuj CSV'}
+      {isExporting ? t('exporting') : t('exportCsv')}
     </button>
   )
 }

@@ -1,3 +1,7 @@
+'use client'
+
+import { useTranslations, useLocale } from 'next-intl'
+
 type Props = {
   totalCount: number
   totalNet: number
@@ -6,19 +10,22 @@ type Props = {
   currency?: string
 }
 
-function formatCurrency(amount: number, currency: string = 'PLN'): string {
-  return new Intl.NumberFormat('pl-PL', {
-    style: 'currency',
-    currency,
-  }).format(amount)
-}
-
 export function InvoiceStats({ totalCount, totalNet, totalVat, totalGross, currency = 'PLN' }: Props) {
+  const t = useTranslations('invoices.stats')
+  const locale = useLocale()
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale === 'pl' ? 'pl-PL' : 'en-US', {
+      style: 'currency',
+      currency,
+    }).format(amount)
+  }
+
   const stats = [
-    { label: 'Liczba faktur', value: totalCount.toString() },
-    { label: 'Suma netto', value: formatCurrency(totalNet, currency) },
-    { label: 'Suma VAT', value: formatCurrency(totalVat, currency) },
-    { label: 'Suma brutto', value: formatCurrency(totalGross, currency) },
+    { label: t('count'), value: totalCount.toString() },
+    { label: t('sumNet'), value: formatCurrency(totalNet) },
+    { label: t('sumVat'), value: formatCurrency(totalVat) },
+    { label: t('sumGross'), value: formatCurrency(totalGross) },
   ]
 
   return (

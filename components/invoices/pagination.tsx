@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 
 type Props = {
   currentPage: number
@@ -14,6 +15,7 @@ export function Pagination({ currentPage, totalPages, totalCount, pageSize }: Pr
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
+  const t = useTranslations('invoices.pagination')
 
   const goToPage = (page: number) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -49,7 +51,7 @@ export function Pagination({ currentPage, totalPages, totalCount, pageSize }: Pr
   return (
     <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        Wyświetlono {startItem}-{endItem} z {totalCount} faktur
+        {t('showing', { start: startItem, end: endItem, total: totalCount })}
       </p>
 
       <div className="flex items-center gap-1">
@@ -58,7 +60,7 @@ export function Pagination({ currentPage, totalPages, totalCount, pageSize }: Pr
           disabled={currentPage === 1 || isPending}
           className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
         >
-          Poprzednia
+          {t('previous')}
         </button>
 
         {pages.map((page, i) =>
@@ -87,7 +89,7 @@ export function Pagination({ currentPage, totalPages, totalCount, pageSize }: Pr
           disabled={currentPage === totalPages || isPending}
           className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
         >
-          Następna
+          {t('next')}
         </button>
       </div>
     </div>

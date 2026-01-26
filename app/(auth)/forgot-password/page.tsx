@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations()
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -37,17 +39,16 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg dark:bg-zinc-800">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-              Sprawdź swoją skrzynkę
+              {t('auth.signup.success.title')}
             </h1>
             <p className="mt-4 text-zinc-600 dark:text-zinc-400">
-              Jeśli konto z adresem <strong>{email}</strong> istnieje,
-              wysłaliśmy link do resetowania hasła.
+              {t('auth.forgotPassword.success', { email })}
             </p>
             <Link
               href="/login"
               className="mt-6 inline-block text-blue-600 hover:text-blue-500 dark:text-blue-400"
             >
-              Powrót do logowania
+              {t('auth.signup.success.backToLogin')}
             </Link>
           </div>
         </div>
@@ -63,7 +64,7 @@ export default function ForgotPasswordPage() {
             Filbert
           </h1>
           <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-            Zresetuj swoje hasło
+            {t('auth.forgotPassword.title')}
           </p>
         </div>
 
@@ -79,7 +80,7 @@ export default function ForgotPasswordPage() {
               htmlFor="email"
               className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
             >
-              Email
+              {t('common.email')}
             </label>
             <input
               id="email"
@@ -98,16 +99,16 @@ export default function ForgotPasswordPage() {
             disabled={loading}
             className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
           >
-            {loading ? 'Wysyłanie...' : 'Wyślij link resetujący'}
+            {loading ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
           </button>
 
           <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-            Pamiętasz hasło?{' '}
+            {t('auth.forgotPassword.rememberPassword')}{' '}
             <Link
               href="/login"
               className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
             >
-              Zaloguj się
+              {t('common.login')}
             </Link>
           </p>
         </form>

@@ -1,0 +1,252 @@
+{
+  "common": {
+    "login": "Zaloguj się",
+    "logout": "Wyloguj",
+    "signup": "Zarejestruj się",
+    "email": "Email",
+    "password": "Hasło",
+    "loading": "Ładowanie...",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "continue": "Kontynuuj",
+    "back": "Powrót",
+    "open": "Otwórz",
+    "search": "Szukaj",
+    "clearFilters": "Wyczyść filtry",
+    "from": "Od",
+    "to": "Do",
+    "actions": "Akcje",
+    "status": "Status",
+    "role": "Rola",
+    "date": "Data",
+    "you": "Ty"
+  },
+  "metadata": {
+    "title": "Filbert - Zarządzanie fakturami KSeF",
+    "description": "Aplikacja do zarządzania fakturami w systemie KSeF"
+  },
+  "landing": {
+    "hero": {
+      "title": "Zarządzaj fakturami KSeF",
+      "description": "Filbert to aplikacja do zarządzania fakturami w Krajowym Systemie e-Faktur. Przeglądaj faktury sprzedażowe i zakupowe, kontroluj VAT i eksportuj dane.",
+      "startFree": "Rozpocznij za darmo"
+    },
+    "features": {
+      "salesInvoices": {
+        "title": "Faktury sprzedaży",
+        "description": "Przeglądaj wystawione faktury z automatycznym podsumowaniem kwot"
+      },
+      "purchaseInvoices": {
+        "title": "Faktury zakupu",
+        "description": "Kontroluj koszty i VAT naliczony od dostawców"
+      },
+      "multipleCompanies": {
+        "title": "Wiele firm",
+        "description": "Zarządzaj fakturami wielu firm z jednego konta"
+      }
+    },
+    "footer": "Filbert - Zarządzanie fakturami KSeF"
+  },
+  "auth": {
+    "login": {
+      "title": "Zaloguj się do swojego konta",
+      "forgotPassword": "Zapomniałeś hasła?",
+      "submitting": "Logowanie...",
+      "noAccount": "Nie masz konta?"
+    },
+    "signup": {
+      "title": "Utwórz nowe konto",
+      "confirmPassword": "Potwierdź hasło",
+      "passwordHint": "Min. 12 znaków, wielkie/małe litery, cyfra, znak specjalny",
+      "submitting": "Tworzenie konta...",
+      "hasAccount": "Masz już konto?",
+      "success": {
+        "title": "Sprawdź swoją skrzynkę",
+        "message": "Wysłaliśmy link aktywacyjny na adres {email}. Kliknij w link, aby dokończyć rejestrację.",
+        "backToLogin": "Powrót do logowania"
+      }
+    },
+    "forgotPassword": {
+      "title": "Zresetuj swoje hasło",
+      "submitting": "Wysyłanie...",
+      "submit": "Wyślij link resetujący",
+      "rememberPassword": "Pamiętasz hasło?",
+      "success": "Jeśli konto z adresem {email} istnieje, wysłaliśmy link do resetowania hasła."
+    },
+    "resetPassword": {
+      "title": "Ustaw nowe hasło",
+      "newPassword": "Nowe hasło",
+      "confirmNewPassword": "Potwierdź nowe hasło",
+      "submitting": "Zapisywanie...",
+      "submit": "Zapisz nowe hasło",
+      "expired": {
+        "title": "Link wygasł",
+        "message": "Ten link do resetowania hasła wygasł lub jest nieprawidłowy.",
+        "requestNew": "Poproś o nowy link"
+      },
+      "success": {
+        "title": "Hasło zmienione",
+        "message": "Twoje hasło zostało pomyślnie zmienione.",
+        "goToApp": "Przejdź do aplikacji"
+      }
+    },
+    "validation": {
+      "passwordsNotMatch": "Hasła nie są identyczne",
+      "passwordMinLength": "Hasło musi mieć co najmniej 12 znaków"
+    },
+    "errors": {
+      "invalidCredentials": "Nieprawidłowy email lub hasło",
+      "emailNotConfirmed": "Email nie został potwierdzony. Sprawdź skrzynkę pocztową.",
+      "userExists": "Użytkownik o tym adresie email już istnieje",
+      "passwordRequirements": "Hasło musi mieć min. 12 znaków oraz zawierać: małą literę, wielką literę, cyfrę i znak specjalny",
+      "rateLimitExceeded": "Zbyt wiele prób. Spróbuj ponownie za chwilę.",
+      "invalidEmail": "Nieprawidłowy adres email"
+    }
+  },
+  "navigation": {
+    "invoices": "Faktury",
+    "sales": "Sprzedaż",
+    "purchases": "Zakupy",
+    "settings": "Ustawienia",
+    "members": "Członkowie",
+    "companies": "Firmy"
+  },
+  "companies": {
+    "title": "Firmy",
+    "subtitle": "Wybierz firmę i przeglądaj faktury",
+    "addCompany": "Dodaj firmę",
+    "roles": {
+      "admin": "Rola: Administrator",
+      "member": "Rola: Członek",
+      "viewer": "Rola: Przeglądający"
+    },
+    "pendingApproval": "Oczekujące na zatwierdzenie",
+    "awaitingAdminApproval": "Oczekuje na zatwierdzenie administratora"
+  },
+  "onboarding": {
+    "title": "Dodaj firmę",
+    "subtitle": "Wprowadź dane swojej firmy, aby rozpocząć korzystanie z Filbert",
+    "companyName": "Nazwa firmy",
+    "companyNamePlaceholder": "Przykładowa Sp. z o.o.",
+    "nipHint": "10 cyfr, np. 123-456-78-90 lub 1234567890",
+    "submitting": "Przetwarzanie...",
+    "errors": {
+      "invalidNip": "Nieprawidłowy numer NIP",
+      "sessionExpired": "Sesja wygasła. Zaloguj się ponownie.",
+      "joiningCompany": "Błąd podczas dołączania do firmy: {error}",
+      "creatingCompany": "Błąd podczas tworzenia firmy: {error}",
+      "assigningToCompany": "Błąd podczas przypisywania do firmy: {error}"
+    }
+  },
+  "pending": {
+    "title": "Oczekiwanie na zatwierdzenie",
+    "message": "Twoja prośba o dołączenie do firmy {company} została wysłana do administratora.",
+    "explanation": "Administrator musi zatwierdzić Twoje konto, zanim uzyskasz dostęp do danych firmy.",
+    "checking": "Sprawdzanie...",
+    "checkStatus": "Sprawdź status",
+    "demoHint": "W międzyczasie możesz przeglądać dane demonstracyjne w firmie demo."
+  },
+  "invoices": {
+    "sales": {
+      "title": "Faktury sprzedażowe",
+      "emptyMessage": "Nie znaleziono faktur sprzedażowych dla wybranych kryteriów."
+    },
+    "purchases": {
+      "title": "Faktury zakupowe",
+      "emptyMessage": "Nie znaleziono faktur zakupowych dla wybranych kryteriów."
+    },
+    "table": {
+      "empty": "Brak faktur",
+      "invoiceNumber": "Numer faktury",
+      "date": "Data",
+      "buyer": "Nabywca",
+      "seller": "Sprzedawca",
+      "net": "Netto",
+      "vat": "VAT",
+      "gross": "Brutto",
+      "ksef": "KSeF"
+    },
+    "filters": {
+      "searchPlaceholder": "Numer faktury, nazwa kontrahenta..."
+    },
+    "stats": {
+      "count": "Liczba faktur",
+      "sumNet": "Suma netto",
+      "sumVat": "Suma VAT",
+      "sumGross": "Suma brutto"
+    },
+    "pagination": {
+      "showing": "Wyświetlono {start}-{end} z {total} faktur",
+      "previous": "Poprzednia",
+      "next": "Następna"
+    },
+    "export": {
+      "exporting": "Eksportowanie...",
+      "exportCsv": "Eksportuj CSV",
+      "columns": {
+        "invoiceNumber": "Numer faktury",
+        "issueDate": "Data wystawienia",
+        "buyer": "Nabywca",
+        "seller": "Sprzedawca",
+        "net": "Netto",
+        "vat": "VAT",
+        "gross": "Brutto",
+        "currency": "Waluta",
+        "ksef": "KSeF"
+      }
+    },
+    "detail": {
+      "backToList": "Powrót do listy",
+      "salesInvoice": "Faktura sprzedażowa",
+      "purchaseInvoice": "Faktura zakupowa",
+      "issueDate": "Data wystawienia",
+      "seller": "Sprzedawca",
+      "buyer": "Nabywca",
+      "amounts": "Kwoty",
+      "net": "Netto",
+      "gross": "Brutto",
+      "additionalInfo": "Informacje dodatkowe",
+      "currency": "Waluta",
+      "source": "Źródło",
+      "sources": {
+        "manual": "Ręczne",
+        "demo": "Demo",
+        "ksef": "KSeF"
+      },
+      "added": "Dodano"
+    }
+  },
+  "members": {
+    "title": "Zarządzanie członkami",
+    "demoCompanyMessage": "Zarządzanie członkami nie jest dostępne dla firmy demo.",
+    "adminOnlyMessage": "Tylko administratorzy mogą zarządzać członkami firmy.",
+    "pendingRequests": "Oczekujące prośby ({count})",
+    "activeMembers": "Aktywni członkowie ({count})",
+    "userId": "ID użytkownika",
+    "requestDate": "Data prośby",
+    "joined": "Dołączył",
+    "statusActive": "Aktywny",
+    "statusPending": "Oczekujący",
+    "noMembers": "Brak członków",
+    "actions": {
+      "approve": "Zatwierdź",
+      "reject": "Odrzuć",
+      "removeConfirm": "Czy na pewno chcesz usunąć tego członka?",
+      "removeMember": "Usuń członka"
+    },
+    "roles": {
+      "admin": "Administrator",
+      "member": "Członek",
+      "viewer": "Przeglądający"
+    },
+    "errors": {
+      "generic": "Wystąpił błąd",
+      "connection": "Wystąpił błąd połączenia"
+    }
+  },
+  "languageSwitcher": {
+    "language": "Język",
+    "polish": "Polski",
+    "english": "English"
+  }
+}

@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getUserCompanies } from '@/lib/data/companies'
 import { AppShell } from '@/components/layout/app-shell'
 import Link from 'next/link'
+import { getTranslations, getLocale } from 'next-intl/server'
+import type { Locale } from '@/lib/i18n/config'
 
 type Props = {
   searchParams: Promise<{ company?: string }>
@@ -11,6 +13,8 @@ type Props = {
 export default async function CompaniesPage({ searchParams }: Props) {
   const params = await searchParams
   const supabase = await createClient()
+  const t = await getTranslations()
+  const locale = await getLocale() as Locale
 
   const {
     data: { user },
@@ -42,20 +46,32 @@ export default async function CompaniesPage({ searchParams }: Props) {
 
   const currentCompanyId = params.company || companies[0]?.id || null
 
+  const getRoleLabel = (role: string | undefined) => {
+    switch (role) {
+      case 'admin':
+        return t('companies.roles.admin')
+      case 'member':
+        return t('companies.roles.member')
+      default:
+        return t('companies.roles.viewer')
+    }
+  }
+
   return (
     <AppShell
       userEmail={user.email || ''}
       companies={companies}
       currentCompanyId={currentCompanyId}
+      currentLocale={locale}
     >
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-              Firmy
+              {t('companies.title')}
             </h1>
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Wybierz firmę i przeglądaj faktury
+              {t('companies.subtitle')}
             </p>
           </div>
           <Link
@@ -65,7 +81,7 @@ export default async function CompaniesPage({ searchParams }: Props) {
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Dodaj firmę
+            {t('companies.addCompany')}
           </Link>
         </div>
 
@@ -92,13 +108,13 @@ export default async function CompaniesPage({ searchParams }: Props) {
               </div>
               <div className="mt-4 flex items-center justify-between">
                 <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Rola: {company.role === 'admin' ? 'Administrator' : company.role === 'member' ? 'Członek' : 'Przeglądający'}
+                  {getRoleLabel(company.role)}
                 </span>
                 <Link
                   href={`/sales?company=${company.id}`}
                   className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
                 >
-                  Otwórz
+                  {t('common.open')}
                 </Link>
               </div>
             </div>
@@ -108,7 +124,7 @@ export default async function CompaniesPage({ searchParams }: Props) {
         {pendingMemberships && pendingMemberships.length > 0 && (
           <div>
             <h2 className="mb-4 text-lg font-medium text-zinc-900 dark:text-white">
-              Oczekujące na zatwierdzenie
+              {t('companies.pendingApproval')}
             </h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {pendingMemberships.map((membership) => {
@@ -126,7 +142,7 @@ export default async function CompaniesPage({ searchParams }: Props) {
                       NIP: {company.nip}
                     </p>
                     <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
-                      Oczekuje na zatwierdzenie administratora
+                      {t('companies.awaitingAdminApproval')}
                     </p>
                   </div>
                 )

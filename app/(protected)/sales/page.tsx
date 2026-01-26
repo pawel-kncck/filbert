@@ -8,6 +8,8 @@ import { InvoiceStats } from '@/components/invoices/invoice-stats'
 import { InvoiceFilters } from '@/components/invoices/invoice-filters'
 import { Pagination } from '@/components/invoices/pagination'
 import { ExportButton } from '@/components/invoices/export-button'
+import { getTranslations, getLocale } from 'next-intl/server'
+import type { Locale } from '@/lib/i18n/config'
 
 type Props = {
   searchParams: Promise<{
@@ -22,6 +24,8 @@ type Props = {
 export default async function SalesPage({ searchParams }: Props) {
   const params = await searchParams
   const supabase = await createClient()
+  const t = await getTranslations()
+  const locale = await getLocale() as Locale
 
   const {
     data: { user },
@@ -67,12 +71,13 @@ export default async function SalesPage({ searchParams }: Props) {
       userEmail={user.email || ''}
       companies={companies}
       currentCompanyId={currentCompanyId}
+      currentLocale={locale}
     >
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-              Faktury sprzedażowe
+              {t('invoices.sales.title')}
             </h1>
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
               {currentCompany?.name}

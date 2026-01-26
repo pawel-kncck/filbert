@@ -1,3 +1,6 @@
+'use client'
+
+import { useTranslations, useLocale } from 'next-intl'
 import { Member } from '@/lib/data/members'
 import { MemberActions } from './member-actions'
 
@@ -8,33 +11,37 @@ type Props = {
   isCurrentUserAdmin: boolean
 }
 
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('pl-PL', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
-const statusLabels: Record<string, { label: string; className: string }> = {
-  active: {
-    label: 'Aktywny',
-    className: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
-  },
-  pending: {
-    label: 'Oczekujący',
-    className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
-  },
-}
-
 export function MembersTable({ members, companyId, currentUserId, isCurrentUserAdmin }: Props) {
+  const t = useTranslations('members')
+  const tCommon = useTranslations('common')
+  const locale = useLocale()
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString(locale === 'pl' ? 'pl-PL' : 'en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  }
+
+  const statusLabels: Record<string, { label: string; className: string }> = {
+    active: {
+      label: t('statusActive'),
+      className: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+    },
+    pending: {
+      label: t('statusPending'),
+      className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
+    },
+  }
+
   const pendingMembers = members.filter((m) => m.status === 'pending')
   const activeMembers = members.filter((m) => m.status === 'active')
 
   if (members.length === 0) {
     return (
       <div className="rounded-lg border border-zinc-200 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-800">
-        <p className="text-zinc-600 dark:text-zinc-400">Brak członków</p>
+        <p className="text-zinc-600 dark:text-zinc-400">{t('noMembers')}</p>
       </div>
     )
   }
@@ -45,20 +52,20 @@ export function MembersTable({ members, companyId, currentUserId, isCurrentUserA
       {pendingMembers.length > 0 && (
         <div>
           <h3 className="mb-3 text-lg font-medium text-zinc-900 dark:text-white">
-            Oczekujące prośby ({pendingMembers.length})
+            {t('pendingRequests', { count: pendingMembers.length })}
           </h3>
           <div className="overflow-hidden rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-900/20">
             <table className="min-w-full divide-y divide-amber-200 dark:divide-amber-900">
               <thead>
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
-                    ID użytkownika
+                    {t('userId')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
-                    Data prośby
+                    {t('requestDate')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500">
-                    Akcje
+                    {t('actions.approve')}
                   </th>
                 </tr>
               </thead>
@@ -92,23 +99,23 @@ export function MembersTable({ members, companyId, currentUserId, isCurrentUserA
       {/* Active members */}
       <div>
         <h3 className="mb-3 text-lg font-medium text-zinc-900 dark:text-white">
-          Aktywni członkowie ({activeMembers.length})
+          {t('activeMembers', { count: activeMembers.length })}
         </h3>
         <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
           <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
             <thead className="bg-zinc-50 dark:bg-zinc-700/50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
-                  ID użytkownika
+                  {t('userId')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
-                  Status
+                  {t('statusActive')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
-                  Dołączył
+                  {t('joined')}
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500">
-                  Rola
+                  {t('roles.admin').split(':')[0]}
                 </th>
               </tr>
             </thead>
@@ -125,7 +132,7 @@ export function MembersTable({ members, companyId, currentUserId, isCurrentUserA
                         </code>
                         {isCurrentUser && (
                           <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                            Ty
+                            {tCommon('you')}
                           </span>
                         )}
                       </div>
