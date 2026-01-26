@@ -47,6 +47,15 @@ CREATE INDEX idx_invoices_vendor_name ON invoices(vendor_name);
 CREATE INDEX idx_invoices_customer_name ON invoices(customer_name);
 CREATE INDEX idx_user_companies_user ON user_companies(user_id);
 
--- Demo company (well-known UUID)
+-- Demo companies (well-known UUIDs)
+-- Main demo company
 INSERT INTO companies (id, name, nip, is_demo)
 VALUES ('00000000-0000-0000-0000-000000000000', 'Demo Sp. z o.o.', '0000000000', true);
+
+-- Demo buyer company (appears as customer on Demo Sp. z o.o. Sales invoices)
+INSERT INTO companies (id, name, nip, is_demo)
+VALUES ('00000000-0000-0000-0000-000000000001', 'Demo Klient Sp. z o.o.', '0000000001', true);
+
+-- Demo vendor company (appears as vendor on Demo Sp. z o.o. Purchase invoices)
+INSERT INTO companies (id, name, nip, is_demo)
+VALUES ('00000000-0000-0000-0000-000000000002', 'Demo Dostawca S.A.', '0000000002', true);

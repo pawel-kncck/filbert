@@ -66,10 +66,10 @@ CREATE POLICY "Admins can update memberships" ON user_companies
 -- INVOICES policies
 -- ============================================
 
--- Users can view invoices for their active companies + demo
+-- Users can view invoices for their active companies + all demo companies
 CREATE POLICY "Users can view invoices" ON invoices
   FOR SELECT USING (
-    company_id = '00000000-0000-0000-0000-000000000000'
+    company_id IN (SELECT id FROM companies WHERE is_demo = true)
     OR company_id IN (
       SELECT company_id FROM user_companies
       WHERE user_id = auth.uid() AND status = 'active'

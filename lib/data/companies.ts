@@ -28,20 +28,22 @@ export async function getUserCompanies(userId: string): Promise<CompanyWithRole[
       }
     })
 
-  // Get demo company
-  const { data: demoCompany } = await supabase
+  // Get all demo companies
+  const { data: demoCompanies } = await supabase
     .from('companies')
     .select('id, name, nip, is_demo')
     .eq('is_demo', true)
-    .single()
+    .order('name')
 
-  if (demoCompany) {
-    // Only add demo if not already in user's companies
-    if (!userCompanies.find((c) => c.id === demoCompany.id)) {
-      userCompanies.push({
-        ...demoCompany,
-        role: 'viewer',
-      })
+  if (demoCompanies) {
+    // Add demo companies that aren't already in user's companies
+    for (const demoCompany of demoCompanies) {
+      if (!userCompanies.find((c) => c.id === demoCompany.id)) {
+        userCompanies.push({
+          ...demoCompany,
+          role: 'viewer',
+        })
+      }
     }
   }
 
