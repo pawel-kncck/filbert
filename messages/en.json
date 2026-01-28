@@ -256,6 +256,10 @@
     "invoiceNotFound": {
       "title": "Invoice not found",
       "description": "This invoice doesn't exist or you don't have access to it."
+    },
+    "api": {
+      "lastAdminRemoval": "Cannot remove the last administrator of the company",
+      "lastAdminRoleChange": "Cannot change role of the last administrator"
     }
   },
   "languageSwitcher": {

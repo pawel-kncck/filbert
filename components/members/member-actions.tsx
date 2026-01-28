@@ -45,7 +45,8 @@ export function MemberActions({ member, companyId, currentUserId, isCurrentUserA
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || t('errors.generic'))
+        const message = data.error?.message || data.error || t('errors.generic')
+        setError(message)
         return
       }
 

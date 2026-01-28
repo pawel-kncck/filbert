@@ -256,6 +256,10 @@
     "invoiceNotFound": {
       "title": "Nie znaleziono faktury",
       "description": "Ta faktura nie istnieje lub nie masz do niej dostępu."
+    },
+    "api": {
+      "lastAdminRemoval": "Nie można usunąć ostatniego administratora firmy",
+      "lastAdminRoleChange": "Nie można zmienić roli ostatniego administratora"
     }
   },
   "languageSwitcher": {
