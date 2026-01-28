@@ -37,6 +37,7 @@ npm run lint     # Run ESLint
 ### Planned Architecture (from PRD)
 
 The application will include:
+
 - **Authentication:** Supabase Auth with email/password
 - **Multi-tenancy:** Users can belong to multiple companies with roles (`admin` | `member`)
 - **Invoice Views:** Separate routes for `/sales` and `/purchases` invoices
@@ -48,18 +49,20 @@ The application will include:
 
 Supabase has deprecated the legacy `anon` and `service_role` JWT-based keys. Use the new key format:
 
-| Legacy (Deprecated) | New Format | Use Case |
-|---------------------|------------|----------|
-| `anon` | `sb_publishable_...` | Client-side (browser, mobile) |
-| `service_role` | `sb_secret_...` | Server-side only |
+| Legacy (Deprecated) | New Format           | Use Case                      |
+| ------------------- | -------------------- | ----------------------------- |
+| `anon`              | `sb_publishable_...` | Client-side (browser, mobile) |
+| `service_role`      | `sb_secret_...`      | Server-side only              |
 
 **Key rules:**
+
 - **Publishable keys** (`sb_publishable_...`): Safe for client-side code, protected by Row Level Security
 - **Secret keys** (`sb_secret_...`): Server-side only, bypasses RLS, never expose in browser
 - New keys cannot be used in `Authorization: Bearer` header (use `apikey` header instead)
 - Secret keys return HTTP 401 if used in browsers
 
 **Timeline:**
+
 - Nov 2025: New projects no longer have `anon`/`service_role` keys
 - Late 2026: Legacy keys deleted entirely
 
@@ -74,6 +77,7 @@ SUPABASE_SECRET_KEY=sb_secret_...                         # Server-side only
 ### Database Schema
 
 Three main tables:
+
 - `companies` - Company info with NIP (Polish tax ID)
 - `user_companies` - Many-to-many user-company relationship with roles
 - `invoices` - Invoice records with type (`sales` | `purchase`), source (`manual` | `demo` | `ksef`)
@@ -113,7 +117,14 @@ export async function createClient() {
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: (cookiesToSet) => { /* ... */ } } }
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: (cookiesToSet) => {
+          /* ... */
+        },
+      },
+    }
   )
 }
 ```

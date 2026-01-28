@@ -44,7 +44,9 @@ export default function OnboardingPage() {
     const supabase = createClient()
 
     // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) {
       setError(t('onboarding.errors.sessionExpired'))
       setLoading(false)
@@ -60,14 +62,12 @@ export default function OnboardingPage() {
 
     if (existingCompany) {
       // Company exists - add user as pending member
-      const { error: joinError } = await supabase
-        .from('user_companies')
-        .insert({
-          user_id: user.id,
-          company_id: existingCompany.id,
-          role: 'member',
-          status: 'pending',
-        })
+      const { error: joinError } = await supabase.from('user_companies').insert({
+        user_id: user.id,
+        company_id: existingCompany.id,
+        role: 'member',
+        status: 'pending',
+      })
 
       if (joinError) {
         setError(t('onboarding.errors.joiningCompany', { error: joinError.message }))
@@ -97,14 +97,12 @@ export default function OnboardingPage() {
     }
 
     // Add user as admin
-    const { error: memberError } = await supabase
-      .from('user_companies')
-      .insert({
-        user_id: user.id,
-        company_id: newCompany.id,
-        role: 'admin',
-        status: 'active',
-      })
+    const { error: memberError } = await supabase.from('user_companies').insert({
+      user_id: user.id,
+      company_id: newCompany.id,
+      role: 'admin',
+      status: 'active',
+    })
 
     if (memberError) {
       setError(t('onboarding.errors.assigningToCompany', { error: memberError.message }))
@@ -128,9 +126,7 @@ export default function OnboardingPage() {
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
             {t('onboarding.title')}
           </h1>
-          <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-            {t('onboarding.subtitle')}
-          </p>
+          <p className="mt-2 text-zinc-600 dark:text-zinc-400">{t('onboarding.subtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">

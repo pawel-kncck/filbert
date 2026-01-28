@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
   public: {
@@ -62,7 +56,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'companies'
             referencedColumns: ['id']
-          }
+          },
         ]
       }
       invoices: {
@@ -127,7 +121,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'companies'
             referencedColumns: ['id']
-          }
+          },
         ]
       }
     }

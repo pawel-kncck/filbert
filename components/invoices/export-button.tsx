@@ -53,9 +53,7 @@ export function ExportButton({ invoices, type, companyName }: Props) {
 
       // Add BOM for Excel to recognize UTF-8
       const BOM = '\uFEFF'
-      const csvContent =
-        BOM +
-        [headers.join(';'), ...rows.map((row) => row.join(';'))].join('\n')
+      const csvContent = BOM + [headers.join(';'), ...rows.map((row) => row.join(';'))].join('\n')
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
       const url = URL.createObjectURL(blob)

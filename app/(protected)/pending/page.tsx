@@ -15,7 +15,9 @@ export default function PendingPage() {
     const fetchPendingCompany = async () => {
       const supabase = createClient()
 
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (!user) return
 
       // Get pending membership with company name
@@ -38,7 +40,9 @@ export default function PendingPage() {
     setChecking(true)
     const supabase = createClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) {
       setChecking(false)
       return
@@ -86,17 +90,13 @@ export default function PendingPage() {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-            {t('pending.title')}
-          </h1>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">{t('pending.title')}</h1>
           {companyName && (
             <p className="mt-4 text-zinc-600 dark:text-zinc-400">
               {t('pending.message', { company: companyName })}
             </p>
           )}
-          <p className="mt-4 text-zinc-600 dark:text-zinc-400">
-            {t('pending.explanation')}
-          </p>
+          <p className="mt-4 text-zinc-600 dark:text-zinc-400">{t('pending.explanation')}</p>
         </div>
 
         <div className="flex flex-col gap-3">

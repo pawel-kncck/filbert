@@ -29,10 +29,7 @@ export async function getCompanyMembers(companyId: string): Promise<Member[]> {
   }))
 }
 
-export async function isUserCompanyAdmin(
-  userId: string,
-  companyId: string
-): Promise<boolean> {
+export async function isUserCompanyAdmin(userId: string, companyId: string): Promise<boolean> {
   const supabase = await createClient()
 
   const { data } = await supabase

@@ -60,12 +60,8 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900">
       <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg dark:bg-zinc-800">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
-            Filbert
-          </h1>
-          <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-            {t('auth.forgotPassword.title')}
-          </p>
+          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">Filbert</h1>
+          <p className="mt-2 text-zinc-600 dark:text-zinc-400">{t('auth.forgotPassword.title')}</p>
         </div>
 
         <form onSubmit={handleResetPassword} className="mt-8 space-y-6">

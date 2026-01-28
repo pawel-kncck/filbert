@@ -16,9 +16,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -40,9 +38,7 @@ export async function updateSession(request: NextRequest) {
 
   // Define public routes that don't require authentication
   const publicRoutes = ['/login', '/signup', '/forgot-password', '/reset-password']
-  const isPublicRoute = publicRoutes.some(route =>
-    request.nextUrl.pathname.startsWith(route)
-  )
+  const isPublicRoute = publicRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
 
   // Allow access to home page for everyone
   if (request.nextUrl.pathname === '/') {

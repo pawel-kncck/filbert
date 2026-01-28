@@ -15,7 +15,7 @@ export default async function MembersSettingsPage({ searchParams }: Props) {
   const params = await searchParams
   const supabase = await createClient()
   const t = await getTranslations()
-  const locale = await getLocale() as Locale
+  const locale = (await getLocale()) as Locale
 
   const {
     data: { user },
@@ -55,15 +55,11 @@ export default async function MembersSettingsPage({ searchParams }: Props) {
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
               {t('members.title')}
             </h1>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              {currentCompany?.name}
-            </p>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{currentCompany?.name}</p>
           </div>
 
           <div className="rounded-lg border border-zinc-200 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-800">
-            <p className="text-zinc-600 dark:text-zinc-400">
-              {t('members.demoCompanyMessage')}
-            </p>
+            <p className="text-zinc-600 dark:text-zinc-400">{t('members.demoCompanyMessage')}</p>
           </div>
         </div>
       </AppShell>
@@ -79,12 +75,8 @@ export default async function MembersSettingsPage({ searchParams }: Props) {
     >
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-            {t('members.title')}
-          </h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            {currentCompany?.name}
-          </p>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">{t('members.title')}</h1>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{currentCompany?.name}</p>
         </div>
 
         {!isAdmin && (

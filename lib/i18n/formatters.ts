@@ -4,11 +4,7 @@ export function getLocaleCode(locale: Locale): string {
   return locale === 'pl' ? 'pl-PL' : 'en-US'
 }
 
-export function formatCurrency(
-  amount: number,
-  locale: Locale,
-  currency: string = 'PLN'
-): string {
+export function formatCurrency(amount: number, locale: Locale, currency: string = 'PLN'): string {
   return new Intl.NumberFormat(getLocaleCode(locale), {
     style: 'currency',
     currency,
@@ -25,10 +21,7 @@ export function formatDate(
     month: '2-digit',
     day: '2-digit',
   }
-  return new Date(dateString).toLocaleDateString(
-    getLocaleCode(locale),
-    options || defaultOptions
-  )
+  return new Date(dateString).toLocaleDateString(getLocaleCode(locale), options || defaultOptions)
 }
 
 export function formatDateLong(dateString: string, locale: Locale): string {

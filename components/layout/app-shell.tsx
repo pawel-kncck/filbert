@@ -17,11 +17,22 @@ type Props = {
   currentLocale: Locale
 }
 
-export function AppShell({ children, userEmail, companies, currentCompanyId, currentLocale }: Props) {
+export function AppShell({
+  children,
+  userEmail,
+  companies,
+  currentCompanyId,
+  currentLocale,
+}: Props) {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       <Sidebar />
-      <TopBar userEmail={userEmail} companies={companies} currentCompanyId={currentCompanyId} currentLocale={currentLocale} />
+      <TopBar
+        userEmail={userEmail}
+        companies={companies}
+        currentCompanyId={currentCompanyId}
+        currentLocale={currentLocale}
+      />
       <main className="ml-60 pt-16">
         <div className="p-6">{children}</div>
       </main>

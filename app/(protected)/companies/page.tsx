@@ -14,7 +14,7 @@ export default async function CompaniesPage({ searchParams }: Props) {
   const params = await searchParams
   const supabase = await createClient()
   const t = await getTranslations()
-  const locale = await getLocale() as Locale
+  const locale = (await getLocale()) as Locale
 
   const {
     data: { user },
@@ -39,7 +39,8 @@ export default async function CompaniesPage({ searchParams }: Props) {
   }
 
   // If only pending and no active, redirect to pending page
-  const hasOnlyPending = companies.every((c) => c.is_demo) && pendingMemberships && pendingMemberships.length > 0
+  const hasOnlyPending =
+    companies.every((c) => c.is_demo) && pendingMemberships && pendingMemberships.length > 0
   if (hasOnlyPending) {
     redirect('/pending')
   }
@@ -79,7 +80,12 @@ export default async function CompaniesPage({ searchParams }: Props) {
             className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             {t('companies.addCompany')}
           </Link>
@@ -93,12 +99,8 @@ export default async function CompaniesPage({ searchParams }: Props) {
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-medium text-zinc-900 dark:text-white">
-                    {company.name}
-                  </h3>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                    NIP: {company.nip}
-                  </p>
+                  <h3 className="font-medium text-zinc-900 dark:text-white">{company.name}</h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">NIP: {company.nip}</p>
                 </div>
                 {company.is_demo && (
                   <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
@@ -128,19 +130,19 @@ export default async function CompaniesPage({ searchParams }: Props) {
             </h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {pendingMemberships.map((membership) => {
-                const company = membership.companies as { id: string; name: string; nip: string } | null
+                const company = membership.companies as {
+                  id: string
+                  name: string
+                  nip: string
+                } | null
                 if (!company) return null
                 return (
                   <div
                     key={company.id}
                     className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-900/20"
                   >
-                    <h3 className="font-medium text-zinc-900 dark:text-white">
-                      {company.name}
-                    </h3>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                      NIP: {company.nip}
-                    </p>
+                    <h3 className="font-medium text-zinc-900 dark:text-white">{company.name}</h3>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">NIP: {company.nip}</p>
                     <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
                       {t('companies.awaitingAdminApproval')}
                     </p>

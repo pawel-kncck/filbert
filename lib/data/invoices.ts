@@ -53,9 +53,7 @@ export async function getInvoices(
   }
 
   // Order and paginate
-  query = query
-    .order('issue_date', { ascending: false })
-    .range(offset, offset + PAGE_SIZE - 1)
+  query = query.order('issue_date', { ascending: false }).range(offset, offset + PAGE_SIZE - 1)
 
   const { data: invoices, error, count } = await query
 
@@ -133,11 +131,7 @@ export async function getAllInvoicesForExport(
 ): Promise<Invoice[]> {
   const supabase = await createClient()
 
-  let query = supabase
-    .from('invoices')
-    .select('*')
-    .eq('company_id', companyId)
-    .eq('type', type)
+  let query = supabase.from('invoices').select('*').eq('company_id', companyId).eq('type', type)
 
   if (filters.search) {
     const searchTerm = `%${filters.search}%`

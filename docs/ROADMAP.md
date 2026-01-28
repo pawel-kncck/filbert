@@ -7,6 +7,7 @@ A comprehensive implementation plan for Filbert - a KSeF (Polish e-invoicing sys
 ## Completed Phases
 
 ### Phase 1: Auth + Company + Database Schema
+
 - Supabase setup with @supabase/ssr
 - Email/password authentication (login, signup, forgot/reset password)
 - Company creation with NIP validation
@@ -15,6 +16,7 @@ A comprehensive implementation plan for Filbert - a KSeF (Polish e-invoicing sys
 - RLS policies with SECURITY DEFINER helper function
 
 ### Phase 2: App Shell + Invoice Lists + Company Selector
+
 - Fixed sidebar navigation (240px)
 - Top bar with company selector and logout
 - Invoice tables for sales and purchases
@@ -22,6 +24,7 @@ A comprehensive implementation plan for Filbert - a KSeF (Polish e-invoicing sys
 - Invoice statistics cards
 
 ### Phase 3: Invoice Features
+
 - Search filtering (vendor/customer name, invoice number)
 - Date range picker
 - Pagination (25 items per page)
@@ -29,6 +32,7 @@ A comprehensive implementation plan for Filbert - a KSeF (Polish e-invoicing sys
 - Invoice detail pages (/sales/[id], /purchases/[id])
 
 ### Phase 4: Admin Features
+
 - Member management page (/settings/members)
 - Approve/reject pending member requests
 - Change member roles (admin/member/viewer)
@@ -36,6 +40,7 @@ A comprehensive implementation plan for Filbert - a KSeF (Polish e-invoicing sys
 - Settings section in sidebar
 
 ### Phase 4.5: Internationalization (i18n)
+
 - next-intl library for Next.js App Router
 - Polish (default) and English language support
 - Hybrid URL strategy: prefix routing for landing page, cookie-based for protected routes
@@ -120,20 +125,20 @@ CREATE POLICY "Admins can delete vendors" ON vendors
 
 #### Files to Create
 
-| File | Description |
-|------|-------------|
-| `supabase/migrations/003_add_vendors_customers_items.sql` | Database migration |
-| `lib/data/vendors.ts` | Data layer: getVendors, getMissingVendors, syncVendorsFromInvoices, CRUD |
-| `app/(protected)/settings/vendors/page.tsx` | Vendors list page |
-| `components/vendors/vendors-table.tsx` | Table with vendor rows |
-| `components/vendors/vendor-actions.tsx` | Edit, Show invoices, Delete buttons |
-| `components/vendors/vendor-form-dialog.tsx` | Add/Edit modal form |
-| `components/vendors/vendor-filters.tsx` | Search filter |
-| `components/vendors/add-vendor-button.tsx` | Add vendor button |
-| `components/vendors/missing-vendors-alert.tsx` | Alert for unsynced vendors |
-| `app/api/vendors/route.ts` | POST: create vendor |
-| `app/api/vendors/[vendorId]/route.ts` | PATCH: update, DELETE: remove |
-| `app/api/vendors/sync/route.ts` | POST: sync from invoices |
+| File                                                      | Description                                                              |
+| --------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `supabase/migrations/003_add_vendors_customers_items.sql` | Database migration                                                       |
+| `lib/data/vendors.ts`                                     | Data layer: getVendors, getMissingVendors, syncVendorsFromInvoices, CRUD |
+| `app/(protected)/settings/vendors/page.tsx`               | Vendors list page                                                        |
+| `components/vendors/vendors-table.tsx`                    | Table with vendor rows                                                   |
+| `components/vendors/vendor-actions.tsx`                   | Edit, Show invoices, Delete buttons                                      |
+| `components/vendors/vendor-form-dialog.tsx`               | Add/Edit modal form                                                      |
+| `components/vendors/vendor-filters.tsx`                   | Search filter                                                            |
+| `components/vendors/add-vendor-button.tsx`                | Add vendor button                                                        |
+| `components/vendors/missing-vendors-alert.tsx`            | Alert for unsynced vendors                                               |
+| `app/api/vendors/route.ts`                                | POST: create vendor                                                      |
+| `app/api/vendors/[vendorId]/route.ts`                     | PATCH: update, DELETE: remove                                            |
+| `app/api/vendors/sync/route.ts`                           | POST: sync from invoices                                                 |
 
 #### Features
 
@@ -149,10 +154,13 @@ CREATE POLICY "Admins can delete vendors" ON vendors
 
 ```typescript
 // lib/data/vendors.ts
-export async function getVendors(companyId: string, options: { page?: number, filters?: { search?: string } })
+export async function getVendors(
+  companyId: string,
+  options: { page?: number; filters?: { search?: string } }
+)
 export async function getVendorById(vendorId: string, companyId: string)
-export async function getMissingVendors(companyId: string)  // Vendors from invoices not in table
-export async function syncVendorsFromInvoices(companyId: string)  // Create vendor records
+export async function getMissingVendors(companyId: string) // Vendors from invoices not in table
+export async function syncVendorsFromInvoices(companyId: string) // Create vendor records
 export async function createVendor(vendor: VendorInsert)
 export async function updateVendor(vendorId: string, companyId: string, updates: VendorUpdate)
 export async function deleteVendor(vendorId: string, companyId: string)
@@ -193,19 +201,19 @@ Same pattern as vendors table.
 
 #### Files to Create
 
-| File | Description |
-|------|-------------|
-| `lib/data/customers.ts` | Data layer (same functions as vendors) |
-| `app/(protected)/settings/customers/page.tsx` | Customers list page |
-| `components/customers/customers-table.tsx` | Table with customer rows |
-| `components/customers/customer-actions.tsx` | Edit, Show invoices, **Create invoice**, Delete |
-| `components/customers/customer-form-dialog.tsx` | Add/Edit modal form |
-| `components/customers/customer-filters.tsx` | Search filter |
-| `components/customers/add-customer-button.tsx` | Add customer button |
-| `components/customers/missing-customers-alert.tsx` | Alert for unsynced customers |
-| `app/api/customers/route.ts` | POST: create customer |
-| `app/api/customers/[customerId]/route.ts` | PATCH: update, DELETE: remove |
-| `app/api/customers/sync/route.ts` | POST: sync from invoices |
+| File                                               | Description                                     |
+| -------------------------------------------------- | ----------------------------------------------- |
+| `lib/data/customers.ts`                            | Data layer (same functions as vendors)          |
+| `app/(protected)/settings/customers/page.tsx`      | Customers list page                             |
+| `components/customers/customers-table.tsx`         | Table with customer rows                        |
+| `components/customers/customer-actions.tsx`        | Edit, Show invoices, **Create invoice**, Delete |
+| `components/customers/customer-form-dialog.tsx`    | Add/Edit modal form                             |
+| `components/customers/customer-filters.tsx`        | Search filter                                   |
+| `components/customers/add-customer-button.tsx`     | Add customer button                             |
+| `components/customers/missing-customers-alert.tsx` | Alert for unsynced customers                    |
+| `app/api/customers/route.ts`                       | POST: create customer                           |
+| `app/api/customers/[customerId]/route.ts`          | PATCH: update, DELETE: remove                   |
+| `app/api/customers/sync/route.ts`                  | POST: sync from invoices                        |
 
 #### Additional Feature: Create Invoice
 
@@ -282,31 +290,31 @@ invoice.gross_amount = SUM(items.gross_amount)
 
 #### Unit Types
 
-| Code | Polish | English |
-|------|--------|---------|
-| szt. | sztuka | piece |
-| godz. | godzina | hour |
-| kg | kilogram | kilogram |
-| m | metr | meter |
-| m² | metr kwadratowy | square meter |
-| usł. | usługa | service |
+| Code  | Polish          | English      |
+| ----- | --------------- | ------------ |
+| szt.  | sztuka          | piece        |
+| godz. | godzina         | hour         |
+| kg    | kilogram        | kilogram     |
+| m     | metr            | meter        |
+| m²    | metr kwadratowy | square meter |
+| usł.  | usługa          | service      |
 
 #### Files to Create
 
-| File | Description |
-|------|-------------|
-| `lib/data/invoice-items.ts` | Data layer for items |
-| `lib/types/database.ts` | Add InvoiceItem type |
-| `components/invoices/invoice-items-table.tsx` | Items table (display) |
-| `components/invoices/invoice-item-row.tsx` | Single editable item row |
+| File                                          | Description              |
+| --------------------------------------------- | ------------------------ |
+| `lib/data/invoice-items.ts`                   | Data layer for items     |
+| `lib/types/database.ts`                       | Add InvoiceItem type     |
+| `components/invoices/invoice-items-table.tsx` | Items table (display)    |
+| `components/invoices/invoice-item-row.tsx`    | Single editable item row |
 
 #### Files to Modify
 
-| File | Change |
-|------|--------|
-| `lib/data/invoices.ts` | Include items in getInvoiceById |
-| `app/(protected)/sales/[id]/page.tsx` | Display items table |
-| `app/(protected)/purchases/[id]/page.tsx` | Display items table |
+| File                                      | Change                          |
+| ----------------------------------------- | ------------------------------- |
+| `lib/data/invoices.ts`                    | Include items in getInvoiceById |
+| `app/(protected)/sales/[id]/page.tsx`     | Display items table             |
+| `app/(protected)/purchases/[id]/page.tsx` | Display items table             |
 
 ---
 
@@ -365,20 +373,20 @@ invoice.gross_amount = SUM(items.gross_amount)
 
 #### Files to Create
 
-| File | Description |
-|------|-------------|
-| `app/(protected)/sales/new/page.tsx` | New invoice page |
+| File                                   | Description                        |
+| -------------------------------------- | ---------------------------------- |
+| `app/(protected)/sales/new/page.tsx`   | New invoice page                   |
 | `components/invoices/invoice-form.tsx` | Invoice form with items management |
-| `components/invoices/nip-input.tsx` | NIP input with validation |
-| `lib/validations/invoice.ts` | Zod schema for form validation |
-| `app/api/invoices/route.ts` | POST: create invoice with items |
+| `components/invoices/nip-input.tsx`    | NIP input with validation          |
+| `lib/validations/invoice.ts`           | Zod schema for form validation     |
+| `app/api/invoices/route.ts`            | POST: create invoice with items    |
 
 #### Files to Modify
 
-| File | Change |
-|------|--------|
-| `components/layout/sidebar.tsx` | Add "Nowa faktura" button |
-| `components/invoices/invoice-table.tsx` | Add "Copy" action button |
+| File                                    | Change                    |
+| --------------------------------------- | ------------------------- |
+| `components/layout/sidebar.tsx`         | Add "Nowa faktura" button |
+| `components/invoices/invoice-table.tsx` | Add "Copy" action button  |
 
 ---
 
@@ -388,30 +396,30 @@ invoice.gross_amount = SUM(items.gross_amount)
 
 #### Required Fields (Invoice Header)
 
-| Field | FA(3) Element | Validation |
-|-------|---------------|------------|
-| invoice_number | P_2 | Required, max 256 chars |
-| issue_date | P_1 | Required, format YYYY-MM-DD, not future |
-| vendor_name | DaneIdentyfikacyjneSprzedawcy/Nazwa | Required, max 256 chars |
-| vendor_nip | NrEwidencyjnyPodatnika | Required for Polish vendors, 10 digits |
-| customer_name | DaneIdentyfikacyjneNabywcy/Nazwa | Required, max 256 chars |
-| customer_nip | NrNIP | Required for Polish B2B, 10 digits |
-| currency | KodWaluty | Required, ISO 4217 (PLN, EUR, USD) |
-| net_amount | P_13_1 | Must match sum of items |
-| vat_amount | P_14_1 | Must match sum of items |
-| gross_amount | P_15 | Must equal net + vat |
+| Field          | FA(3) Element                       | Validation                              |
+| -------------- | ----------------------------------- | --------------------------------------- |
+| invoice_number | P_2                                 | Required, max 256 chars                 |
+| issue_date     | P_1                                 | Required, format YYYY-MM-DD, not future |
+| vendor_name    | DaneIdentyfikacyjneSprzedawcy/Nazwa | Required, max 256 chars                 |
+| vendor_nip     | NrEwidencyjnyPodatnika              | Required for Polish vendors, 10 digits  |
+| customer_name  | DaneIdentyfikacyjneNabywcy/Nazwa    | Required, max 256 chars                 |
+| customer_nip   | NrNIP                               | Required for Polish B2B, 10 digits      |
+| currency       | KodWaluty                           | Required, ISO 4217 (PLN, EUR, USD)      |
+| net_amount     | P_13_1                              | Must match sum of items                 |
+| vat_amount     | P_14_1                              | Must match sum of items                 |
+| gross_amount   | P_15                                | Must equal net + vat                    |
 
 #### Required Fields (Invoice Items)
 
-| Field | FA(3) Element | Validation |
-|-------|---------------|------------|
-| description | P_7 | Required, max 256 chars |
-| quantity | P_8A | Required, > 0 |
-| unit | P_8B | Required |
-| unit_price | P_9A | Required, >= 0 |
-| vat_rate | P_12 | Required (23, 8, 5, 0, or "zw" for exempt) |
-| net_amount | P_11 | Must equal qty × unit_price |
-| vat_amount | P_11A | Must equal net × vat_rate% |
+| Field       | FA(3) Element | Validation                                 |
+| ----------- | ------------- | ------------------------------------------ |
+| description | P_7           | Required, max 256 chars                    |
+| quantity    | P_8A          | Required, > 0                              |
+| unit        | P_8B          | Required                                   |
+| unit_price  | P_9A          | Required, >= 0                             |
+| vat_rate    | P_12          | Required (23, 8, 5, 0, or "zw" for exempt) |
+| net_amount  | P_11          | Must equal qty × unit_price                |
+| vat_amount  | P_11A         | Must equal net × vat_rate%                 |
 
 #### Validation Behavior
 
@@ -422,10 +430,10 @@ invoice.gross_amount = SUM(items.gross_amount)
 
 #### Files to Create
 
-| File | Description |
-|------|-------------|
-| `lib/validations/ksef-fa3.ts` | FA(3) schema validation rules |
-| `lib/ksef/fa3-validator.ts` | Validator function with error messages |
+| File                          | Description                            |
+| ----------------------------- | -------------------------------------- |
+| `lib/validations/ksef-fa3.ts` | FA(3) schema validation rules          |
+| `lib/ksef/fa3-validator.ts`   | Validator function with error messages |
 
 ---
 
@@ -446,23 +454,24 @@ The `ksef_hash` stores the SHA-256 Base64URL hash from KSeF, required for QR cod
 Per official KSeF documentation ([CIRFMF/ksef-docs](https://github.com/CIRFMF/ksef-docs/blob/main/kody-qr.md)):
 
 **URL Structure:**
+
 ```
 https://qr.ksef.mf.gov.pl/invoice/{NIP}/{DATE}/{HASH}
 ```
 
-| Parameter | Format | Example |
-|-----------|--------|---------|
-| NIP | Seller's 10-digit tax ID | `1111111111` |
-| DATE | Issue date as `DD-MM-RRRR` | `01-02-2026` |
-| HASH | SHA-256 of invoice XML, Base64URL encoded | `UtQp9Gpc51y-...` |
+| Parameter | Format                                    | Example           |
+| --------- | ----------------------------------------- | ----------------- |
+| NIP       | Seller's 10-digit tax ID                  | `1111111111`      |
+| DATE      | Issue date as `DD-MM-RRRR`                | `01-02-2026`      |
+| HASH      | SHA-256 of invoice XML, Base64URL encoded | `UtQp9Gpc51y-...` |
 
 **Environment URLs:**
 
-| Environment | URL |
-|-------------|-----|
-| Test | `https://qr-test.ksef.mf.gov.pl` |
-| Demo | `https://qr-demo.ksef.mf.gov.pl` |
-| Production | `https://qr.ksef.mf.gov.pl` |
+| Environment | URL                              |
+| ----------- | -------------------------------- |
+| Test        | `https://qr-test.ksef.mf.gov.pl` |
+| Demo        | `https://qr-demo.ksef.mf.gov.pl` |
+| Production  | `https://qr.ksef.mf.gov.pl`      |
 
 **QR Code Generation:**
 
@@ -487,6 +496,7 @@ function generateKsefQrUrl(
 ```
 
 **Display Requirements:**
+
 - QR code must comply with ISO/IEC 18004:2024
 - Use 5-pixel-per-module scaling for print readability
 - Display KSeF reference number below QR code
@@ -516,12 +526,12 @@ Add "Preview" button for KSeF invoices:
 
 #### Files to Create
 
-| File | Description |
-|------|-------------|
-| `components/invoices/ksef-preview-modal.tsx` | Modal wrapper |
-| `components/invoices/ksef-invoice-view.tsx` | Styled A4-like invoice view |
-| `components/invoices/ksef-qr-code.tsx` | QR code component |
-| `lib/ksef/generate-qr-data.ts` | QR URL generation |
+| File                                         | Description                 |
+| -------------------------------------------- | --------------------------- |
+| `components/invoices/ksef-preview-modal.tsx` | Modal wrapper               |
+| `components/invoices/ksef-invoice-view.tsx`  | Styled A4-like invoice view |
+| `components/invoices/ksef-qr-code.tsx`       | QR code component           |
+| `lib/ksef/generate-qr-data.ts`               | QR URL generation           |
 
 #### Dependencies
 
@@ -662,7 +672,7 @@ export default async function Page() {
 }
 
 // Client Component
-'use client'
+;('use client')
 import { useTranslations } from 'next-intl'
 
 export function Component() {

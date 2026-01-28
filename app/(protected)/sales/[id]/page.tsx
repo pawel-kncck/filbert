@@ -17,7 +17,7 @@ export default async function SalesInvoiceDetailPage({ params, searchParams }: P
   const { company } = await searchParams
   const supabase = await createClient()
   const t = await getTranslations()
-  const locale = await getLocale() as Locale
+  const locale = (await getLocale()) as Locale
 
   const {
     data: { user },
@@ -86,7 +86,12 @@ export default async function SalesInvoiceDetailPage({ params, searchParams }: P
             className="flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             {t('invoices.detail.backToList')}
           </Link>
@@ -104,7 +109,9 @@ export default async function SalesInvoiceDetailPage({ params, searchParams }: P
               </p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">{t('invoices.detail.issueDate')}</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                {t('invoices.detail.issueDate')}
+              </p>
               <p className="text-lg font-medium text-zinc-900 dark:text-white">
                 {formatDate(invoice.issue_date)}
               </p>
@@ -172,7 +179,9 @@ export default async function SalesInvoiceDetailPage({ params, searchParams }: P
               </p>
             </div>
             <div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">{t('invoices.detail.gross')}</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                {t('invoices.detail.gross')}
+              </p>
               <p className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
                 {formatCurrency(invoice.gross_amount, invoice.currency)}
               </p>
@@ -187,19 +196,25 @@ export default async function SalesInvoiceDetailPage({ params, searchParams }: P
           </h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-3">
             <div>
-              <dt className="text-sm text-zinc-600 dark:text-zinc-400">{t('invoices.detail.currency')}</dt>
+              <dt className="text-sm text-zinc-600 dark:text-zinc-400">
+                {t('invoices.detail.currency')}
+              </dt>
               <dd className="mt-1 text-sm font-medium text-zinc-900 dark:text-white">
                 {invoice.currency}
               </dd>
             </div>
             <div>
-              <dt className="text-sm text-zinc-600 dark:text-zinc-400">{t('invoices.detail.source')}</dt>
+              <dt className="text-sm text-zinc-600 dark:text-zinc-400">
+                {t('invoices.detail.source')}
+              </dt>
               <dd className="mt-1 text-sm font-medium text-zinc-900 dark:text-white">
                 {getSourceLabel(invoice.source)}
               </dd>
             </div>
             <div>
-              <dt className="text-sm text-zinc-600 dark:text-zinc-400">{t('invoices.detail.added')}</dt>
+              <dt className="text-sm text-zinc-600 dark:text-zinc-400">
+                {t('invoices.detail.added')}
+              </dt>
               <dd className="mt-1 text-sm font-medium text-zinc-900 dark:text-white">
                 {formatDate(invoice.created_at)}
               </dd>
