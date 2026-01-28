@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { Invoice } from '@/lib/types/database'
+import * as Sentry from '@sentry/nextjs'
 
 export type InvoiceFilters = {
   search?: string
@@ -58,7 +59,7 @@ export async function getInvoices(
   const { data: invoices, error, count } = await query
 
   if (error) {
-    console.error('Error fetching invoices:', error)
+    Sentry.captureException(error)
     return {
       invoices: [],
       totalCount: 0,
@@ -117,7 +118,7 @@ export async function getInvoiceById(
     .single()
 
   if (error) {
-    console.error('Error fetching invoice:', error)
+    Sentry.captureException(error)
     return null
   }
 
@@ -151,7 +152,7 @@ export async function getAllInvoicesForExport(
   const { data, error } = await query
 
   if (error) {
-    console.error('Error fetching invoices for export:', error)
+    Sentry.captureException(error)
     return []
   }
 

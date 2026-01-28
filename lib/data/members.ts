@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import * as Sentry from '@sentry/nextjs'
 
 export type Member = {
   user_id: string
@@ -17,7 +18,7 @@ export async function getCompanyMembers(companyId: string): Promise<Member[]> {
     .order('created_at', { ascending: true })
 
   if (error) {
-    console.error('Error fetching members:', error)
+    Sentry.captureException(error)
     return []
   }
 
