@@ -250,6 +250,28 @@
         "itemQuantityPositive": "Quantity must be greater than 0",
         "itemPriceNonNegative": "Unit price must be 0 or greater",
         "atLeastOneItem": "At least one item is required"
+      },
+      "fa3": {
+        "invoiceNumberRequired": "Invoice number is required (P_2)",
+        "invoiceNumberMaxLength": "Invoice number must not exceed 256 characters (P_2)",
+        "issueDateFormat": "Issue date must be in YYYY-MM-DD format (P_1)",
+        "issueDateFuture": "Issue date cannot be in the future (P_1)",
+        "customerNameRequired": "Customer name is required",
+        "customerNameMaxLength": "Customer name must not exceed 256 characters",
+        "invalidNip": "NIP must be exactly 10 digits",
+        "invalidCurrency": "Currency must be PLN, EUR, or USD",
+        "atLeastOneItem": "At least one item is required",
+        "grossMismatch": "Gross total does not match net + VAT (P_15)",
+        "item": {
+          "descriptionRequired": "Item description is required (P_7)",
+          "descriptionMaxLength": "Item description must not exceed 256 characters (P_7)",
+          "quantityPositive": "Quantity must be greater than 0 (P_8A)",
+          "unitRequired": "Unit is required (P_8B)",
+          "unitPriceNonNegative": "Unit price must be 0 or greater (P_9A)",
+          "invalidVatRate": "VAT rate must be 23%, 8%, 5%, or 0% (P_12)",
+          "netMismatch": "Net amount does not match qty x unit price (P_11)",
+          "vatMismatch": "VAT amount does not match net x VAT rate (P_11A)"
+        }
       }
     },
     "detail": {

@@ -250,6 +250,28 @@
         "itemQuantityPositive": "Ilość musi być większa od 0",
         "itemPriceNonNegative": "Cena jednostkowa musi wynosić 0 lub więcej",
         "atLeastOneItem": "Wymagana jest co najmniej jedna pozycja"
+      },
+      "fa3": {
+        "invoiceNumberRequired": "Numer faktury jest wymagany (P_2)",
+        "invoiceNumberMaxLength": "Numer faktury nie może przekraczać 256 znaków (P_2)",
+        "issueDateFormat": "Data wystawienia musi być w formacie RRRR-MM-DD (P_1)",
+        "issueDateFuture": "Data wystawienia nie może być z przyszłości (P_1)",
+        "customerNameRequired": "Nazwa nabywcy jest wymagana",
+        "customerNameMaxLength": "Nazwa nabywcy nie może przekraczać 256 znaków",
+        "invalidNip": "NIP musi mieć dokładnie 10 cyfr",
+        "invalidCurrency": "Waluta musi być PLN, EUR lub USD",
+        "atLeastOneItem": "Wymagana jest co najmniej jedna pozycja",
+        "grossMismatch": "Kwota brutto nie zgadza się z netto + VAT (P_15)",
+        "item": {
+          "descriptionRequired": "Opis pozycji jest wymagany (P_7)",
+          "descriptionMaxLength": "Opis pozycji nie może przekraczać 256 znaków (P_7)",
+          "quantityPositive": "Ilość musi być większa od 0 (P_8A)",
+          "unitRequired": "Jednostka jest wymagana (P_8B)",
+          "unitPriceNonNegative": "Cena jednostkowa musi wynosić 0 lub więcej (P_9A)",
+          "invalidVatRate": "Stawka VAT musi wynosić 23%, 8%, 5% lub 0% (P_12)",
+          "netMismatch": "Kwota netto nie zgadza się z ilość x cena jedn. (P_11)",
+          "vatMismatch": "Kwota VAT nie zgadza się z netto x stawka VAT (P_11A)"
+        }
       }
     },
     "detail": {
