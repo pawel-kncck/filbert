@@ -1,65 +1,38 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useFilterParams } from '@/lib/hooks/use-filter-params'
 
 type Props = {
   type: 'sales' | 'purchase'
 }
 
 export function InvoiceFilters({ type }: Props) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [isPending, startTransition] = useTransition()
+  const basePath = type === 'sales' ? '/sales' : '/purchases'
+  const { isPending, getParam, updateParams, clearParams } = useFilterParams(basePath)
   const t = useTranslations()
 
-  const [search, setSearch] = useState(searchParams.get('search') || '')
-  const [dateFrom, setDateFrom] = useState(searchParams.get('from') || '')
-  const [dateTo, setDateTo] = useState(searchParams.get('to') || '')
-
-  const updateFilters = (updates: Record<string, string>) => {
-    const params = new URLSearchParams(searchParams.toString())
-
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value) {
-        params.set(key, value)
-      } else {
-        params.delete(key)
-      }
-    })
-
-    // Reset to page 1 when filters change
-    params.delete('page')
-
-    startTransition(() => {
-      router.push(`/${type === 'sales' ? 'sales' : 'purchases'}?${params.toString()}`)
-    })
-  }
+  const [search, setSearch] = useState(getParam('search'))
+  const [dateFrom, setDateFrom] = useState(getParam('from'))
+  const [dateTo, setDateTo] = useState(getParam('to'))
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    updateFilters({ search })
+    updateParams({ search })
   }
 
   const handleDateChange = (from: string, to: string) => {
     setDateFrom(from)
     setDateTo(to)
-    updateFilters({ from, to })
+    updateParams({ from, to })
   }
 
   const handleClearFilters = () => {
     setSearch('')
     setDateFrom('')
     setDateTo('')
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete('search')
-    params.delete('from')
-    params.delete('to')
-    params.delete('page')
-    startTransition(() => {
-      router.push(`/${type === 'sales' ? 'sales' : 'purchases'}?${params.toString()}`)
-    })
+    clearParams(['search', 'from', 'to'])
   }
 
   const hasActiveFilters = search || dateFrom || dateTo
