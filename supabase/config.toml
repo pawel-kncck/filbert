@@ -2,11 +2,8 @@
 # Install: brew install supabase/tap/supabase (macOS)
 # Usage: supabase init (already done), supabase start, supabase migration new <name>
 
-[project]
-id = "" # Set to your Supabase project ref
-
 [db]
-major_version = 15
+major_version = 17
 
 [db.pooler]
 enabled = false
