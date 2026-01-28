@@ -48,9 +48,19 @@ A comprehensive implementation plan for Filbert - a KSeF (Polish e-invoicing sys
 - Translation files: messages/pl.json, messages/en.json (170+ keys)
 - Validation script: `npm run i18n:validate`
 
+### Phase 5: Contacts & Invoice Management
+
+- **5a: Vendors List** — CRUD vendor contacts with sync from purchase invoices, search/pagination, missing vendors alert
+- **5b: Customers List** — CRUD customer contacts with sync from sales invoices, "Create invoice" action linking to `/sales/new?customer=`
+- **5c: Invoice Items** — `invoice_items` table with RLS, display on invoice detail pages, currency-formatted totals
+- **5d: Create Sales Invoice** — `/sales/new` form with dynamic line items, copy invoice flow, customer prefill, auto-calculated amounts
+- **5e: FA(3) Schema Validation** — KSeF FA(3) Zod schema with field-level inline errors, server-side validation (HTTP 422), translation message keys
+- **5f: KSeF Invoice Preview** — Styled A4-like preview modal with QR code (KOD I), `ksef_hash` column, preview button on table and detail page
+- **5g: Sidebar & Translation Updates** — Navigation entries for all Phase 5 features, 350 translation keys (PL + EN)
+
 ---
 
-## Phase 5: Contacts & Invoice Management
+## Phase 5: Contacts & Invoice Management (Detailed Specs)
 
 ### 5a: Vendors List
 
