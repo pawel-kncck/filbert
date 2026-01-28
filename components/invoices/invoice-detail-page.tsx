@@ -3,7 +3,9 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getUserCompanies, getDefaultCompanyId } from '@/lib/data/companies'
 import { getInvoiceById } from '@/lib/data/invoices'
+import { getInvoiceItems } from '@/lib/data/invoice-items'
 import { AppShell } from '@/components/layout/app-shell'
+import { InvoiceItemsTable } from '@/components/invoices/invoice-items-table'
 import { getTranslations, getLocale } from 'next-intl/server'
 import type { Locale } from '@/lib/i18n/config'
 
@@ -45,6 +47,8 @@ export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
   if (!invoice || invoice.type !== type) {
     notFound()
   }
+
+  const items = await getInvoiceItems(invoice.id)
 
   const formatCurrency = (amount: number, currency: string = 'PLN') => {
     return new Intl.NumberFormat(locale === 'pl' ? 'pl-PL' : 'en-US', {
@@ -162,6 +166,9 @@ export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
             )}
           </div>
         </div>
+
+        {/* Invoice items */}
+        <InvoiceItemsTable items={items} currency={invoice.currency} locale={locale} />
 
         {/* Amounts */}
         <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">

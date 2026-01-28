@@ -197,6 +197,19 @@
         "ksef": "KSeF"
       }
     },
+    "items": {
+      "title": "Invoice items",
+      "position": "No.",
+      "description": "Description",
+      "quantity": "Qty",
+      "unit": "Unit",
+      "unitPrice": "Unit price",
+      "vatRate": "VAT rate",
+      "net": "Net",
+      "vat": "VAT",
+      "gross": "Gross",
+      "total": "Total"
+    },
     "detail": {
       "backToList": "Back to list",
       "salesInvoice": "Sales invoice",

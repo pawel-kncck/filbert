@@ -224,6 +224,59 @@ export type Database = {
           },
         ]
       }
+      invoice_items: {
+        Row: {
+          id: string
+          invoice_id: string
+          position: number
+          description: string
+          quantity: number
+          unit: string
+          unit_price: number
+          vat_rate: number
+          net_amount: number
+          vat_amount: number
+          gross_amount: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          invoice_id: string
+          position: number
+          description: string
+          quantity?: number
+          unit?: string
+          unit_price: number
+          vat_rate?: number
+          net_amount: number
+          vat_amount: number
+          gross_amount: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          invoice_id?: string
+          position?: number
+          description?: string
+          quantity?: number
+          unit?: string
+          unit_price?: number
+          vat_rate?: number
+          net_amount?: number
+          vat_amount?: number
+          gross_amount?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'invoice_items_invoice_id_fkey'
+            columns: ['invoice_id']
+            isOneToOne: false
+            referencedRelation: 'invoices'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -252,3 +305,6 @@ export type VendorUpdate = Database['public']['Tables']['vendors']['Update']
 export type Customer = Database['public']['Tables']['customers']['Row']
 export type CustomerInsert = Database['public']['Tables']['customers']['Insert']
 export type CustomerUpdate = Database['public']['Tables']['customers']['Update']
+export type InvoiceItem = Database['public']['Tables']['invoice_items']['Row']
+export type InvoiceItemInsert = Database['public']['Tables']['invoice_items']['Insert']
+export type InvoiceItemUpdate = Database['public']['Tables']['invoice_items']['Update']

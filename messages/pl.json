@@ -197,6 +197,19 @@
         "ksef": "KSeF"
       }
     },
+    "items": {
+      "title": "Pozycje faktury",
+      "position": "Lp.",
+      "description": "Opis",
+      "quantity": "Ilość",
+      "unit": "Jedn.",
+      "unitPrice": "Cena jedn.",
+      "vatRate": "Stawka VAT",
+      "net": "Netto",
+      "vat": "VAT",
+      "gross": "Brutto",
+      "total": "Razem"
+    },
     "detail": {
       "backToList": "Powrót do listy",
       "salesInvoice": "Faktura sprzedażowa",
