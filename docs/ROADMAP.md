@@ -635,6 +635,16 @@ Ustawienia
 
 ---
 
+## Infrastructure & Quality
+
+### CI/CD Pipeline (Planned)
+
+- GitHub Actions workflow with: `npm run lint`, `tsc --noEmit`, `npm run build`, `npm test`
+- Preview deployments via Vercel
+- Branch protection rules on `main`
+
+---
+
 ## Implementation Guidelines
 
 ### General Rules
