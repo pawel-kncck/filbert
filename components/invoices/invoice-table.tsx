@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Invoice } from '@/lib/types/database'
+import { KsefPreviewModal } from './ksef-preview-modal'
 
 type Props = {
   invoices: Invoice[]
@@ -13,6 +15,7 @@ export function InvoiceTable({ invoices, type }: Props) {
   const router = useRouter()
   const t = useTranslations()
   const locale = useLocale()
+  const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null)
 
   const formatCurrency = (amount: number, currency: string = 'PLN') => {
     return new Intl.NumberFormat(locale === 'pl' ? 'pl-PL' : 'en-US', {
@@ -90,7 +93,8 @@ export function InvoiceTable({ invoices, type }: Props) {
             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               {t('invoices.table.ksef')}
             </th>
-            {type === 'sales' && (
+            {(type === 'sales' ||
+              invoices.some((inv) => inv.source === 'ksef' && inv.ksef_reference)) && (
               <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                 {t('common.actions')}
               </th>
@@ -134,37 +138,76 @@ export function InvoiceTable({ invoices, type }: Props) {
                   <span className="text-zinc-400">-</span>
                 )}
               </td>
-              {type === 'sales' && (
+              {(type === 'sales' || (invoice.source === 'ksef' && invoice.ksef_reference)) && (
                 <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      router.push(`/sales/new?copy=${invoice.id}`)
-                    }}
-                    className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-white"
-                    title={t('invoices.form.copy')}
-                  >
-                    <svg
-                      className="h-3.5 w-3.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                      />
-                    </svg>
-                    {t('invoices.form.copy')}
-                  </button>
+                  <div className="flex items-center justify-end gap-1">
+                    {invoice.source === 'ksef' && invoice.ksef_reference && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setPreviewInvoice(invoice)
+                        }}
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-white"
+                        title={t('invoices.preview.preview')}
+                      >
+                        <svg
+                          className="h-3.5 w-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        </svg>
+                        {t('invoices.preview.preview')}
+                      </button>
+                    )}
+                    {type === 'sales' && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          router.push(`/sales/new?copy=${invoice.id}`)
+                        }}
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-white"
+                        title={t('invoices.form.copy')}
+                      >
+                        <svg
+                          className="h-3.5 w-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
+                        </svg>
+                        {t('invoices.form.copy')}
+                      </button>
+                    )}
+                  </div>
                 </td>
               )}
             </tr>
           ))}
         </tbody>
       </table>
+
+      {previewInvoice && (
+        <KsefPreviewModal invoice={previewInvoice} onClose={() => setPreviewInvoice(null)} />
+      )}
     </div>
   )
 }

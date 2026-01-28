@@ -274,6 +274,26 @@
         }
       }
     },
+    "preview": {
+      "title": "Podgląd faktury",
+      "issueDate": "Data wystawienia",
+      "seller": "Sprzedawca",
+      "buyer": "Nabywca",
+      "position": "Lp.",
+      "description": "Opis",
+      "quantity": "Ilość",
+      "unit": "Jedn.",
+      "unitPrice": "Cena jedn.",
+      "vatRate": "Stawka VAT",
+      "net": "Netto",
+      "vat": "VAT",
+      "gross": "Brutto",
+      "total": "Razem",
+      "totalNet": "Suma netto",
+      "totalVat": "Suma VAT",
+      "totalGross": "Suma brutto",
+      "preview": "Podgląd"
+    },
     "detail": {
       "backToList": "Powrót do listy",
       "salesInvoice": "Faktura sprzedażowa",

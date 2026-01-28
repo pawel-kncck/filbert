@@ -75,6 +75,7 @@ export type Database = {
           gross_amount: number
           currency: string
           ksef_reference: string | null
+          ksef_hash: string | null
           source: 'manual' | 'demo' | 'ksef'
           created_at: string
         }
@@ -93,6 +94,7 @@ export type Database = {
           gross_amount: number
           currency?: string
           ksef_reference?: string | null
+          ksef_hash?: string | null
           source?: 'manual' | 'demo' | 'ksef'
           created_at?: string
         }
@@ -111,6 +113,7 @@ export type Database = {
           gross_amount?: number
           currency?: string
           ksef_reference?: string | null
+          ksef_hash?: string | null
           source?: 'manual' | 'demo' | 'ksef'
           created_at?: string
         }

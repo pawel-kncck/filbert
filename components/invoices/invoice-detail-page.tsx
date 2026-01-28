@@ -6,6 +6,7 @@ import { getInvoiceById } from '@/lib/data/invoices'
 import { getInvoiceItems } from '@/lib/data/invoice-items'
 import { AppShell } from '@/components/layout/app-shell'
 import { InvoiceItemsTable } from '@/components/invoices/invoice-items-table'
+import { KsefPreviewButton } from '@/components/invoices/ksef-preview-button'
 import { getTranslations, getLocale } from 'next-intl/server'
 import type { Locale } from '@/lib/i18n/config'
 
@@ -113,7 +114,10 @@ export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
               <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
                 {invoice.invoice_number}
               </h1>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{invoiceTypeLabel}</p>
+              <div className="mt-1 flex items-center gap-3">
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">{invoiceTypeLabel}</p>
+                <KsefPreviewButton invoice={invoice} items={items} />
+              </div>
             </div>
             <div className="text-right">
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
