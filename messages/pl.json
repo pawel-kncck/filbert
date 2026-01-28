@@ -111,7 +111,8 @@
     "members": "Członkowie",
     "vendors": "Dostawcy",
     "customers": "Klienci",
-    "companies": "Firmy"
+    "companies": "Firmy",
+    "newInvoice": "Nowa faktura"
   },
   "companies": {
     "title": "Firmy",
@@ -209,6 +210,47 @@
       "vat": "VAT",
       "gross": "Brutto",
       "total": "Razem"
+    },
+    "form": {
+      "newInvoice": "Nowa faktura",
+      "title": "Nowa faktura sprzedażowa",
+      "invoiceNumber": "Numer faktury",
+      "invoiceNumberPlaceholder": "FV/2025/01/001",
+      "issueDate": "Data wystawienia",
+      "currency": "Waluta",
+      "customerName": "Nazwa nabywcy",
+      "customerNamePlaceholder": "Nazwa nabywcy",
+      "customerNip": "NIP nabywcy",
+      "customerNipPlaceholder": "1234567890",
+      "nipHint": "10 cyfr",
+      "items": "Pozycje",
+      "addItem": "Dodaj pozycję",
+      "removeItem": "Usuń",
+      "description": "Opis",
+      "descriptionPlaceholder": "Nazwa towaru lub usługi",
+      "quantity": "Ilość",
+      "unit": "Jedn.",
+      "unitPrice": "Cena jedn.",
+      "vatRate": "VAT %",
+      "net": "Netto",
+      "vat": "VAT",
+      "gross": "Brutto",
+      "totals": "Razem",
+      "saving": "Zapisywanie...",
+      "save": "Zapisz fakturę",
+      "cancel": "Anuluj",
+      "copyTitle": "Kopiuj fakturę",
+      "copy": "Kopiuj",
+      "errors": {
+        "generic": "Wystąpił błąd podczas zapisywania faktury.",
+        "invoiceNumberRequired": "Numer faktury jest wymagany",
+        "customerNameRequired": "Nazwa nabywcy jest wymagana",
+        "invalidNip": "NIP musi mieć dokładnie 10 cyfr",
+        "itemDescriptionRequired": "Opis pozycji jest wymagany",
+        "itemQuantityPositive": "Ilość musi być większa od 0",
+        "itemPriceNonNegative": "Cena jednostkowa musi wynosić 0 lub więcej",
+        "atLeastOneItem": "Wymagana jest co najmniej jedna pozycja"
+      }
     },
     "detail": {
       "backToList": "Powrót do listy",

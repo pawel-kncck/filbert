@@ -111,7 +111,8 @@
     "members": "Members",
     "vendors": "Vendors",
     "customers": "Customers",
-    "companies": "Companies"
+    "companies": "Companies",
+    "newInvoice": "New invoice"
   },
   "companies": {
     "title": "Companies",
@@ -209,6 +210,47 @@
       "vat": "VAT",
       "gross": "Gross",
       "total": "Total"
+    },
+    "form": {
+      "newInvoice": "New invoice",
+      "title": "New sales invoice",
+      "invoiceNumber": "Invoice number",
+      "invoiceNumberPlaceholder": "FV/2025/01/001",
+      "issueDate": "Issue date",
+      "currency": "Currency",
+      "customerName": "Customer name",
+      "customerNamePlaceholder": "Customer name",
+      "customerNip": "Customer NIP",
+      "customerNipPlaceholder": "1234567890",
+      "nipHint": "10 digits",
+      "items": "Items",
+      "addItem": "Add item",
+      "removeItem": "Remove",
+      "description": "Description",
+      "descriptionPlaceholder": "Product or service name",
+      "quantity": "Qty",
+      "unit": "Unit",
+      "unitPrice": "Unit price",
+      "vatRate": "VAT %",
+      "net": "Net",
+      "vat": "VAT",
+      "gross": "Gross",
+      "totals": "Totals",
+      "saving": "Saving...",
+      "save": "Save invoice",
+      "cancel": "Cancel",
+      "copyTitle": "Copy invoice",
+      "copy": "Copy",
+      "errors": {
+        "generic": "An error occurred while saving the invoice.",
+        "invoiceNumberRequired": "Invoice number is required",
+        "customerNameRequired": "Customer name is required",
+        "invalidNip": "NIP must be exactly 10 digits",
+        "itemDescriptionRequired": "Item description is required",
+        "itemQuantityPositive": "Quantity must be greater than 0",
+        "itemPriceNonNegative": "Unit price must be 0 or greater",
+        "atLeastOneItem": "At least one item is required"
+      }
     },
     "detail": {
       "backToList": "Back to list",
