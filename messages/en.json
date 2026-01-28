@@ -110,6 +110,7 @@
     "settings": "Settings",
     "members": "Members",
     "vendors": "Vendors",
+    "customers": "Customers",
     "companies": "Companies"
   },
   "companies": {
@@ -300,6 +301,64 @@
       "generic": "An error occurred",
       "connection": "Connection error",
       "duplicateNip": "A vendor with this NIP already exists"
+    }
+  },
+  "customers": {
+    "title": "Customers",
+    "demoCompanyMessage": "Customer management is not available for demo company.",
+    "table": {
+      "empty": "No customers",
+      "name": "Name",
+      "nip": "NIP",
+      "address": "Address",
+      "email": "Email",
+      "phone": "Phone",
+      "actions": "Actions",
+      "syncedBadge": "Synced"
+    },
+    "filters": {
+      "searchPlaceholder": "Customer name or NIP..."
+    },
+    "pagination": {
+      "showing": "Showing {start}-{end} of {total} customers",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "form": {
+      "addTitle": "Add customer",
+      "editTitle": "Edit customer",
+      "name": "Name",
+      "namePlaceholder": "Customer name",
+      "nip": "NIP",
+      "nipPlaceholder": "1234567890",
+      "address": "Address",
+      "addressPlaceholder": "Street, city",
+      "email": "Email",
+      "emailPlaceholder": "customer@example.com",
+      "phone": "Phone",
+      "phonePlaceholder": "+48 123 456 789",
+      "notes": "Notes",
+      "notesPlaceholder": "Additional information...",
+      "saving": "Saving...",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "actions": {
+      "addCustomer": "Add customer",
+      "editCustomer": "Edit",
+      "deleteCustomer": "Delete",
+      "deleteConfirm": "Are you sure you want to delete this customer?",
+      "showInvoices": "Show invoices",
+      "createInvoice": "Create invoice"
+    },
+    "missingAlert": {
+      "message": "{count} customers from sales invoices are not yet in your customer list.",
+      "import": "Import customers"
+    },
+    "errors": {
+      "generic": "An error occurred",
+      "connection": "Connection error",
+      "duplicateNip": "A customer with this NIP already exists"
     }
   },
   "errors": {

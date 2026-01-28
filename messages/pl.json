@@ -110,6 +110,7 @@
     "settings": "Ustawienia",
     "members": "Członkowie",
     "vendors": "Dostawcy",
+    "customers": "Klienci",
     "companies": "Firmy"
   },
   "companies": {
@@ -300,6 +301,64 @@
       "generic": "Wystąpił błąd",
       "connection": "Wystąpił błąd połączenia",
       "duplicateNip": "Dostawca z tym NIP-em już istnieje"
+    }
+  },
+  "customers": {
+    "title": "Klienci",
+    "demoCompanyMessage": "Zarządzanie klientami nie jest dostępne dla firmy demo.",
+    "table": {
+      "empty": "Brak klientów",
+      "name": "Nazwa",
+      "nip": "NIP",
+      "address": "Adres",
+      "email": "Email",
+      "phone": "Telefon",
+      "actions": "Akcje",
+      "syncedBadge": "Zsynchronizowany"
+    },
+    "filters": {
+      "searchPlaceholder": "Nazwa klienta lub NIP..."
+    },
+    "pagination": {
+      "showing": "Wyświetlono {start}-{end} z {total} klientów",
+      "previous": "Poprzednia",
+      "next": "Następna"
+    },
+    "form": {
+      "addTitle": "Dodaj klienta",
+      "editTitle": "Edytuj klienta",
+      "name": "Nazwa",
+      "namePlaceholder": "Nazwa klienta",
+      "nip": "NIP",
+      "nipPlaceholder": "1234567890",
+      "address": "Adres",
+      "addressPlaceholder": "Ulica, miasto",
+      "email": "Email",
+      "emailPlaceholder": "klient@przykład.pl",
+      "phone": "Telefon",
+      "phonePlaceholder": "+48 123 456 789",
+      "notes": "Notatki",
+      "notesPlaceholder": "Dodatkowe informacje...",
+      "saving": "Zapisywanie...",
+      "save": "Zapisz",
+      "cancel": "Anuluj"
+    },
+    "actions": {
+      "addCustomer": "Dodaj klienta",
+      "editCustomer": "Edytuj",
+      "deleteCustomer": "Usuń",
+      "deleteConfirm": "Czy na pewno chcesz usunąć tego klienta?",
+      "showInvoices": "Pokaż faktury",
+      "createInvoice": "Utwórz fakturę"
+    },
+    "missingAlert": {
+      "message": "{count} klientów z faktur sprzedażowych nie ma jeszcze na liście klientów.",
+      "import": "Importuj klientów"
+    },
+    "errors": {
+      "generic": "Wystąpił błąd",
+      "connection": "Wystąpił błąd połączenia",
+      "duplicateNip": "Klient z tym NIP-em już istnieje"
     }
   },
   "errors": {

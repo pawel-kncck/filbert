@@ -174,6 +174,56 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          id: string
+          company_id: string
+          name: string
+          nip: string | null
+          address: string | null
+          email: string | null
+          phone: string | null
+          notes: string | null
+          is_synced: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          name: string
+          nip?: string | null
+          address?: string | null
+          email?: string | null
+          phone?: string | null
+          notes?: string | null
+          is_synced?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          name?: string
+          nip?: string | null
+          address?: string | null
+          email?: string | null
+          phone?: string | null
+          notes?: string | null
+          is_synced?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'customers_company_id_fkey'
+            columns: ['company_id']
+            isOneToOne: false
+            referencedRelation: 'companies'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -199,3 +249,6 @@ export type InvoiceInsert = Database['public']['Tables']['invoices']['Insert']
 export type Vendor = Database['public']['Tables']['vendors']['Row']
 export type VendorInsert = Database['public']['Tables']['vendors']['Insert']
 export type VendorUpdate = Database['public']['Tables']['vendors']['Update']
+export type Customer = Database['public']['Tables']['customers']['Row']
+export type CustomerInsert = Database['public']['Tables']['customers']['Insert']
+export type CustomerUpdate = Database['public']['Tables']['customers']['Update']
