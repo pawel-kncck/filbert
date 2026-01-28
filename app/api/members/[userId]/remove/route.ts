@@ -19,7 +19,7 @@ export async function POST(
     .eq('role', 'admin')
     .eq('status', 'active')
 
-  if (admins && admins.length === 1 && admins[0].user_id === userId) {
+  if (admins && admins.length === 1 && admins[0]?.user_id === userId) {
     return apiError('LAST_ADMIN', 'Cannot remove the last administrator', 400)
   }
 

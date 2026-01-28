@@ -121,7 +121,7 @@ export function MembersTable({ members, companyId, currentUserId, isCurrentUserA
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-700">
               {activeMembers.map((member) => {
-                const status = statusLabels[member.status]
+                const status = statusLabels[member.status] ?? statusLabels['active']!
                 const isCurrentUser = member.user_id === currentUserId
                 return (
                   <tr key={member.user_id}>
