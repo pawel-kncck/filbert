@@ -43,3 +43,17 @@ export async function isUserCompanyAdmin(userId: string, companyId: string): Pro
 
   return data?.role === 'admin'
 }
+
+export async function isUserCompanyMember(userId: string, companyId: string): Promise<boolean> {
+  const supabase = await createClient()
+
+  const { data } = await supabase
+    .from('user_companies')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('company_id', companyId)
+    .eq('status', 'active')
+    .single()
+
+  return data?.role === 'admin' || data?.role === 'member'
+}

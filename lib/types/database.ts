@@ -124,6 +124,56 @@ export type Database = {
           },
         ]
       }
+      vendors: {
+        Row: {
+          id: string
+          company_id: string
+          name: string
+          nip: string | null
+          address: string | null
+          email: string | null
+          phone: string | null
+          notes: string | null
+          is_synced: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          name: string
+          nip?: string | null
+          address?: string | null
+          email?: string | null
+          phone?: string | null
+          notes?: string | null
+          is_synced?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          name?: string
+          nip?: string | null
+          address?: string | null
+          email?: string | null
+          phone?: string | null
+          notes?: string | null
+          is_synced?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'vendors_company_id_fkey'
+            columns: ['company_id']
+            isOneToOne: false
+            referencedRelation: 'companies'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -146,3 +196,6 @@ export type UserCompany = Database['public']['Tables']['user_companies']['Row']
 export type UserCompanyInsert = Database['public']['Tables']['user_companies']['Insert']
 export type Invoice = Database['public']['Tables']['invoices']['Row']
 export type InvoiceInsert = Database['public']['Tables']['invoices']['Insert']
+export type Vendor = Database['public']['Tables']['vendors']['Row']
+export type VendorInsert = Database['public']['Tables']['vendors']['Insert']
+export type VendorUpdate = Database['public']['Tables']['vendors']['Update']

@@ -9,13 +9,20 @@ type Props = {
   totalPages: number
   totalCount: number
   pageSize: number
+  translationNamespace?: string
 }
 
-export function Pagination({ currentPage, totalPages, totalCount, pageSize }: Props) {
+export function Pagination({
+  currentPage,
+  totalPages,
+  totalCount,
+  pageSize,
+  translationNamespace = 'invoices.pagination',
+}: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
-  const t = useTranslations('invoices.pagination')
+  const t = useTranslations(translationNamespace)
 
   const goToPage = (page: number) => {
     const params = new URLSearchParams(searchParams.toString())

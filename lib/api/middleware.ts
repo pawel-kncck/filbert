@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { isUserCompanyAdmin } from '@/lib/data/members'
+import { isUserCompanyAdmin, isUserCompanyMember } from '@/lib/data/members'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/types/database'
 
@@ -51,6 +51,36 @@ export async function requireAdminAuth(
 
   const isAdmin = await isUserCompanyAdmin(user.id, companyId)
   if (!isAdmin) {
+    return forbidden()
+  }
+
+  return { user, supabase, companyId }
+}
+
+export type MemberContext = {
+  user: { id: string; email?: string }
+  supabase: SupabaseClient<Database>
+  companyId: string
+}
+
+export async function requireMemberAuth(
+  companyId: string | undefined | null
+): Promise<MemberContext | NextResponse<ApiError>> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return unauthorized()
+  }
+
+  if (!companyId) {
+    return badRequest('Company ID required')
+  }
+
+  const isMember = await isUserCompanyMember(user.id, companyId)
+  if (!isMember) {
     return forbidden()
   }
 

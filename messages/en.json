@@ -109,6 +109,7 @@
     "purchases": "Purchases",
     "settings": "Settings",
     "members": "Members",
+    "vendors": "Vendors",
     "companies": "Companies"
   },
   "companies": {
@@ -242,6 +243,63 @@
     "errors": {
       "generic": "An error occurred",
       "connection": "Connection error"
+    }
+  },
+  "vendors": {
+    "title": "Vendors",
+    "demoCompanyMessage": "Vendor management is not available for demo company.",
+    "table": {
+      "empty": "No vendors",
+      "name": "Name",
+      "nip": "NIP",
+      "address": "Address",
+      "email": "Email",
+      "phone": "Phone",
+      "actions": "Actions",
+      "syncedBadge": "Synced"
+    },
+    "filters": {
+      "searchPlaceholder": "Vendor name or NIP..."
+    },
+    "pagination": {
+      "showing": "Showing {start}-{end} of {total} vendors",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "form": {
+      "addTitle": "Add vendor",
+      "editTitle": "Edit vendor",
+      "name": "Name",
+      "namePlaceholder": "Vendor name",
+      "nip": "NIP",
+      "nipPlaceholder": "1234567890",
+      "address": "Address",
+      "addressPlaceholder": "Street, city",
+      "email": "Email",
+      "emailPlaceholder": "vendor@example.com",
+      "phone": "Phone",
+      "phonePlaceholder": "+48 123 456 789",
+      "notes": "Notes",
+      "notesPlaceholder": "Additional information...",
+      "saving": "Saving...",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "actions": {
+      "addVendor": "Add vendor",
+      "editVendor": "Edit",
+      "deleteVendor": "Delete",
+      "deleteConfirm": "Are you sure you want to delete this vendor?",
+      "showInvoices": "Show invoices"
+    },
+    "missingAlert": {
+      "message": "{count} vendors from purchase invoices are not yet in your vendor list.",
+      "import": "Import vendors"
+    },
+    "errors": {
+      "generic": "An error occurred",
+      "connection": "Connection error",
+      "duplicateNip": "A vendor with this NIP already exists"
     }
   },
   "errors": {

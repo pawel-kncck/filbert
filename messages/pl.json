@@ -109,6 +109,7 @@
     "purchases": "Zakupy",
     "settings": "Ustawienia",
     "members": "Członkowie",
+    "vendors": "Dostawcy",
     "companies": "Firmy"
   },
   "companies": {
@@ -242,6 +243,63 @@
     "errors": {
       "generic": "Wystąpił błąd",
       "connection": "Wystąpił błąd połączenia"
+    }
+  },
+  "vendors": {
+    "title": "Dostawcy",
+    "demoCompanyMessage": "Zarządzanie dostawcami nie jest dostępne dla firmy demo.",
+    "table": {
+      "empty": "Brak dostawców",
+      "name": "Nazwa",
+      "nip": "NIP",
+      "address": "Adres",
+      "email": "Email",
+      "phone": "Telefon",
+      "actions": "Akcje",
+      "syncedBadge": "Zsynchronizowany"
+    },
+    "filters": {
+      "searchPlaceholder": "Nazwa dostawcy lub NIP..."
+    },
+    "pagination": {
+      "showing": "Wyświetlono {start}-{end} z {total} dostawców",
+      "previous": "Poprzednia",
+      "next": "Następna"
+    },
+    "form": {
+      "addTitle": "Dodaj dostawcę",
+      "editTitle": "Edytuj dostawcę",
+      "name": "Nazwa",
+      "namePlaceholder": "Nazwa dostawcy",
+      "nip": "NIP",
+      "nipPlaceholder": "1234567890",
+      "address": "Adres",
+      "addressPlaceholder": "Ulica, miasto",
+      "email": "Email",
+      "emailPlaceholder": "dostawca@przykład.pl",
+      "phone": "Telefon",
+      "phonePlaceholder": "+48 123 456 789",
+      "notes": "Notatki",
+      "notesPlaceholder": "Dodatkowe informacje...",
+      "saving": "Zapisywanie...",
+      "save": "Zapisz",
+      "cancel": "Anuluj"
+    },
+    "actions": {
+      "addVendor": "Dodaj dostawcę",
+      "editVendor": "Edytuj",
+      "deleteVendor": "Usuń",
+      "deleteConfirm": "Czy na pewno chcesz usunąć tego dostawcę?",
+      "showInvoices": "Pokaż faktury"
+    },
+    "missingAlert": {
+      "message": "{count} dostawców z faktur zakupowych nie ma jeszcze na liście dostawców.",
+      "import": "Importuj dostawców"
+    },
+    "errors": {
+      "generic": "Wystąpił błąd",
+      "connection": "Wystąpił błąd połączenia",
+      "duplicateNip": "Dostawca z tym NIP-em już istnieje"
     }
   },
   "errors": {
