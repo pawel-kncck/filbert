@@ -244,6 +244,20 @@
       "connection": "Wystąpił błąd połączenia"
     }
   },
+  "errors": {
+    "title": "Coś poszło nie tak",
+    "description": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie.",
+    "tryAgain": "Spróbuj ponownie",
+    "notFound": {
+      "title": "Nie znaleziono strony",
+      "description": "Strona, której szukasz, nie istnieje lub została przeniesiona.",
+      "goHome": "Przejdź do strony głównej"
+    },
+    "invoiceNotFound": {
+      "title": "Nie znaleziono faktury",
+      "description": "Ta faktura nie istnieje lub nie masz do niej dostępu."
+    }
+  },
   "languageSwitcher": {
     "language": "Język",
     "polish": "Polski",

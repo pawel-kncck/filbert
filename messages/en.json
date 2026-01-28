@@ -244,6 +244,20 @@
       "connection": "Connection error"
     }
   },
+  "errors": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please try again.",
+    "tryAgain": "Try again",
+    "notFound": {
+      "title": "Page not found",
+      "description": "The page you're looking for doesn't exist or has been moved.",
+      "goHome": "Go to home page"
+    },
+    "invoiceNotFound": {
+      "title": "Invoice not found",
+      "description": "This invoice doesn't exist or you don't have access to it."
+    }
+  },
   "languageSwitcher": {
     "language": "Language",
     "polish": "Polski",
