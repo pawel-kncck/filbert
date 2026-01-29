@@ -6,6 +6,7 @@ import { getKsefCredentials } from '@/lib/data/company-settings'
 import { AppShell } from '@/components/layout/app-shell'
 import { CompanyInfoSection } from '@/components/company-settings/company-info-section'
 import { KsefCredentialsSection } from '@/components/company-settings/ksef-credentials-section'
+import { KsefFetchSection } from '@/components/company-settings/ksef-fetch-section'
 import { DeleteCompanySection } from '@/components/company-settings/delete-company-section'
 import { getTranslations, getLocale } from 'next-intl/server'
 import type { Locale } from '@/lib/i18n/config'
@@ -105,6 +106,10 @@ export default async function CompanySettingsPage({ searchParams }: Props) {
 
         {isAdmin && (
           <KsefCredentialsSection companyId={currentCompanyId} credentials={credentials} />
+        )}
+
+        {isAdmin && (
+          <KsefFetchSection companyId={currentCompanyId} hasCredentials={!!credentials} />
         )}
 
         {isAdmin && (

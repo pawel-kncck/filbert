@@ -69,6 +69,19 @@ A comprehensive implementation plan for Filbert - a KSeF (Polish e-invoicing sys
 - Demo company shows unavailable message
 - Non-admin users see read-only view
 
+### Phase 8: KSeF Integration
+
+- KSeF API client for test/demo/prod environments
+- Send sales invoices to KSeF (FA(3) XML generation, session management, status polling)
+- Fetch invoices from KSeF (query by date range, parse FA(3) XML, import with deduplication)
+- Invoice KSeF status tracking (pending → sent → accepted/rejected/error)
+- KSeF status badges on invoice table and detail pages
+- "Send to KSeF" button on sales invoice detail page
+- "Fetch from KSeF" section in company settings (admin only)
+- Error handling with user-friendly messages (auth failures, session errors, connection issues)
+- SHA-256 hash generation for QR code after successful send
+- Database columns: ksef_status, ksef_error, ksef_sent_at
+
 ---
 
 ## Phase 5: Contacts & Invoice Management (Detailed Specs)
@@ -640,13 +653,13 @@ Ustawienia
 - ~~KSeF credentials management~~
 - ~~Delete company (with confirmation)~~
 
-### Phase 8: KSeF Integration
+### ~~Phase 8: KSeF Integration~~ (Completed)
 
-- Store KSeF API credentials (encrypted)
-- Fetch invoices from KSeF
-- Send invoices to KSeF
-- Sync status indicator
-- Error handling for API failures
+- ~~Store KSeF API credentials (encrypted)~~
+- ~~Fetch invoices from KSeF~~
+- ~~Send invoices to KSeF~~
+- ~~Sync status indicator~~
+- ~~Error handling for API failures~~
 
 ### Phase 9: Notifications & Audit
 

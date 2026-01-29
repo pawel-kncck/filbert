@@ -76,6 +76,9 @@ export type Database = {
           currency: string
           ksef_reference: string | null
           ksef_hash: string | null
+          ksef_status: 'pending' | 'sent' | 'accepted' | 'rejected' | 'error' | null
+          ksef_error: string | null
+          ksef_sent_at: string | null
           source: 'manual' | 'demo' | 'ksef'
           created_at: string
         }
@@ -95,6 +98,9 @@ export type Database = {
           currency?: string
           ksef_reference?: string | null
           ksef_hash?: string | null
+          ksef_status?: 'pending' | 'sent' | 'accepted' | 'rejected' | 'error' | null
+          ksef_error?: string | null
+          ksef_sent_at?: string | null
           source?: 'manual' | 'demo' | 'ksef'
           created_at?: string
         }
@@ -114,6 +120,9 @@ export type Database = {
           currency?: string
           ksef_reference?: string | null
           ksef_hash?: string | null
+          ksef_status?: 'pending' | 'sent' | 'accepted' | 'rejected' | 'error' | null
+          ksef_error?: string | null
+          ksef_sent_at?: string | null
           source?: 'manual' | 'demo' | 'ksef'
           created_at?: string
         }

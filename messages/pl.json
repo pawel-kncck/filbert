@@ -518,6 +518,48 @@
       "lastAdminRoleChange": "Nie można zmienić roli ostatniego administratora"
     }
   },
+  "ksef": {
+    "send": {
+      "button": "Wyślij do KSeF",
+      "sending": "Wysyłanie...",
+      "success": "Faktura wysłana do KSeF",
+      "noCredentials": "Najpierw skonfiguruj dane dostępowe KSeF w ustawieniach firmy",
+      "alreadySent": "Faktura już wysłana do KSeF",
+      "confirmTitle": "Wyślij do KSeF",
+      "confirmMessage": "Spowoduje to wysłanie faktury do systemu KSeF. Kontynuować?",
+      "confirm": "Wyślij"
+    },
+    "fetch": {
+      "title": "Pobierz faktury z KSeF",
+      "description": "Pobierz faktury z KSeF dla wybranego zakresu dat.",
+      "dateFrom": "Data od",
+      "dateTo": "Data do",
+      "type": "Typ faktur",
+      "typeSales": "Sprzedaż (wystawione przez Ciebie)",
+      "typePurchases": "Zakupy (otrzymane)",
+      "button": "Pobierz faktury",
+      "fetching": "Pobieranie...",
+      "result": "Zaimportowano {imported} faktur, {skipped} pominięto (duplikaty)",
+      "noResults": "Nie znaleziono nowych faktur w KSeF dla wybranego okresu",
+      "noCredentials": "Najpierw skonfiguruj dane dostępowe KSeF powyżej"
+    },
+    "status": {
+      "pending": "Wysyłanie...",
+      "sent": "Wysłano",
+      "accepted": "Zaakceptowano przez KSeF",
+      "rejected": "Odrzucono przez KSeF",
+      "error": "Wysyłanie nieudane"
+    },
+    "errors": {
+      "generic": "Błąd komunikacji z KSeF",
+      "authFailed": "Uwierzytelnianie KSeF nie powiodło się. Sprawdź dane dostępowe.",
+      "sessionFailed": "Nie udało się nawiązać sesji KSeF",
+      "sendFailed": "Nie udało się wysłać faktury do KSeF",
+      "fetchFailed": "Nie udało się pobrać faktur z KSeF",
+      "invalidXml": "Otrzymano nieprawidłowy XML faktury z KSeF",
+      "connection": "Nie można połączyć się z KSeF. Spróbuj ponownie później."
+    }
+  },
   "languageSwitcher": {
     "language": "Język",
     "polish": "Polski",

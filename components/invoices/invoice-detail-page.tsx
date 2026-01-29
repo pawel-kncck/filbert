@@ -4,9 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { getUserCompanies, getDefaultCompanyId } from '@/lib/data/companies'
 import { getInvoiceById } from '@/lib/data/invoices'
 import { getInvoiceItems } from '@/lib/data/invoice-items'
+import { getKsefCredentialsForCompany } from '@/lib/data/ksef'
 import { AppShell } from '@/components/layout/app-shell'
 import { InvoiceItemsTable } from '@/components/invoices/invoice-items-table'
 import { KsefPreviewButton } from '@/components/invoices/ksef-preview-button'
+import { KsefSendButton } from '@/components/invoices/ksef-send-button'
+import { KsefStatusBadge } from '@/components/invoices/ksef-status-badge'
 import { getTranslations, getLocale } from 'next-intl/server'
 import type { Locale } from '@/lib/i18n/config'
 
@@ -50,6 +53,8 @@ export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
   }
 
   const items = await getInvoiceItems(invoice.id)
+  const credentials = await getKsefCredentialsForCompany(currentCompanyId)
+  const hasCredentials = !!credentials
 
   const formatCurrency = (amount: number, currency: string = 'PLN') => {
     return new Intl.NumberFormat(locale === 'pl' ? 'pl-PL' : 'en-US', {
@@ -117,6 +122,7 @@ export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
               <div className="mt-1 flex items-center gap-3">
                 <p className="text-sm text-zinc-600 dark:text-zinc-400">{invoiceTypeLabel}</p>
                 <KsefPreviewButton invoice={invoice} items={items} />
+                <KsefSendButton invoice={invoice} hasCredentials={hasCredentials} />
               </div>
             </div>
             <div className="text-right">
@@ -129,11 +135,26 @@ export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
             </div>
           </div>
 
-          {invoice.ksef_reference && (
+          {(invoice.ksef_reference || invoice.ksef_status) && (
             <div className="mt-4 flex items-center gap-2">
-              <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800 dark:bg-green-900/50 dark:text-green-300">
-                KSeF: {invoice.ksef_reference}
-              </span>
+              {invoice.ksef_reference && (
+                <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800 dark:bg-green-900/50 dark:text-green-300">
+                  KSeF: {invoice.ksef_reference}
+                </span>
+              )}
+              {invoice.ksef_status && (
+                <KsefStatusBadge
+                  status={invoice.ksef_status}
+                  ksefReference={invoice.ksef_reference}
+                  error={invoice.ksef_error}
+                />
+              )}
+            </div>
+          )}
+
+          {invoice.ksef_status === 'error' && invoice.ksef_error && (
+            <div className="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+              {invoice.ksef_error}
             </div>
           )}
         </div>

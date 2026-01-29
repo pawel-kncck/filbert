@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Invoice } from '@/lib/types/database'
 import { KsefPreviewModal } from './ksef-preview-modal'
+import { KsefStatusBadge } from './ksef-status-badge'
 
 type Props = {
   invoices: Invoice[]
@@ -130,7 +131,13 @@ export function InvoiceTable({ invoices, type }: Props) {
                 {formatCurrency(invoice.gross_amount, invoice.currency)}
               </td>
               <td className="whitespace-nowrap px-4 py-3 text-sm">
-                {invoice.ksef_reference ? (
+                {invoice.ksef_status ? (
+                  <KsefStatusBadge
+                    status={invoice.ksef_status}
+                    ksefReference={invoice.ksef_reference}
+                    error={invoice.ksef_error}
+                  />
+                ) : invoice.ksef_reference ? (
                   <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/50 dark:text-green-300">
                     {invoice.ksef_reference.slice(0, 10)}...
                   </span>

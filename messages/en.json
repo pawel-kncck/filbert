@@ -518,6 +518,48 @@
       "lastAdminRoleChange": "Cannot change role of the last administrator"
     }
   },
+  "ksef": {
+    "send": {
+      "button": "Send to KSeF",
+      "sending": "Sending...",
+      "success": "Invoice sent to KSeF",
+      "noCredentials": "Configure KSeF credentials in company settings first",
+      "alreadySent": "Invoice already sent to KSeF",
+      "confirmTitle": "Send to KSeF",
+      "confirmMessage": "This will submit the invoice to the KSeF system. Continue?",
+      "confirm": "Send"
+    },
+    "fetch": {
+      "title": "Fetch invoices from KSeF",
+      "description": "Download invoices from KSeF for the selected date range.",
+      "dateFrom": "Date from",
+      "dateTo": "Date to",
+      "type": "Invoice type",
+      "typeSales": "Sales (issued by you)",
+      "typePurchases": "Purchases (received)",
+      "button": "Fetch invoices",
+      "fetching": "Fetching...",
+      "result": "Imported {imported} invoices, {skipped} skipped (duplicates)",
+      "noResults": "No new invoices found in KSeF for the selected period",
+      "noCredentials": "Configure KSeF credentials above first"
+    },
+    "status": {
+      "pending": "Sending...",
+      "sent": "Sent",
+      "accepted": "Accepted by KSeF",
+      "rejected": "Rejected by KSeF",
+      "error": "Send failed"
+    },
+    "errors": {
+      "generic": "KSeF communication error",
+      "authFailed": "KSeF authentication failed. Check your credentials.",
+      "sessionFailed": "Failed to establish KSeF session",
+      "sendFailed": "Failed to send invoice to KSeF",
+      "fetchFailed": "Failed to fetch invoices from KSeF",
+      "invalidXml": "Invalid invoice XML received from KSeF",
+      "connection": "Cannot connect to KSeF. Try again later."
+    }
+  },
   "languageSwitcher": {
     "language": "Language",
     "polish": "Polski",
