@@ -326,7 +326,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_missing_vendors_count: {
+        Args: { p_company_id: string }
+        Returns: number
+      }
+      get_missing_vendors: {
+        Args: { p_company_id: string }
+        Returns: { name: string; nip: string | null }[]
+      }
+      get_missing_customers_count: {
+        Args: { p_company_id: string }
+        Returns: number
+      }
+      get_missing_customers: {
+        Args: { p_company_id: string }
+        Returns: { name: string; nip: string | null }[]
+      }
     }
     Enums: {
       [_ in never]: never

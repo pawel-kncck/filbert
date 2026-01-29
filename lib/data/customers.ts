@@ -78,78 +78,29 @@ export type MissingCustomer = {
 export async function getMissingCustomersCount(companyId: string): Promise<number> {
   const supabase = await createClient()
 
-  // Find distinct customer_name/customer_nip pairs from sales invoices
-  // that don't exist in the customers table
-  const { data: invoiceCustomers, error: invoiceError } = await supabase
-    .from('invoices')
-    .select('customer_name, customer_nip')
-    .eq('company_id', companyId)
-    .eq('type', 'sales')
+  const { data, error } = await supabase.rpc('get_missing_customers_count', {
+    p_company_id: companyId,
+  })
 
-  if (invoiceError) {
-    Sentry.captureException(invoiceError)
-    throw invoiceError
+  if (error) {
+    Sentry.captureException(error)
+    throw error
   }
 
-  const { data: existingCustomers, error: customerError } = await supabase
-    .from('customers')
-    .select('name, nip')
-    .eq('company_id', companyId)
-
-  if (customerError) {
-    Sentry.captureException(customerError)
-    throw customerError
-  }
-
-  const existingSet = new Set((existingCustomers || []).map((c) => `${c.name}||${c.nip || ''}`))
-
-  const uniqueInvoiceCustomers = new Set(
-    (invoiceCustomers || []).map((ic) => `${ic.customer_name}||${ic.customer_nip || ''}`)
-  )
-
-  let missingCount = 0
-  for (const key of uniqueInvoiceCustomers) {
-    if (!existingSet.has(key)) {
-      missingCount++
-    }
-  }
-
-  return missingCount
+  return data ?? 0
 }
 
 export async function getMissingCustomers(companyId: string): Promise<MissingCustomer[]> {
   const supabase = await createClient()
 
-  const { data: invoiceCustomers, error: invoiceError } = await supabase
-    .from('invoices')
-    .select('customer_name, customer_nip')
-    .eq('company_id', companyId)
-    .eq('type', 'sales')
+  const { data, error } = await supabase.rpc('get_missing_customers', {
+    p_company_id: companyId,
+  })
 
-  if (invoiceError) {
-    Sentry.captureException(invoiceError)
-    throw invoiceError
+  if (error) {
+    Sentry.captureException(error)
+    throw error
   }
 
-  const { data: existingCustomers, error: customerError } = await supabase
-    .from('customers')
-    .select('name, nip')
-    .eq('company_id', companyId)
-
-  if (customerError) {
-    Sentry.captureException(customerError)
-    throw customerError
-  }
-
-  const existingSet = new Set((existingCustomers || []).map((c) => `${c.name}||${c.nip || ''}`))
-
-  const uniqueMap = new Map<string, MissingCustomer>()
-  for (const ic of invoiceCustomers || []) {
-    const key = `${ic.customer_name}||${ic.customer_nip || ''}`
-    if (!existingSet.has(key) && !uniqueMap.has(key)) {
-      uniqueMap.set(key, { name: ic.customer_name, nip: ic.customer_nip })
-    }
-  }
-
-  return Array.from(uniqueMap.values())
+  return data ?? []
 }
