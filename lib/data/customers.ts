@@ -37,7 +37,7 @@ export async function getCustomers(
 
   if (error) {
     Sentry.captureException(error)
-    return { customers: [], totalCount: 0 }
+    throw error
   }
 
   return {
@@ -60,8 +60,11 @@ export async function getCustomerById(
     .single()
 
   if (error) {
+    if (error.code === 'PGRST116') {
+      return null
+    }
     Sentry.captureException(error)
-    return null
+    throw error
   }
 
   return data
@@ -85,7 +88,7 @@ export async function getMissingCustomersCount(companyId: string): Promise<numbe
 
   if (invoiceError) {
     Sentry.captureException(invoiceError)
-    return 0
+    throw invoiceError
   }
 
   const { data: existingCustomers, error: customerError } = await supabase
@@ -95,7 +98,7 @@ export async function getMissingCustomersCount(companyId: string): Promise<numbe
 
   if (customerError) {
     Sentry.captureException(customerError)
-    return 0
+    throw customerError
   }
 
   const existingSet = new Set((existingCustomers || []).map((c) => `${c.name}||${c.nip || ''}`))
@@ -125,7 +128,7 @@ export async function getMissingCustomers(companyId: string): Promise<MissingCus
 
   if (invoiceError) {
     Sentry.captureException(invoiceError)
-    return []
+    throw invoiceError
   }
 
   const { data: existingCustomers, error: customerError } = await supabase
@@ -135,7 +138,7 @@ export async function getMissingCustomers(companyId: string): Promise<MissingCus
 
   if (customerError) {
     Sentry.captureException(customerError)
-    return []
+    throw customerError
   }
 
   const existingSet = new Set((existingCustomers || []).map((c) => `${c.name}||${c.nip || ''}`))

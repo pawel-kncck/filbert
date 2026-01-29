@@ -12,8 +12,11 @@ export async function getCompanyById(companyId: string): Promise<Company | null>
     .single()
 
   if (error) {
+    if (error.code === 'PGRST116') {
+      return null
+    }
     Sentry.captureException(error)
-    return null
+    throw error
   }
 
   return data
@@ -30,10 +33,11 @@ export async function getKsefCredentials(companyId: string): Promise<KsefCredent
 
   if (error) {
     // PGRST116 = no rows found, which is expected when no credentials exist
-    if (error.code !== 'PGRST116') {
-      Sentry.captureException(error)
+    if (error.code === 'PGRST116') {
+      return null
     }
-    return null
+    Sentry.captureException(error)
+    throw error
   }
 
   return data

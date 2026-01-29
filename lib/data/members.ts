@@ -19,7 +19,7 @@ export async function getCompanyMembers(companyId: string): Promise<Member[]> {
 
   if (error) {
     Sentry.captureException(error)
-    return []
+    throw error
   }
 
   return (data || []).map((m) => ({

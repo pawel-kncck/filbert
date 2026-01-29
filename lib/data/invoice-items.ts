@@ -13,7 +13,7 @@ export async function getInvoiceItems(invoiceId: string): Promise<InvoiceItem[]>
 
   if (error) {
     Sentry.captureException(error)
-    return []
+    throw error
   }
 
   return data || []

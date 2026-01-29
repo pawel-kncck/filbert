@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import * as Sentry from '@sentry/nextjs'
 
 export type CompanyWithRole = {
   id: string
@@ -12,11 +13,16 @@ export async function getUserCompanies(userId: string): Promise<CompanyWithRole[
   const supabase = await createClient()
 
   // Get user's companies with their roles
-  const { data: memberships } = await supabase
+  const { data: memberships, error: membershipsError } = await supabase
     .from('user_companies')
     .select('company_id, role, status, companies(id, name, nip, is_demo)')
     .eq('user_id', userId)
     .eq('status', 'active')
+
+  if (membershipsError) {
+    Sentry.captureException(membershipsError)
+    throw membershipsError
+  }
 
   const userCompanies: CompanyWithRole[] = (memberships || [])
     .filter((m) => m.companies)
@@ -29,11 +35,16 @@ export async function getUserCompanies(userId: string): Promise<CompanyWithRole[
     })
 
   // Get all demo companies
-  const { data: demoCompanies } = await supabase
+  const { data: demoCompanies, error: demoError } = await supabase
     .from('companies')
     .select('id, name, nip, is_demo')
     .eq('is_demo', true)
     .order('name')
+
+  if (demoError) {
+    Sentry.captureException(demoError)
+    throw demoError
+  }
 
   if (demoCompanies) {
     // Add demo companies that aren't already in user's companies

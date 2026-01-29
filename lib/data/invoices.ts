@@ -60,13 +60,7 @@ export async function getInvoices(
 
   if (error) {
     Sentry.captureException(error)
-    return {
-      invoices: [],
-      totalCount: 0,
-      totalNet: 0,
-      totalVat: 0,
-      totalGross: 0,
-    }
+    throw error
   }
 
   // Build query for totals (with same filters but no pagination)
@@ -89,7 +83,12 @@ export async function getInvoices(
     totalsQuery = totalsQuery.lte('issue_date', filters.dateTo)
   }
 
-  const { data: totals } = await totalsQuery
+  const { data: totals, error: totalsError } = await totalsQuery
+
+  if (totalsError) {
+    Sentry.captureException(totalsError)
+    throw totalsError
+  }
 
   const totalNet = (totals || []).reduce((sum, inv) => sum + Number(inv.net_amount), 0)
   const totalVat = (totals || []).reduce((sum, inv) => sum + Number(inv.vat_amount), 0)
@@ -118,8 +117,11 @@ export async function getInvoiceById(
     .single()
 
   if (error) {
+    if (error.code === 'PGRST116') {
+      return null
+    }
     Sentry.captureException(error)
-    return null
+    throw error
   }
 
   return data
@@ -153,7 +155,7 @@ export async function getAllInvoicesForExport(
 
   if (error) {
     Sentry.captureException(error)
-    return []
+    throw error
   }
 
   return data || []

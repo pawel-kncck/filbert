@@ -14,10 +14,11 @@ export async function getKsefCredentialsForCompany(
     .single()
 
   if (error) {
-    if (error.code !== 'PGRST116') {
-      Sentry.captureException(error)
+    if (error.code === 'PGRST116') {
+      return null
     }
-    return null
+    Sentry.captureException(error)
+    throw error
   }
 
   return data

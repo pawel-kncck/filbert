@@ -24,10 +24,7 @@ export async function getVendors(
   const { page = 1, filters = {} } = options
   const offset = (page - 1) * VENDORS_PAGE_SIZE
 
-  let query = supabase
-    .from('vendors')
-    .select('*', { count: 'exact' })
-    .eq('company_id', companyId)
+  let query = supabase.from('vendors').select('*', { count: 'exact' }).eq('company_id', companyId)
 
   if (filters.search) {
     const searchTerm = `%${filters.search}%`
@@ -40,7 +37,7 @@ export async function getVendors(
 
   if (error) {
     Sentry.captureException(error)
-    return { vendors: [], totalCount: 0 }
+    throw error
   }
 
   return {
@@ -49,10 +46,7 @@ export async function getVendors(
   }
 }
 
-export async function getVendorById(
-  vendorId: string,
-  companyId: string
-): Promise<Vendor | null> {
+export async function getVendorById(vendorId: string, companyId: string): Promise<Vendor | null> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -63,8 +57,11 @@ export async function getVendorById(
     .single()
 
   if (error) {
+    if (error.code === 'PGRST116') {
+      return null
+    }
     Sentry.captureException(error)
-    return null
+    throw error
   }
 
   return data
@@ -88,7 +85,7 @@ export async function getMissingVendorsCount(companyId: string): Promise<number>
 
   if (invoiceError) {
     Sentry.captureException(invoiceError)
-    return 0
+    throw invoiceError
   }
 
   const { data: existingVendors, error: vendorError } = await supabase
@@ -98,12 +95,10 @@ export async function getMissingVendorsCount(companyId: string): Promise<number>
 
   if (vendorError) {
     Sentry.captureException(vendorError)
-    return 0
+    throw vendorError
   }
 
-  const existingSet = new Set(
-    (existingVendors || []).map((v) => `${v.name}||${v.nip || ''}`)
-  )
+  const existingSet = new Set((existingVendors || []).map((v) => `${v.name}||${v.nip || ''}`))
 
   const uniqueInvoiceVendors = new Set(
     (invoiceVendors || []).map((iv) => `${iv.vendor_name}||${iv.vendor_nip || ''}`)
@@ -130,7 +125,7 @@ export async function getMissingVendors(companyId: string): Promise<MissingVendo
 
   if (invoiceError) {
     Sentry.captureException(invoiceError)
-    return []
+    throw invoiceError
   }
 
   const { data: existingVendors, error: vendorError } = await supabase
@@ -140,12 +135,10 @@ export async function getMissingVendors(companyId: string): Promise<MissingVendo
 
   if (vendorError) {
     Sentry.captureException(vendorError)
-    return []
+    throw vendorError
   }
 
-  const existingSet = new Set(
-    (existingVendors || []).map((v) => `${v.name}||${v.nip || ''}`)
-  )
+  const existingSet = new Set((existingVendors || []).map((v) => `${v.name}||${v.nip || ''}`))
 
   const uniqueMap = new Map<string, MissingVendor>()
   for (const iv of invoiceVendors || []) {
