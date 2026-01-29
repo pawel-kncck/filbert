@@ -280,6 +280,38 @@ export type Database = {
           },
         ]
       }
+      company_ksef_credentials: {
+        Row: {
+          company_id: string
+          token: string
+          environment: 'test' | 'demo' | 'prod'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          token: string
+          environment?: 'test' | 'demo' | 'prod'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          token?: string
+          environment?: 'test' | 'demo' | 'prod'
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'company_ksef_credentials_company_id_fkey'
+            columns: ['company_id']
+            isOneToOne: true
+            referencedRelation: 'companies'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -311,3 +343,8 @@ export type CustomerUpdate = Database['public']['Tables']['customers']['Update']
 export type InvoiceItem = Database['public']['Tables']['invoice_items']['Row']
 export type InvoiceItemInsert = Database['public']['Tables']['invoice_items']['Insert']
 export type InvoiceItemUpdate = Database['public']['Tables']['invoice_items']['Update']
+export type KsefCredentials = Database['public']['Tables']['company_ksef_credentials']['Row']
+export type KsefCredentialsInsert =
+  Database['public']['Tables']['company_ksef_credentials']['Insert']
+export type KsefCredentialsUpdate =
+  Database['public']['Tables']['company_ksef_credentials']['Update']

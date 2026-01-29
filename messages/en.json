@@ -111,6 +111,7 @@
     "members": "Members",
     "vendors": "Vendors",
     "customers": "Customers",
+    "company": "Company",
     "companies": "Companies",
     "newInvoice": "New invoice"
   },
@@ -456,6 +457,47 @@
       "generic": "An error occurred",
       "connection": "Connection error",
       "duplicateNip": "A customer with this NIP already exists"
+    }
+  },
+  "companySettings": {
+    "title": "Company settings",
+    "demoCompanyMessage": "Company settings are not available for demo company.",
+    "adminOnlyMessage": "Only administrators can manage company settings.",
+    "companyName": "Company name",
+    "nip": "NIP",
+    "nipReadOnly": "NIP cannot be changed",
+    "nameUpdated": "Company name updated",
+    "ksef": {
+      "title": "KSeF credentials",
+      "description": "Configure credentials for connecting to the KSeF (National e-Invoice System).",
+      "token": "API token",
+      "tokenPlaceholder": "Enter KSeF API token",
+      "environment": "Environment",
+      "environments": {
+        "test": "Test",
+        "demo": "Demo",
+        "prod": "Production"
+      },
+      "save": "Save credentials",
+      "remove": "Remove credentials",
+      "removeConfirm": "Are you sure you want to remove KSeF credentials?",
+      "saved": "Credentials saved",
+      "removed": "Credentials removed",
+      "noCredentials": "No KSeF credentials configured"
+    },
+    "delete": {
+      "title": "Danger zone",
+      "description": "Permanently delete this company and all its data.",
+      "button": "Delete company",
+      "confirmTitle": "Delete company",
+      "confirmMessage": "This will permanently delete the company and all associated data (invoices, vendors, customers, members). This action cannot be undone.",
+      "confirmLabel": "Type \"{name}\" to confirm",
+      "confirmButton": "Delete permanently",
+      "deleting": "Deleting..."
+    },
+    "errors": {
+      "generic": "An error occurred",
+      "connection": "Connection error"
     }
   },
   "errors": {

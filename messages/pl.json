@@ -111,6 +111,7 @@
     "members": "Członkowie",
     "vendors": "Dostawcy",
     "customers": "Klienci",
+    "company": "Firma",
     "companies": "Firmy",
     "newInvoice": "Nowa faktura"
   },
@@ -456,6 +457,47 @@
       "generic": "Wystąpił błąd",
       "connection": "Wystąpił błąd połączenia",
       "duplicateNip": "Klient z tym NIP-em już istnieje"
+    }
+  },
+  "companySettings": {
+    "title": "Ustawienia firmy",
+    "demoCompanyMessage": "Ustawienia firmy nie są dostępne dla firmy demo.",
+    "adminOnlyMessage": "Tylko administratorzy mogą zarządzać ustawieniami firmy.",
+    "companyName": "Nazwa firmy",
+    "nip": "NIP",
+    "nipReadOnly": "NIP nie może być zmieniony",
+    "nameUpdated": "Nazwa firmy zaktualizowana",
+    "ksef": {
+      "title": "Dane dostępowe KSeF",
+      "description": "Skonfiguruj dane dostępowe do połączenia z KSeF (Krajowym Systemem e-Faktur).",
+      "token": "Token API",
+      "tokenPlaceholder": "Wprowadź token API KSeF",
+      "environment": "Środowisko",
+      "environments": {
+        "test": "Testowe",
+        "demo": "Demo",
+        "prod": "Produkcyjne"
+      },
+      "save": "Zapisz dane dostępowe",
+      "remove": "Usuń dane dostępowe",
+      "removeConfirm": "Czy na pewno chcesz usunąć dane dostępowe KSeF?",
+      "saved": "Dane dostępowe zapisane",
+      "removed": "Dane dostępowe usunięte",
+      "noCredentials": "Brak skonfigurowanych danych dostępowych KSeF"
+    },
+    "delete": {
+      "title": "Strefa zagrożenia",
+      "description": "Trwale usuń tę firmę i wszystkie jej dane.",
+      "button": "Usuń firmę",
+      "confirmTitle": "Usuń firmę",
+      "confirmMessage": "Spowoduje to trwałe usunięcie firmy i wszystkich powiązanych danych (faktury, dostawcy, klienci, członkowie). Tej operacji nie można cofnąć.",
+      "confirmLabel": "Wpisz \"{name}\" aby potwierdzić",
+      "confirmButton": "Usuń na stałe",
+      "deleting": "Usuwanie..."
+    },
+    "errors": {
+      "generic": "Wystąpił błąd",
+      "connection": "Wystąpił błąd połączenia"
     }
   },
   "errors": {

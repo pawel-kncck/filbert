@@ -58,6 +58,17 @@ A comprehensive implementation plan for Filbert - a KSeF (Polish e-invoicing sys
 - **5f: KSeF Invoice Preview** — Styled A4-like preview modal with QR code (KOD I), `ksef_hash` column, preview button on table and detail page
 - **5g: Sidebar & Translation Updates** — Navigation entries for all Phase 5 features, 350 translation keys (PL + EN)
 
+### Phase 7: Company Settings
+
+- Company settings page at `/settings/company`
+- Edit company name (admin only, inline editing)
+- View NIP (read-only for all users)
+- KSeF credentials management (token + environment: test/demo/prod, admin only)
+- Delete company with name-typing confirmation dialog (cascade delete, admin only)
+- Sidebar navigation entry with gear icon
+- Demo company shows unavailable message
+- Non-admin users see read-only view
+
 ---
 
 ## Phase 5: Contacts & Invoice Management (Detailed Specs)
@@ -622,12 +633,12 @@ Ustawienia
 - Top 5 customers by sales amount
 - Period selector (this month, last 3 months, this year, custom)
 
-### Phase 7: Company Settings
+### ~~Phase 7: Company Settings~~ (Completed)
 
-- Edit company name
-- View NIP (read-only)
-- KSeF credentials management
-- Delete company (with confirmation)
+- ~~Edit company name~~
+- ~~View NIP (read-only)~~
+- ~~KSeF credentials management~~
+- ~~Delete company (with confirmation)~~
 
 ### Phase 8: KSeF Integration
 
