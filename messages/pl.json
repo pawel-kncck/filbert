@@ -560,6 +560,20 @@
       "connection": "Nie można połączyć się z KSeF. Spróbuj ponownie później."
     }
   },
+  "gus": {
+    "lookup": "Wyszukaj",
+    "loading": "Wyszukiwanie...",
+    "lookupTooltip": "Wyszukaj dane firmy po NIP w rejestrze GUS REGON",
+    "found": "Znaleziono firmę",
+    "inactive": "Ta firma jest oznaczona jako nieaktywna w rejestrze",
+    "errors": {
+      "notFound": "Nie znaleziono firmy o podanym NIP",
+      "rateLimited": "Zbyt wiele zapytań. Spróbuj ponownie za chwilę.",
+      "generic": "Błąd podczas wyszukiwania danych firmy. Spróbuj ponownie później.",
+      "connection": "Nie można połączyć się z rejestrem GUS. Spróbuj ponownie później.",
+      "invalidNip": "Wprowadź prawidłowy 10-cyfrowy NIP"
+    }
+  },
   "languageSwitcher": {
     "language": "Język",
     "polish": "Polski",

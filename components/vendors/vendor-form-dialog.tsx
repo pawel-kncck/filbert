@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import {
@@ -10,7 +10,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
+import { NipLookupButton } from '@/components/shared/nip-lookup-button'
 import type { Vendor } from '@/lib/types/database'
+import type { GusFormattedResult } from '@/lib/gus/types'
 
 type Props = {
   open: boolean
@@ -44,7 +46,22 @@ export function VendorFormDialog({ open, onOpenChange, companyId, vendor }: Prop
     }
   }, [open, vendor])
 
+  const tGus = useTranslations('gus')
   const isEdit = !!vendor
+
+  const handleLookupResult = useCallback((data: GusFormattedResult) => {
+    setName(data.name)
+    if (data.nip) setNip(data.nip)
+    if (data.address) setAddress(data.address)
+    setError(null)
+  }, [])
+
+  const handleLookupError = useCallback(
+    (errorKey: string) => {
+      setError(tGus(errorKey.replace('gus.', '')))
+    },
+    [tGus]
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,13 +132,20 @@ export function VendorFormDialog({ open, onOpenChange, companyId, vendor }: Prop
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
               {t('form.nip')}
             </label>
-            <input
-              type="text"
-              value={nip}
-              onChange={(e) => setNip(e.target.value)}
-              placeholder={t('form.nipPlaceholder')}
-              className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
-            />
+            <div className="mt-1 flex gap-2">
+              <input
+                type="text"
+                value={nip}
+                onChange={(e) => setNip(e.target.value)}
+                placeholder={t('form.nipPlaceholder')}
+                className="block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+              />
+              <NipLookupButton
+                nip={nip}
+                onResult={handleLookupResult}
+                onError={handleLookupError}
+              />
+            </div>
           </div>
 
           <div>

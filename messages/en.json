@@ -560,6 +560,20 @@
       "connection": "Cannot connect to KSeF. Try again later."
     }
   },
+  "gus": {
+    "lookup": "Lookup",
+    "loading": "Looking up...",
+    "lookupTooltip": "Look up company data by NIP in the GUS REGON registry",
+    "found": "Company found",
+    "inactive": "This company is marked as inactive in the registry",
+    "errors": {
+      "notFound": "No company found for this NIP",
+      "rateLimited": "Too many lookup requests. Try again shortly.",
+      "generic": "Error looking up company data. Try again later.",
+      "connection": "Cannot connect to the GUS registry. Try again later.",
+      "invalidNip": "Enter a valid 10-digit NIP to look up"
+    }
+  },
   "languageSwitcher": {
     "language": "Language",
     "polish": "Polski",
