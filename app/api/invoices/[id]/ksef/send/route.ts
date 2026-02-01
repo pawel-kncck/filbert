@@ -84,21 +84,23 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // Send to KSeF
   const client = new KsefApiClient(credentials.environment)
   try {
-    await client.initSession(company.nip, credentials.token)
+    await client.authenticate(company.nip, credentials.token)
+    await client.openSession()
+    const sessionRef = client.getSessionRef()!
     const result = await client.sendInvoice(xml)
 
     // Poll for status
-    let status = await client.getInvoiceStatus(result.elementReferenceNumber)
+    let status = await client.getInvoiceStatus(sessionRef, result.elementReferenceNumber)
     let attempts = 0
     const maxAttempts = 10
 
     while (!status.ksefReferenceNumber && attempts < maxAttempts) {
       await new Promise((resolve) => setTimeout(resolve, 2000))
-      status = await client.getInvoiceStatus(result.elementReferenceNumber)
+      status = await client.getInvoiceStatus(sessionRef, result.elementReferenceNumber)
       attempts++
     }
 
-    await client.terminateSession()
+    await client.closeSession()
 
     if (status.ksefReferenceNumber) {
       // Generate hash from XML for QR code

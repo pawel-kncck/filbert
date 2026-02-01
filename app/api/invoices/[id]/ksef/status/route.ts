@@ -48,15 +48,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const client = new KsefApiClient(credentials.environment)
 
   try {
-    await client.initSession(company.nip, credentials.token)
+    await client.authenticate(company.nip, credentials.token)
 
     const invoices = await client.fetchInvoices({
       subjectType: 'subject1',
       dateFrom: invoice.issue_date,
       dateTo: invoice.issue_date,
     })
-
-    await client.terminateSession()
 
     const match = invoices.find((inv) => inv.invoiceNumber === invoice.invoice_number)
 

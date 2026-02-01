@@ -42,7 +42,7 @@ export async function POST(
   const client = new KsefApiClient(credentials.environment)
 
   try {
-    await client.initSession(company.nip, credentials.token)
+    await client.authenticate(company.nip, credentials.token)
 
     // subject1 = seller (our company issued), subject2 = buyer (received by us)
     const subjectType = type === 'sales' ? 'subject1' : 'subject2'
@@ -146,8 +146,6 @@ export async function POST(
       imported++
     }
 
-    await client.terminateSession()
-
     return NextResponse.json({
       success: true,
       imported,
@@ -156,12 +154,6 @@ export async function POST(
     })
   } catch (error) {
     Sentry.captureException(error)
-
-    try {
-      await client.terminateSession()
-    } catch {
-      // Ignore cleanup errors
-    }
 
     const errorMessage =
       error instanceof KsefApiError

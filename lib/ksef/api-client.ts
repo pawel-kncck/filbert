@@ -1,10 +1,7 @@
-export type KsefEnvironment = 'test' | 'demo' | 'prod'
-
-const API_URLS: Record<KsefEnvironment, string> = {
-  test: 'https://ksef-test.mf.gov.pl/api',
-  demo: 'https://ksef-demo.mf.gov.pl/api',
-  prod: 'https://ksef.mf.gov.pl/api',
-}
+import { authenticateWithKsef, KsefAuthError, type KsefAuthTokens } from './auth'
+import { V2_BASE_URLS } from './types'
+export type { KsefEnvironment } from './types'
+import type { KsefEnvironment } from './types'
 
 export type KsefSendResult = {
   elementReferenceNumber: string
@@ -37,68 +34,75 @@ export type KsefInvoiceRef = {
 export class KsefApiClient {
   private environment: KsefEnvironment
   private baseUrl: string
-  private sessionToken: string | null = null
+  private authTokens: KsefAuthTokens | null = null
+  private sessionRef: string | null = null
 
   constructor(environment: KsefEnvironment) {
     this.environment = environment
-    this.baseUrl = API_URLS[environment]
+    this.baseUrl = V2_BASE_URLS[environment]
   }
 
-  async initSession(nip: string, token: string): Promise<void> {
-    const response = await this.request(
-      'POST',
-      '/online/Session/InitSigned',
-      {
-        Context: {
-          Challenge: this.generateChallenge(),
-          Identifier: {
-            type: 'onip',
-            identifier: nip,
-          },
-          DocumentType: {
-            service: 'KSeF',
-            formCode: {
-              systemCode: 'FA (3)',
-              schemaVersion: '1-0E',
-              targetNamespace: 'http://crd.gov.pl/wzor/2023/06/29/12648/',
-              value: 'FA',
-            },
-          },
-        },
-      },
-      {
-        Authorization: `Bearer ${token}`,
-      }
-    )
+  /**
+   * Authenticates with KSeF using the 6-step v2 flow.
+   * Required before any API operation.
+   */
+  async authenticate(nip: string, token: string): Promise<KsefAuthTokens> {
+    this.authTokens = await authenticateWithKsef(this.environment, nip, token)
+    return this.authTokens
+  }
+
+  /**
+   * Opens an online session. Required only for sending invoices.
+   */
+  async openSession(): Promise<string> {
+    this.requireAuth()
+
+    const response = await this.request('POST', '/v2/sessions/online', {})
 
     if (!response.ok) {
       const error = await response.text()
-      throw new KsefApiError('AUTH_FAILED', `KSeF authentication failed: ${error}`, response.status)
+      throw new KsefApiError(
+        'SESSION_FAILED',
+        `Failed to open KSeF session: ${error}`,
+        response.status
+      )
     }
 
     const data = await response.json()
-    this.sessionToken = data.sessionToken?.token
-    if (!this.sessionToken) {
-      throw new KsefApiError('SESSION_FAILED', 'No session token returned from KSeF', 500)
+    this.sessionRef = data.referenceNumber
+    if (!this.sessionRef) {
+      throw new KsefApiError('SESSION_FAILED', 'No referenceNumber returned from session open', 500)
     }
+
+    return this.sessionRef
   }
 
-  async terminateSession(): Promise<void> {
-    if (!this.sessionToken) return
+  /**
+   * Closes the current online session.
+   */
+  async closeSession(): Promise<void> {
+    if (!this.sessionRef) return
 
     try {
-      await this.request('GET', '/online/Session/Terminate')
+      await this.request('POST', `/v2/sessions/online/${this.sessionRef}/close`, {})
     } finally {
-      this.sessionToken = null
+      this.sessionRef = null
     }
   }
 
+  /**
+   * Sends an invoice XML within an open session.
+   * Requires: authenticate() + openSession()
+   */
   async sendInvoice(xml: string): Promise<KsefSendResult> {
     this.requireSession()
 
-    const response = await this.request('PUT', '/online/Invoice/Send', xml, {
-      'Content-Type': 'application/octet-stream',
-    })
+    const response = await this.request(
+      'POST',
+      `/v2/sessions/online/${this.sessionRef}/invoices`,
+      xml,
+      { 'Content-Type': 'application/octet-stream' }
+    )
 
     if (!response.ok) {
       const error = await response.text()
@@ -114,10 +118,14 @@ export class KsefApiClient {
     }
   }
 
-  async getInvoiceStatus(elementReferenceNumber: string): Promise<KsefInvoiceStatus> {
-    this.requireSession()
+  /**
+   * Gets the status of a sent invoice within a session.
+   * Requires: authenticate() + openSession()
+   */
+  async getInvoiceStatus(sessionRef: string, invoiceRef: string): Promise<KsefInvoiceStatus> {
+    this.requireAuth()
 
-    const response = await this.request('GET', `/online/Invoice/Status/${elementReferenceNumber}`)
+    const response = await this.request('GET', `/v2/sessions/${sessionRef}/invoices/${invoiceRef}`)
 
     if (!response.ok) {
       const error = await response.text()
@@ -136,8 +144,12 @@ export class KsefApiClient {
     }
   }
 
+  /**
+   * Queries invoice metadata. Session-free in v2.
+   * Requires: authenticate() only
+   */
   async fetchInvoices(criteria: KsefQueryCriteria): Promise<KsefInvoiceRef[]> {
-    this.requireSession()
+    this.requireAuth()
 
     const queryBody = {
       queryCriteria: {
@@ -148,7 +160,7 @@ export class KsefApiClient {
       },
     }
 
-    const response = await this.request('POST', '/online/Query/Invoice/Sync', queryBody)
+    const response = await this.request('POST', '/v2/invoices/query/metadata', queryBody)
 
     if (!response.ok) {
       const error = await response.text()
@@ -174,10 +186,14 @@ export class KsefApiClient {
     }))
   }
 
+  /**
+   * Downloads a full invoice XML by KSeF reference number. Session-free in v2.
+   * Requires: authenticate() only
+   */
   async getInvoice(ksefReferenceNumber: string): Promise<string> {
-    this.requireSession()
+    this.requireAuth()
 
-    const response = await this.request('GET', `/online/Invoice/Get/${ksefReferenceNumber}`)
+    const response = await this.request('GET', `/v2/invoices/ksef/${ksefReferenceNumber}`)
 
     if (!response.ok) {
       const error = await response.text()
@@ -185,6 +201,14 @@ export class KsefApiClient {
     }
 
     return response.text()
+  }
+
+  getSessionRef(): string | null {
+    return this.sessionRef
+  }
+
+  getAuthTokens(): KsefAuthTokens | null {
+    return this.authTokens
   }
 
   private async request(
@@ -198,8 +222,8 @@ export class KsefApiClient {
       ...extraHeaders,
     }
 
-    if (this.sessionToken) {
-      headers['SessionToken'] = this.sessionToken
+    if (this.authTokens) {
+      headers['Authorization'] = `Bearer ${this.authTokens.accessToken}`
     }
 
     const isRawBody = typeof body === 'string'
@@ -222,17 +246,25 @@ export class KsefApiClient {
     }
   }
 
-  private requireSession(): void {
-    if (!this.sessionToken) {
-      throw new KsefApiError('SESSION_REQUIRED', 'KSeF session not initialized', 401)
+  private requireAuth(): void {
+    if (!this.authTokens) {
+      throw new KsefApiError(
+        'AUTH_REQUIRED',
+        'KSeF authentication required — call authenticate() first',
+        401
+      )
     }
   }
 
-  private generateChallenge(): string {
-    return new Date()
-      .toISOString()
-      .replace(/[-:T.Z]/g, '')
-      .slice(0, 20)
+  private requireSession(): void {
+    this.requireAuth()
+    if (!this.sessionRef) {
+      throw new KsefApiError(
+        'SESSION_REQUIRED',
+        'KSeF session required — call openSession() first',
+        401
+      )
+    }
   }
 }
 
@@ -247,3 +279,5 @@ export class KsefApiError extends Error {
     this.statusCode = statusCode
   }
 }
+
+export { KsefAuthError }

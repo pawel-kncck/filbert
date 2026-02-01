@@ -294,6 +294,8 @@ export type Database = {
           company_id: string
           token: string
           environment: 'test' | 'demo' | 'prod'
+          refresh_token: string | null
+          refresh_token_expires_at: string | null
           created_at: string
           updated_at: string
         }
@@ -301,6 +303,8 @@ export type Database = {
           company_id: string
           token: string
           environment?: 'test' | 'demo' | 'prod'
+          refresh_token?: string | null
+          refresh_token_expires_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -308,6 +312,8 @@ export type Database = {
           company_id?: string
           token?: string
           environment?: 'test' | 'demo' | 'prod'
+          refresh_token?: string | null
+          refresh_token_expires_at?: string | null
           created_at?: string
           updated_at?: string
         }
