@@ -93,9 +93,7 @@ export default async function VendorsSettingsPage({ searchParams }: Props) {
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
               {t('vendors.title')}
             </h1>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              {currentCompany?.name}
-            </p>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{currentCompany?.name}</p>
           </div>
           <AddVendorButton companyId={currentCompanyId} />
         </div>
