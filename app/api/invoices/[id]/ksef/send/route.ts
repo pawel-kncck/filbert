@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireMemberAuth, isApiError, apiError, unauthorized } from '@/lib/api/middleware'
 import { getKsefCredentialsForCompany, updateInvoiceKsefStatus } from '@/lib/data/ksef'
-import { KsefApiClient, KsefApiError } from '@/lib/ksef/api-client'
+import { KsefApiError } from '@/lib/ksef/api-client'
+import { authenticateKsefClient } from '@/lib/ksef/authenticate-client'
 import { buildFA3Xml } from '@/lib/ksef/fa3-xml-builder'
 import * as Sentry from '@sentry/nextjs'
 
@@ -82,9 +83,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const xml = buildFA3Xml({ invoice, items })
 
   // Send to KSeF
-  const client = new KsefApiClient(credentials.environment)
   try {
-    await client.authenticate(company.nip, credentials.token)
+    const client = await authenticateKsefClient(credentials, company.nip)
     await client.openSession()
     const sessionRef = client.getSessionRef()!
     const result = await client.sendInvoice(xml)

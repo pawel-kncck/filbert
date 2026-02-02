@@ -35,6 +35,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return apiError('BAD_REQUEST', 'KSeF credentials not configured', 400)
   }
 
+  if (!credentials.token) {
+    return apiError('BAD_REQUEST', 'KSeF token not configured for this company', 400)
+  }
+
   const { data: company } = await auth.supabase
     .from('companies')
     .select('nip')

@@ -470,8 +470,18 @@
     "ksef": {
       "title": "KSeF credentials",
       "description": "Configure credentials for connecting to the KSeF (National e-Invoice System).",
+      "authMethods": {
+        "token": "API token",
+        "certificate": "Certificate"
+      },
       "token": "API token",
       "tokenPlaceholder": "Enter KSeF API token",
+      "certificateFile": "Certificate file (.p12 / .pfx)",
+      "certificateFileHint": "Upload a PKCS#12 file containing a qualified electronic seal or signature certificate",
+      "certificatePassword": "Certificate password",
+      "certificatePasswordPlaceholder": "Enter certificate file password",
+      "certificateActive": "Certificate is configured and active",
+      "uploadCertificate": "Upload certificate",
       "environment": "Environment",
       "environments": {
         "test": "Test",
