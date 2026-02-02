@@ -292,8 +292,11 @@ export type Database = {
       company_ksef_credentials: {
         Row: {
           company_id: string
-          token: string
+          token: string | null
           environment: 'test' | 'demo' | 'prod'
+          auth_method: 'token' | 'certificate'
+          certificate_pem: string | null
+          encrypted_private_key: string | null
           refresh_token: string | null
           refresh_token_expires_at: string | null
           created_at: string
@@ -301,8 +304,11 @@ export type Database = {
         }
         Insert: {
           company_id: string
-          token: string
+          token?: string | null
           environment?: 'test' | 'demo' | 'prod'
+          auth_method?: 'token' | 'certificate'
+          certificate_pem?: string | null
+          encrypted_private_key?: string | null
           refresh_token?: string | null
           refresh_token_expires_at?: string | null
           created_at?: string
@@ -310,8 +316,11 @@ export type Database = {
         }
         Update: {
           company_id?: string
-          token?: string
+          token?: string | null
           environment?: 'test' | 'demo' | 'prod'
+          auth_method?: 'token' | 'certificate'
+          certificate_pem?: string | null
+          encrypted_private_key?: string | null
           refresh_token?: string | null
           refresh_token_expires_at?: string | null
           created_at?: string

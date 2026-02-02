@@ -470,8 +470,18 @@
     "ksef": {
       "title": "Dane dostępowe KSeF",
       "description": "Skonfiguruj dane dostępowe do połączenia z KSeF (Krajowym Systemem e-Faktur).",
+      "authMethods": {
+        "token": "Token API",
+        "certificate": "Certyfikat"
+      },
       "token": "Token API",
       "tokenPlaceholder": "Wprowadź token API KSeF",
+      "certificateFile": "Plik certyfikatu (.p12 / .pfx)",
+      "certificateFileHint": "Załaduj plik PKCS#12 zawierający kwalifikowaną pieczęć elektroniczną lub podpis kwalifikowany",
+      "certificatePassword": "Hasło certyfikatu",
+      "certificatePasswordPlaceholder": "Wprowadź hasło do pliku certyfikatu",
+      "certificateActive": "Certyfikat jest skonfigurowany i aktywny",
+      "uploadCertificate": "Załaduj certyfikat",
       "environment": "Środowisko",
       "environments": {
         "test": "Testowe",

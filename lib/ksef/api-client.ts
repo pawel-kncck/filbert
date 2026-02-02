@@ -1,6 +1,11 @@
-import { authenticateWithKsef, KsefAuthError, type KsefAuthTokens } from './auth'
+import {
+  authenticateWithKsef,
+  authenticateWithCertificate,
+  KsefAuthError,
+  type KsefAuthTokens,
+} from './auth'
 import { V2_BASE_URLS } from './types'
-export type { KsefEnvironment } from './types'
+export type { KsefEnvironment, KsefAuthMethod } from './types'
 import type { KsefEnvironment } from './types'
 
 export type KsefSendResult = {
@@ -43,11 +48,29 @@ export class KsefApiClient {
   }
 
   /**
-   * Authenticates with KSeF using the 6-step v2 flow.
+   * Authenticates with KSeF using the 6-step v2 token-based flow.
    * Required before any API operation.
    */
   async authenticate(nip: string, token: string): Promise<KsefAuthTokens> {
     this.authTokens = await authenticateWithKsef(this.environment, nip, token)
+    return this.authTokens
+  }
+
+  /**
+   * Authenticates with KSeF using the v2 certificate-based flow (XAdES-BES).
+   * Alternative to token-based authentication using a qualified certificate.
+   */
+  async authenticateWithCert(
+    nip: string,
+    certificatePem: string,
+    privateKeyPem: string
+  ): Promise<KsefAuthTokens> {
+    this.authTokens = await authenticateWithCertificate(
+      this.environment,
+      nip,
+      certificatePem,
+      privateKeyPem
+    )
     return this.authTokens
   }
 

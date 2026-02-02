@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminAuth, isApiError, apiError, badRequest } from '@/lib/api/middleware'
 import { getKsefCredentialsForCompany } from '@/lib/data/ksef'
-import { KsefApiClient, KsefApiError } from '@/lib/ksef/api-client'
+import { KsefApiError } from '@/lib/ksef/api-client'
+import { authenticateKsefClient } from '@/lib/ksef/authenticate-client'
 import { parseFA3Xml } from '@/lib/ksef/fa3-xml-parser'
 import * as Sentry from '@sentry/nextjs'
 
@@ -39,10 +40,8 @@ export async function POST(
     return apiError('NOT_FOUND', 'Company not found', 404)
   }
 
-  const client = new KsefApiClient(credentials.environment)
-
   try {
-    await client.authenticate(company.nip, credentials.token)
+    const client = await authenticateKsefClient(credentials, company.nip)
 
     // subject1 = seller (our company issued), subject2 = buyer (received by us)
     const subjectType = type === 'sales' ? 'subject1' : 'subject2'

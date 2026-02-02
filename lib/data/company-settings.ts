@@ -28,7 +28,7 @@ export async function getKsefCredentials(companyId: string): Promise<KsefCredent
   const { data, error } = await supabase
     .from('company_ksef_credentials')
     .select(
-      'company_id, token, environment, refresh_token, refresh_token_expires_at, created_at, updated_at'
+      'company_id, token, environment, auth_method, certificate_pem, encrypted_private_key, refresh_token, refresh_token_expires_at, created_at, updated_at'
     )
     .eq('company_id', companyId)
     .single()
