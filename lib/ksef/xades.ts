@@ -114,10 +114,7 @@ function injectXadesObject(signedXml: string, xadesObject: string): string {
   const doc = new DOMParser().parseFromString(signedXml, 'text/xml')
 
   // Find the ds:Signature element
-  const sigElements = doc.getElementsByTagNameNS(
-    'http://www.w3.org/2000/09/xmldsig#',
-    'Signature'
-  )
+  const sigElements = doc.getElementsByTagNameNS('http://www.w3.org/2000/09/xmldsig#', 'Signature')
   if (sigElements.length === 0) {
     throw new Error('No Signature element found in signed XML')
   }

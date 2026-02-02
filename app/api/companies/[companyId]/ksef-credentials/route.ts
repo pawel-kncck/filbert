@@ -6,11 +6,7 @@ import {
   badRequest,
   type AdminContext,
 } from '@/lib/api/middleware'
-import {
-  parsePkcs12,
-  encryptPrivateKey,
-  CertificateError,
-} from '@/lib/ksef/certificate-crypto'
+import { parsePkcs12, encryptPrivateKey, CertificateError } from '@/lib/ksef/certificate-crypto'
 
 const VALID_ENVIRONMENTS = ['test', 'demo', 'prod'] as const
 
