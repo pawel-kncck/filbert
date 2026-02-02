@@ -100,15 +100,15 @@ export default function OnboardingPage() {
     }
 
     // Company doesn't exist - create it and add user as admin
-    const { data: newCompany, error: createError } = await supabase
-      .from('companies')
-      .insert({
-        name: companyName,
-        nip: cleanNip,
-        is_demo: false,
-      })
-      .select()
-      .single()
+    // Generate ID client-side to avoid needing RETURNING (which requires
+    // SELECT RLS access the user doesn't have until the membership exists).
+    const companyId = crypto.randomUUID()
+    const { error: createError } = await supabase.from('companies').insert({
+      id: companyId,
+      name: companyName,
+      nip: cleanNip,
+      is_demo: false,
+    })
 
     if (createError) {
       setError(t('onboarding.errors.creatingCompany', { error: createError.message }))
@@ -119,7 +119,7 @@ export default function OnboardingPage() {
     // Add user as admin
     const { error: memberError } = await supabase.from('user_companies').insert({
       user_id: user.id,
-      company_id: newCompany.id,
+      company_id: companyId,
       role: 'admin',
       status: 'active',
     })
