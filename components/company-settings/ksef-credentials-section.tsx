@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import type { KsefCredentials } from '@/lib/types/database'
 
 type AuthMethod = 'token' | 'certificate'
+type CertificateFormat = 'pkcs12' | 'pem'
 
 type Props = {
   companyId: string
@@ -19,16 +20,19 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
   const router = useRouter()
 
   const [authMethod, setAuthMethod] = useState<AuthMethod>('token')
+  const [certificateFormat, setCertificateFormat] = useState<CertificateFormat>('pkcs12')
   const [token, setToken] = useState('')
   const [environment, setEnvironment] = useState<'test' | 'demo' | 'prod'>('test')
   const [showToken, setShowToken] = useState(false)
   const [certificateFile, setCertificateFile] = useState<File | null>(null)
+  const [privateKeyFile, setPrivateKeyFile] = useState<File | null>(null)
   const [certificatePassword, setCertificatePassword] = useState('')
   const [showCertPassword, setShowCertPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const keyFileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (credentials) {
@@ -71,7 +75,13 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
 
   const handleSaveCertificate = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!certificateFile || !certificatePassword) return
+
+    // Validate based on format
+    if (certificateFormat === 'pkcs12') {
+      if (!certificateFile || !certificatePassword) return
+    } else {
+      if (!certificateFile || !privateKeyFile) return
+    }
 
     setLoading(true)
     setError(null)
@@ -79,9 +89,18 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
 
     try {
       const formData = new FormData()
-      formData.append('certificate', certificateFile)
-      formData.append('certificatePassword', certificatePassword)
+      formData.append('certificate', certificateFile!)
+      formData.append('certificateFormat', certificateFormat)
       formData.append('environment', environment)
+
+      if (certificateFormat === 'pkcs12') {
+        formData.append('certificatePassword', certificatePassword)
+      } else {
+        formData.append('privateKey', privateKeyFile!)
+        if (certificatePassword) {
+          formData.append('privateKeyPassword', certificatePassword)
+        }
+      }
 
       const res = await fetch(`/api/companies/${companyId}/ksef-credentials`, {
         method: 'POST',
@@ -97,7 +116,9 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
       setSuccess(t('saved'))
       setCertificatePassword('')
       setCertificateFile(null)
+      setPrivateKeyFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
+      if (keyFileInputRef.current) keyFileInputRef.current.value = ''
       router.refresh()
       setTimeout(() => setSuccess(null), 3000)
     } catch {
@@ -241,58 +262,172 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
             </div>
           )}
 
+          {/* Certificate format selector */}
           <div>
-            <label
-              htmlFor="ksef-certificate"
-              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            >
-              {t('certificateFile')}
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              {t('certificateFormatLabel')}
             </label>
-            <input
-              ref={fileInputRef}
-              id="ksef-certificate"
-              type="file"
-              accept=".p12,.pfx"
-              onChange={(e) => setCertificateFile(e.target.files?.[0] || null)}
-              className="mt-1 block w-full text-sm text-zinc-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 dark:text-zinc-300 dark:file:bg-blue-900/20 dark:file:text-blue-400"
-            />
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              {t('certificateFileHint')}
-            </p>
-          </div>
-
-          <div>
-            <label
-              htmlFor="ksef-cert-password"
-              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            >
-              {t('certificatePassword')}
-            </label>
-            <div className="relative mt-1">
-              <input
-                id="ksef-cert-password"
-                type={showCertPassword ? 'text' : 'password'}
-                value={certificatePassword}
-                onChange={(e) => setCertificatePassword(e.target.value)}
-                placeholder={t('certificatePasswordPlaceholder')}
-                className="block w-full rounded-md border border-zinc-300 px-3 py-2 pr-10 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
-              />
-              <button
-                type="button"
-                onClick={() => setShowCertPassword(!showCertPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
-              >
-                <EyeIcon open={showCertPassword} />
-              </button>
+            <div className="mt-2 flex gap-4">
+              <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                <input
+                  type="radio"
+                  name="certFormat"
+                  value="pkcs12"
+                  checked={certificateFormat === 'pkcs12'}
+                  onChange={() => setCertificateFormat('pkcs12')}
+                  className="text-blue-600 focus:ring-blue-500"
+                />
+                {t('formatPkcs12')}
+              </label>
+              <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                <input
+                  type="radio"
+                  name="certFormat"
+                  value="pem"
+                  checked={certificateFormat === 'pem'}
+                  onChange={() => setCertificateFormat('pem')}
+                  className="text-blue-600 focus:ring-blue-500"
+                />
+                {t('formatPem')}
+              </label>
             </div>
           </div>
+
+          {/* PKCS#12 format inputs */}
+          {certificateFormat === 'pkcs12' && (
+            <>
+              <div>
+                <label
+                  htmlFor="ksef-certificate"
+                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  {t('certificateFile')}
+                </label>
+                <input
+                  ref={fileInputRef}
+                  id="ksef-certificate"
+                  type="file"
+                  accept=".p12,.pfx"
+                  onChange={(e) => setCertificateFile(e.target.files?.[0] || null)}
+                  className="mt-1 block w-full text-sm text-zinc-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 dark:text-zinc-300 dark:file:bg-blue-900/20 dark:file:text-blue-400"
+                />
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  {t('certificateFileHint')}
+                </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="ksef-cert-password"
+                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  {t('certificatePassword')}
+                </label>
+                <div className="relative mt-1">
+                  <input
+                    id="ksef-cert-password"
+                    type={showCertPassword ? 'text' : 'password'}
+                    value={certificatePassword}
+                    onChange={(e) => setCertificatePassword(e.target.value)}
+                    placeholder={t('certificatePasswordPlaceholder')}
+                    className="block w-full rounded-md border border-zinc-300 px-3 py-2 pr-10 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCertPassword(!showCertPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+                  >
+                    <EyeIcon open={showCertPassword} />
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* PEM format inputs */}
+          {certificateFormat === 'pem' && (
+            <>
+              <div>
+                <label
+                  htmlFor="ksef-certificate-pem"
+                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  {t('certificateFilePem')}
+                </label>
+                <input
+                  ref={fileInputRef}
+                  id="ksef-certificate-pem"
+                  type="file"
+                  accept=".crt,.pem,.cer"
+                  onChange={(e) => setCertificateFile(e.target.files?.[0] || null)}
+                  className="mt-1 block w-full text-sm text-zinc-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 dark:text-zinc-300 dark:file:bg-blue-900/20 dark:file:text-blue-400"
+                />
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  {t('certificateFilePemHint')}
+                </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="ksef-private-key"
+                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  {t('privateKeyFile')}
+                </label>
+                <input
+                  ref={keyFileInputRef}
+                  id="ksef-private-key"
+                  type="file"
+                  accept=".key,.pem"
+                  onChange={(e) => setPrivateKeyFile(e.target.files?.[0] || null)}
+                  className="mt-1 block w-full text-sm text-zinc-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 dark:text-zinc-300 dark:file:bg-blue-900/20 dark:file:text-blue-400"
+                />
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  {t('privateKeyFileHint')}
+                </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="ksef-pem-password"
+                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  {t('privateKeyPassword')}
+                </label>
+                <div className="relative mt-1">
+                  <input
+                    id="ksef-pem-password"
+                    type={showCertPassword ? 'text' : 'password'}
+                    value={certificatePassword}
+                    onChange={(e) => setCertificatePassword(e.target.value)}
+                    placeholder={t('privateKeyPasswordPlaceholder')}
+                    className="block w-full rounded-md border border-zinc-300 px-3 py-2 pr-10 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCertPassword(!showCertPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+                  >
+                    <EyeIcon open={showCertPassword} />
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  {t('privateKeyPasswordHint')}
+                </p>
+              </div>
+            </>
+          )}
 
           <EnvironmentSelector environment={environment} onChange={setEnvironment} t={t} />
 
           <div className="flex items-center gap-2">
             <button
               type="submit"
-              disabled={loading || !certificateFile || !certificatePassword}
+              disabled={
+                loading ||
+                !certificateFile ||
+                (certificateFormat === 'pkcs12' ? !certificatePassword : !privateKeyFile)
+              }
               className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
               {loading ? tCommon('loading') : t('uploadCertificate')}

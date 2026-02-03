@@ -9,6 +9,65 @@ export type ParsedCertificate = {
 }
 
 /**
+ * Parses PEM-formatted certificate and private key strings.
+ * Accepts .crt/.pem certificate and .key/.pem private key files.
+ * Supports encrypted private keys when password is provided.
+ */
+export function parsePemCertificate(
+  certificatePem: string,
+  privateKeyPem: string,
+  password?: string
+): ParsedCertificate {
+  try {
+    const cert = forge.pki.certificateFromPem(certificatePem)
+
+    // Try to parse the private key - it might be encrypted
+    let privateKey: forge.pki.PrivateKey
+    let decryptedKeyPem: string
+
+    if (privateKeyPem.includes('ENCRYPTED')) {
+      // Encrypted private key - requires password
+      if (!password) {
+        throw new CertificateError(
+          'PASSWORD_REQUIRED',
+          'Private key is encrypted. Password is required.'
+        )
+      }
+      privateKey = forge.pki.decryptRsaPrivateKey(privateKeyPem, password)
+      if (!privateKey) {
+        throw new CertificateError(
+          'INVALID_PASSWORD',
+          'Failed to decrypt private key. Check the password.'
+        )
+      }
+      // Convert to unencrypted PEM for storage (will be encrypted with our key)
+      decryptedKeyPem = forge.pki.privateKeyToPem(privateKey)
+    } else {
+      // Unencrypted private key
+      privateKey = forge.pki.privateKeyFromPem(privateKeyPem)
+      decryptedKeyPem = privateKeyPem.trim()
+    }
+
+    const cn = cert.subject.getField('CN')
+    const commonName = cn ? String(cn.value) : null
+    const notAfter = cert.validity.notAfter
+
+    return {
+      certificatePem: certificatePem.trim(),
+      privateKeyPem: decryptedKeyPem,
+      commonName,
+      notAfter,
+    }
+  } catch (err) {
+    if (err instanceof CertificateError) {
+      throw err
+    }
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    throw new CertificateError('INVALID_PEM', `Failed to parse PEM certificate: ${message}`)
+  }
+}
+
+/**
  * Parses a PKCS#12 (.p12/.pfx) file and extracts the certificate and private key.
  */
 export function parsePkcs12(p12Buffer: Buffer, password: string): ParsedCertificate {

@@ -53,6 +53,15 @@ export class KsefApiClient {
    */
   async authenticate(nip: string, token: string): Promise<KsefAuthTokens> {
     this.authTokens = await authenticateWithKsef(this.environment, nip, token)
+    console.log(
+      '[KSeF Client] Auth complete, accessToken starts with:',
+      this.authTokens.accessToken?.substring(0, 50)
+    )
+    console.log(
+      '[KSeF Client] Auth complete, refreshToken starts with:',
+      this.authTokens.refreshToken?.substring(0, 50)
+    )
+    console.log('[KSeF Client] Auth complete, expiresAt:', this.authTokens.accessTokenExpiresAt)
     return this.authTokens
   }
 
@@ -174,14 +183,27 @@ export class KsefApiClient {
   async fetchInvoices(criteria: KsefQueryCriteria): Promise<KsefInvoiceRef[]> {
     this.requireAuth()
 
+    // v2 API flat structure (no filters wrapper)
+    // - subjectType must be capitalized: Subject1, Subject2
+    // - dates must be ISO-8601 with timezone
+    const subjectTypeMap: Record<string, string> = {
+      subject1: 'Subject1',
+      subject2: 'Subject2',
+    }
+
     const queryBody = {
-      queryCriteria: {
-        subjectType: criteria.subjectType,
-        type: 'incremental',
-        acquisitionTimestampThresholdFrom: `${criteria.dateFrom}T00:00:00`,
-        acquisitionTimestampThresholdTo: `${criteria.dateTo}T23:59:59`,
+      subjectType: subjectTypeMap[criteria.subjectType] || criteria.subjectType,
+      dateRange: {
+        dateType: 'Invoicing',
+        from: `${criteria.dateFrom}T00:00:00.000+00:00`,
+        to: `${criteria.dateTo}T23:59:59.000+00:00`,
       },
     }
+
+    console.log('[KSeF Client] ========== INVOICE QUERY ==========')
+    console.log('[KSeF Client] Endpoint: POST /v2/invoices/query/metadata')
+    console.log('[KSeF Client] Request body:')
+    console.log(JSON.stringify(queryBody, null, 2))
 
     const response = await this.request('POST', '/v2/invoices/query/metadata', queryBody)
 
@@ -191,22 +213,32 @@ export class KsefApiClient {
     }
 
     const data = await response.json()
-    const items = data.invoiceHeaderList || []
+    console.log('[KSeF Client] ========== INVOICE QUERY RESPONSE ==========')
+    console.log(JSON.stringify(data, null, 2))
 
-    return items.map((item: Record<string, unknown>) => ({
-      ksefReferenceNumber: item.ksefReferenceNumber as string,
-      invoiceNumber: (item.invoiceReferenceNumber as string) || '',
-      invoiceDate: (item.invoicingDate as string) || '',
-      subjectName:
-        ((item.subjectBy as Record<string, unknown>)?.issuedByName as string) ||
-        ((item.subjectTo as Record<string, unknown>)?.issuedToName as string) ||
-        '',
-      subjectNip:
-        ((item.subjectBy as Record<string, unknown>)?.issuedByIdentifier as string) ||
-        ((item.subjectTo as Record<string, unknown>)?.issuedToIdentifier as string) ||
-        '',
-      grossAmount: (item.invoiceGrossValue as number) || 0,
-    }))
+    // v2 API returns 'invoices' array
+    const items = data.invoices || data.invoiceHeaderList || []
+    console.log('[KSeF Client] Found', items.length, 'invoices')
+
+    return items.map((item: Record<string, unknown>) => {
+      // v2 response format:
+      // - ksefNumber (not ksefReferenceNumber)
+      // - seller.nip, seller.name
+      // - buyer.identifier.value, buyer.name
+      const seller = item.seller as Record<string, unknown> | undefined
+      const buyer = item.buyer as Record<string, unknown> | undefined
+      const buyerIdentifier = buyer?.identifier as Record<string, unknown> | undefined
+
+      return {
+        ksefReferenceNumber:
+          (item.ksefNumber as string) || (item.ksefReferenceNumber as string) || '',
+        invoiceNumber: (item.invoiceNumber as string) || '',
+        invoiceDate: (item.issueDate as string) || (item.invoicingDate as string) || '',
+        subjectName: (seller?.name as string) || (buyer?.name as string) || '',
+        subjectNip: (seller?.nip as string) || (buyerIdentifier?.value as string) || '',
+        grossAmount: (item.grossAmount as number) || 0,
+      }
+    })
   }
 
   /**
@@ -254,12 +286,17 @@ export class KsefApiClient {
       headers['Content-Type'] = 'application/json'
     }
 
+    console.log(`[KSeF Client] Request: ${method} ${this.baseUrl}${path}`)
+    console.log('[KSeF Client] Headers:', JSON.stringify(headers, null, 2))
+
     try {
-      return await fetch(`${this.baseUrl}${path}`, {
+      const response = await fetch(`${this.baseUrl}${path}`, {
         method,
         headers,
         body: body ? (isRawBody ? body : JSON.stringify(body)) : undefined,
       })
+      console.log(`[KSeF Client] Response status: ${response.status}`)
+      return response
     } catch (error) {
       throw new KsefApiError(
         'CONNECTION_ERROR',

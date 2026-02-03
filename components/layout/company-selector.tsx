@@ -1,27 +1,12 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useCompany } from '@/components/providers/company-provider'
 
-type Company = {
-  id: string
-  name: string
-  nip: string
-  is_demo: boolean
-}
-
-type Props = {
-  companies: Company[]
-  currentCompanyId: string | null
-}
-
-export function CompanySelector({ companies, currentCompanyId }: Props) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
+export function CompanySelector() {
+  const { companies, currentCompanyId, currentCompany, setCurrentCompanyId } = useCompany()
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-
-  const currentCompany = companies.find((c) => c.id === currentCompanyId) || companies[0]
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -35,9 +20,7 @@ export function CompanySelector({ companies, currentCompanyId }: Props) {
   }, [])
 
   const handleSelect = (companyId: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    params.set('company', companyId)
-    router.push(`?${params.toString()}`)
+    setCurrentCompanyId(companyId)
     setIsOpen(false)
   }
 
@@ -66,7 +49,7 @@ export function CompanySelector({ companies, currentCompanyId }: Props) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-72 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-600 dark:bg-zinc-700">
+        <div className="absolute left-0 z-50 mt-2 w-72 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-600 dark:bg-zinc-700">
           {companies.map((company) => (
             <button
               key={company.id}
