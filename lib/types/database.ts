@@ -79,6 +79,7 @@ export type Database = {
           ksef_status: 'pending' | 'sent' | 'accepted' | 'rejected' | 'error' | null
           ksef_error: string | null
           ksef_sent_at: string | null
+          ksef_xml: string | null
           source: 'manual' | 'demo' | 'ksef'
           created_at: string
         }
@@ -101,6 +102,7 @@ export type Database = {
           ksef_status?: 'pending' | 'sent' | 'accepted' | 'rejected' | 'error' | null
           ksef_error?: string | null
           ksef_sent_at?: string | null
+          ksef_xml?: string | null
           source?: 'manual' | 'demo' | 'ksef'
           created_at?: string
         }
@@ -123,6 +125,7 @@ export type Database = {
           ksef_status?: 'pending' | 'sent' | 'accepted' | 'rejected' | 'error' | null
           ksef_error?: string | null
           ksef_sent_at?: string | null
+          ksef_xml?: string | null
           source?: 'manual' | 'demo' | 'ksef'
           created_at?: string
         }
