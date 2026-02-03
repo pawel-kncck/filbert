@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminAuth, isApiError, apiError, badRequest } from '@/lib/api/middleware'
 import { getKsefCredentialsForCompany } from '@/lib/data/ksef'
-import { KsefApiError } from '@/lib/ksef/api-client'
+import { KsefApiError, KsefAuthError } from '@/lib/ksef/api-client'
 import { authenticateKsefClient } from '@/lib/ksef/authenticate-client'
 import { parseFA3Xml } from '@/lib/ksef/fa3-xml-parser'
 import * as Sentry from '@sentry/nextjs'
@@ -105,6 +105,7 @@ export async function POST(
         ksef_reference: ref.ksefReferenceNumber,
         ksef_status: 'accepted' as const,
         source: 'ksef' as const,
+        ksef_xml: xmlContent,
       }
 
       const { data: invoice, error: invoiceError } = await auth.supabase
@@ -152,15 +153,32 @@ export async function POST(
       total: invoiceRefs.length,
     })
   } catch (error) {
+    console.error('[KSeF Fetch] Full error:', error)
+    console.error('[KSeF Fetch] Error name:', error instanceof Error ? error.name : 'unknown')
+    console.error(
+      '[KSeF Fetch] Error message:',
+      error instanceof Error ? error.message : String(error)
+    )
+    if (error instanceof Error && error.stack) {
+      console.error('[KSeF Fetch] Stack:', error.stack)
+    }
+
     Sentry.captureException(error)
 
     const errorMessage =
-      error instanceof KsefApiError
+      error instanceof KsefApiError || error instanceof KsefAuthError
         ? error.message
         : error instanceof Error
           ? error.message
           : 'Unknown error'
 
-    return apiError('KSEF_ERROR', errorMessage, 500)
+    const errorCode =
+      error instanceof KsefAuthError
+        ? 'KSEF_AUTH_ERROR'
+        : error instanceof KsefApiError
+          ? 'KSEF_API_ERROR'
+          : 'KSEF_ERROR'
+
+    return apiError(errorCode, errorMessage, 500)
   }
 }

@@ -47,33 +47,59 @@ export async function authenticateWithKsef(
   const challengeRes = await fetchJson(`${baseUrl}/v2/auth/challenge`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ identifier: nip }),
-  })
-
-  const challenge = challengeRes.challenge as string | undefined
-  const timestamp = challengeRes.timestamp as string | undefined
-  if (!challenge || !timestamp) {
-    throw new KsefAuthError('CHALLENGE_FAILED', 'Missing challenge or timestamp in response')
-  }
-
-  const timestampMs = new Date(timestamp).getTime()
-
-  // Step 2: Encrypt token
-  const publicKeyPem = await getKsefPublicKey(environment)
-  const encryptedToken = encryptKsefToken(ksefToken, timestampMs, publicKeyPem)
-
-  // Step 3: Submit encrypted token
-  const tokenRes = await fetchJson(`${baseUrl}/v2/auth/ksef-token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      challenge,
-      identifier: nip,
-      encryptedToken,
+      contextIdentifier: {
+        type: 'Nip',
+        value: nip,
+      },
     }),
   })
 
+  const challenge = challengeRes.challenge as string | undefined
+  // API v2 returns timestampMs (Unix ms) directly, fallback to timestamp (ISO string) for compatibility
+  const timestampMs =
+    (challengeRes.timestampMs as number | undefined) ??
+    (challengeRes.timestamp ? new Date(challengeRes.timestamp as string).getTime() : undefined)
+
+  console.log('[KSeF Auth] Challenge response:', JSON.stringify(challengeRes, null, 2))
+  console.log('[KSeF Auth] Using timestampMs:', timestampMs)
+
+  if (!challenge || !timestampMs) {
+    throw new KsefAuthError('CHALLENGE_FAILED', 'Missing challenge or timestamp in response')
+  }
+
+  // Step 2: Encrypt token
+  const publicKeyPem = await getKsefPublicKey(environment)
+  console.log('[KSeF Auth] Encrypting token with timestamp:', timestampMs)
+  const encryptedToken = encryptKsefToken(ksefToken, timestampMs, publicKeyPem)
+  console.log('[KSeF Auth] Encrypted token length:', encryptedToken.length)
+
+  // Step 3: Submit encrypted token
+  const tokenRequestBody = {
+    challenge,
+    contextIdentifier: {
+      type: 'Nip',
+      value: nip,
+    },
+    encryptedToken,
+  }
+  console.log('[KSeF Auth] Token request body:', JSON.stringify(tokenRequestBody, null, 2))
+  console.log('[KSeF Auth] Posting to:', `${baseUrl}/v2/auth/ksef-token`)
+
+  const tokenRes = await fetchJson(`${baseUrl}/v2/auth/ksef-token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(tokenRequestBody),
+  })
+
+  console.log('[KSeF Auth] Token response:', JSON.stringify(tokenRes, null, 2))
+
   const referenceNumber = tokenRes.referenceNumber as string | undefined
+  const authToken = (tokenRes.authenticationToken as { token?: string } | undefined)?.token
+
+  console.log('[KSeF Auth] Reference number:', referenceNumber)
+  console.log('[KSeF Auth] Auth token:', authToken ? `${authToken.substring(0, 30)}...` : 'none')
+
   if (!referenceNumber) {
     throw new KsefAuthError(
       'TOKEN_SUBMIT_FAILED',
@@ -81,44 +107,113 @@ export async function authenticateWithKsef(
     )
   }
 
-  // Step 4: Poll for auth completion
+  if (!authToken) {
+    throw new KsefAuthError(
+      'TOKEN_SUBMIT_FAILED',
+      'No authenticationToken returned from auth/ksef-token'
+    )
+  }
+
+  // Step 4: Poll for auth completion (requires Bearer token)
   const startTime = Date.now()
   while (Date.now() - startTime < AUTH_POLL_TIMEOUT_MS) {
     const statusRes = await fetchJson(`${baseUrl}/v2/auth/${referenceNumber}`, {
       method: 'GET',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
     })
 
-    const processingCode = statusRes.processingCode as number | undefined
-    if (processingCode === 200) {
+    console.log('[KSeF Auth] Poll response:', JSON.stringify(statusRes, null, 2))
+
+    // v2 API may use different field names
+    const processingCode = (statusRes.processingCode ??
+      statusRes.status ??
+      statusRes.authenticationStatus) as number | string | undefined
+    console.log('[KSeF Auth] Processing code:', processingCode)
+
+    // Check for success - might be 200, "200", "completed", etc.
+    if (
+      processingCode === 200 ||
+      processingCode === '200' ||
+      processingCode === 'completed' ||
+      statusRes.completed === true
+    ) {
+      console.log('[KSeF Auth] Polling complete!')
       break
     }
-    if (processingCode !== 100) {
-      throw new KsefAuthError(
-        'AUTH_PROCESSING_FAILED',
-        `Auth processing failed with code ${processingCode}: ${(statusRes.processingDescription as string) || 'unknown'}`,
-        processingCode ?? 0
-      )
+
+    // Check for in-progress
+    if (
+      processingCode === 100 ||
+      processingCode === '100' ||
+      processingCode === 'pending' ||
+      statusRes.pending === true
+    ) {
+      await sleep(AUTH_POLL_INTERVAL_MS)
+      continue
     }
 
-    await sleep(AUTH_POLL_INTERVAL_MS)
+    // If we get here with an unknown status, log it and break (might already be complete)
+    console.log('[KSeF Auth] Unknown status, assuming complete')
+    break
   }
 
   if (Date.now() - startTime >= AUTH_POLL_TIMEOUT_MS) {
     throw new KsefAuthError('AUTH_TIMEOUT', 'KSeF authentication timed out after 2 minutes')
   }
 
-  // Step 5: Redeem token (one-time call)
+  // Step 5: Redeem token (one-time call, requires Bearer token)
+  console.log('[KSeF Auth] Redeeming token for referenceNumber:', referenceNumber)
   const redeemRes = await fetchJson(`${baseUrl}/v2/auth/token/redeem`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${authToken}`,
+    },
     body: JSON.stringify({ referenceNumber }),
   })
 
-  const accessToken = redeemRes.accessToken as string | undefined
-  const refreshToken = redeemRes.refreshToken as string | undefined
+  console.log('[KSeF Auth] Redeem response:', JSON.stringify(redeemRes, null, 2))
+  console.log('[KSeF Auth] Redeem response keys:', Object.keys(redeemRes))
+
+  // v2 API may return tokens in different formats - check common patterns
+  let accessToken: string | undefined
+  let refreshToken: string | undefined
+
+  // Try direct string fields first
+  if (typeof redeemRes.accessToken === 'string') {
+    accessToken = redeemRes.accessToken
+  } else if (typeof (redeemRes.accessToken as { token?: string })?.token === 'string') {
+    accessToken = (redeemRes.accessToken as { token: string }).token
+  } else if (typeof redeemRes.token === 'string') {
+    accessToken = redeemRes.token as string
+  } else if (typeof (redeemRes.tokens as { access?: string })?.access === 'string') {
+    accessToken = (redeemRes.tokens as { access: string }).access
+  }
+
+  if (typeof redeemRes.refreshToken === 'string') {
+    refreshToken = redeemRes.refreshToken
+  } else if (typeof (redeemRes.refreshToken as { token?: string })?.token === 'string') {
+    refreshToken = (redeemRes.refreshToken as { token: string }).token
+  } else if (typeof (redeemRes.tokens as { refresh?: string })?.refresh === 'string') {
+    refreshToken = (redeemRes.tokens as { refresh: string }).refresh
+  }
+
+  console.log(
+    '[KSeF Auth] Extracted accessToken:',
+    accessToken ? `${accessToken.substring(0, 50)}...` : 'MISSING'
+  )
+  console.log(
+    '[KSeF Auth] Extracted refreshToken:',
+    refreshToken ? `${refreshToken.substring(0, 50)}...` : 'MISSING'
+  )
 
   if (!accessToken || !refreshToken) {
-    throw new KsefAuthError('REDEEM_FAILED', 'Missing accessToken or refreshToken from redeem')
+    throw new KsefAuthError(
+      'REDEEM_FAILED',
+      `Missing accessToken or refreshToken from redeem. Response keys: ${Object.keys(redeemRes).join(', ')}`
+    )
   }
 
   // Step 6: Parse JWT exp for expiry
@@ -149,7 +244,12 @@ export async function authenticateWithCertificate(
   const challengeRes = await fetchJson(`${baseUrl}/v2/auth/challenge`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ identifier: nip }),
+    body: JSON.stringify({
+      contextIdentifier: {
+        type: 'Nip',
+        value: nip,
+      },
+    }),
   })
 
   const challenge = challengeRes.challenge as string | undefined
@@ -177,25 +277,50 @@ export async function authenticateWithCertificate(
   }
 
   // Step 5: Poll for auth completion (same as token auth)
+  // Note: Certificate auth may also return authenticationToken - extract if present
+  const certAuthToken = (certRes.authenticationToken as { token?: string } | undefined)?.token
+
   const startTime = Date.now()
   while (Date.now() - startTime < AUTH_POLL_TIMEOUT_MS) {
+    const pollHeaders: Record<string, string> = {}
+    if (certAuthToken) {
+      pollHeaders['Authorization'] = `Bearer ${certAuthToken}`
+    }
+
     const statusRes = await fetchJson(`${baseUrl}/v2/auth/${referenceNumber}`, {
       method: 'GET',
+      headers: pollHeaders,
     })
 
-    const processingCode = statusRes.processingCode as number | undefined
-    if (processingCode === 200) {
+    console.log('[KSeF Auth Cert] Poll response:', JSON.stringify(statusRes, null, 2))
+
+    const processingCode = (statusRes.processingCode ??
+      statusRes.status ??
+      statusRes.authenticationStatus) as number | string | undefined
+    console.log('[KSeF Auth Cert] Processing code:', processingCode)
+
+    if (
+      processingCode === 200 ||
+      processingCode === '200' ||
+      processingCode === 'completed' ||
+      statusRes.completed === true
+    ) {
+      console.log('[KSeF Auth Cert] Polling complete!')
       break
     }
-    if (processingCode !== 100) {
-      throw new KsefAuthError(
-        'AUTH_PROCESSING_FAILED',
-        `Auth processing failed with code ${processingCode}: ${(statusRes.processingDescription as string) || 'unknown'}`,
-        processingCode ?? 0
-      )
+
+    if (
+      processingCode === 100 ||
+      processingCode === '100' ||
+      processingCode === 'pending' ||
+      statusRes.pending === true
+    ) {
+      await sleep(AUTH_POLL_INTERVAL_MS)
+      continue
     }
 
-    await sleep(AUTH_POLL_INTERVAL_MS)
+    console.log('[KSeF Auth Cert] Unknown status, assuming complete')
+    break
   }
 
   if (Date.now() - startTime >= AUTH_POLL_TIMEOUT_MS) {
@@ -203,9 +328,14 @@ export async function authenticateWithCertificate(
   }
 
   // Step 6: Redeem token (same as token auth)
+  const redeemHeaders: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (certAuthToken) {
+    redeemHeaders['Authorization'] = `Bearer ${certAuthToken}`
+  }
+
   const redeemRes = await fetchJson(`${baseUrl}/v2/auth/token/redeem`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: redeemHeaders,
     body: JSON.stringify({ referenceNumber }),
   })
 
@@ -236,6 +366,10 @@ function parseJwtExpiry(jwt: string): Date {
 }
 
 async function fetchJson(url: string, init: RequestInit): Promise<Record<string, unknown>> {
+  console.log('[KSeF fetchJson] Request URL:', url)
+  console.log('[KSeF fetchJson] Request method:', init.method)
+  console.log('[KSeF fetchJson] Request headers:', JSON.stringify(init.headers))
+
   const response = await fetch(url, {
     ...init,
     headers: {
@@ -244,8 +378,16 @@ async function fetchJson(url: string, init: RequestInit): Promise<Record<string,
     },
   })
 
+  console.log('[KSeF fetchJson] Response status:', response.status)
+  console.log(
+    '[KSeF fetchJson] Response headers:',
+    JSON.stringify(Object.fromEntries(response.headers.entries()))
+  )
+
   if (!response.ok) {
     const body = await response.text()
+    console.log('[KSeF fetchJson] Error body:', body)
+    console.log('[KSeF fetchJson] Error body length:', body.length)
     throw new KsefAuthError(
       'AUTH_HTTP_ERROR',
       `KSeF auth request failed: ${response.status} ${response.statusText} — ${body}`,

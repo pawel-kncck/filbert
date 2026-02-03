@@ -52,10 +52,21 @@ export async function getKsefPublicKey(environment: KsefEnvironment): Promise<st
   }
 
   // The certificate is base64-encoded DER, convert to PEM format
-  const base64Cert = tokenCert.certificate
-  const pemCertificate = `-----BEGIN CERTIFICATE-----\n${base64Cert.match(/.{1,64}/g)?.join('\n')}\n-----END CERTIFICATE-----`
-  const publicKeyPem = extractPublicKeyFromCert(pemCertificate)
+  // Clean the base64 string (remove any whitespace/newlines that might exist)
+  const base64Cert = tokenCert.certificate.replace(/\s/g, '')
+  if (!base64Cert) {
+    throw new Error('Certificate data is empty')
+  }
+
+  // Format as PEM with 64-char lines
+  const lines = base64Cert.match(/.{1,64}/g)
+  if (!lines) {
+    throw new Error('Failed to format certificate as PEM')
+  }
+  const pemCertificate = `-----BEGIN CERTIFICATE-----\n${lines.join('\n')}\n-----END CERTIFICATE-----`
+
   const x509 = new X509Certificate(pemCertificate)
+  const publicKeyPem = extractPublicKeyFromCert(pemCertificate)
   const notAfter = new Date(x509.validTo)
 
   cache.set(environment, {

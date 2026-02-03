@@ -6,7 +6,12 @@ import {
   badRequest,
   type AdminContext,
 } from '@/lib/api/middleware'
-import { parsePkcs12, encryptPrivateKey, CertificateError } from '@/lib/ksef/certificate-crypto'
+import {
+  parsePkcs12,
+  parsePemCertificate,
+  encryptPrivateKey,
+  CertificateError,
+} from '@/lib/ksef/certificate-crypto'
 
 const VALID_ENVIRONMENTS = ['test', 'demo', 'prod'] as const
 
@@ -70,15 +75,22 @@ async function handleCertificateUpload(request: NextRequest, auth: AdminContext)
   }
 
   const certificateFile = formData.get('certificate') as File | null
+  const certificateFormat = (formData.get('certificateFormat') as string) || 'pkcs12'
   const password = formData.get('certificatePassword') as string | null
+  const privateKeyPassword = formData.get('privateKeyPassword') as string | null
+  const privateKeyFile = formData.get('privateKey') as File | null
   const environment = formData.get('environment') as string | null
 
   if (!certificateFile) {
     return badRequest('Certificate file is required')
   }
 
-  if (!password) {
-    return badRequest('Certificate password is required')
+  if (certificateFormat === 'pkcs12' && !password) {
+    return badRequest('Certificate password is required for PKCS#12 files')
+  }
+
+  if (certificateFormat === 'pem' && !privateKeyFile) {
+    return badRequest('Private key file is required for PEM format')
   }
 
   if (
@@ -88,15 +100,24 @@ async function handleCertificateUpload(request: NextRequest, auth: AdminContext)
     return badRequest('Invalid environment. Must be test, demo, or prod')
   }
 
-  // Parse PKCS#12 file
   let certificatePem: string
   let encryptedPrivateKey: string
 
   try {
-    const buffer = Buffer.from(await certificateFile.arrayBuffer())
-    const parsed = parsePkcs12(buffer, password)
-    certificatePem = parsed.certificatePem
-    encryptedPrivateKey = encryptPrivateKey(parsed.privateKeyPem)
+    if (certificateFormat === 'pem') {
+      // Parse PEM format (separate certificate and private key files)
+      const certContent = await certificateFile.text()
+      const keyContent = await privateKeyFile!.text()
+      const parsed = parsePemCertificate(certContent, keyContent, privateKeyPassword || undefined)
+      certificatePem = parsed.certificatePem
+      encryptedPrivateKey = encryptPrivateKey(parsed.privateKeyPem)
+    } else {
+      // Parse PKCS#12 format
+      const buffer = Buffer.from(await certificateFile.arrayBuffer())
+      const parsed = parsePkcs12(buffer, password!)
+      certificatePem = parsed.certificatePem
+      encryptedPrivateKey = encryptPrivateKey(parsed.privateKeyPem)
+    }
   } catch (err) {
     if (err instanceof CertificateError) {
       if (err.code === 'MISSING_ENCRYPTION_KEY') {
@@ -108,7 +129,11 @@ async function handleCertificateUpload(request: NextRequest, auth: AdminContext)
       }
       return badRequest(err.message)
     }
-    return badRequest('Failed to parse certificate file. Check the file and password.')
+    return badRequest(
+      certificateFormat === 'pem'
+        ? 'Failed to parse certificate or private key file.'
+        : 'Failed to parse certificate file. Check the file and password.'
+    )
   }
 
   const { error } = await auth.supabase.from('company_ksef_credentials').upsert(

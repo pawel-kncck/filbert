@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import * as Sentry from '@sentry/nextjs'
 
@@ -67,10 +68,18 @@ export async function getDefaultCompanyId(
 ): Promise<string | null> {
   if (companies.length === 0) return null
 
-  // If a specific company is requested and user has access, use it
+  // If a specific company is requested via URL param and user has access, use it
   if (requestedCompanyId) {
     const hasAccess = companies.some((c) => c.id === requestedCompanyId)
     if (hasAccess) return requestedCompanyId
+  }
+
+  // Check for saved company selection in cookie
+  const cookieStore = await cookies()
+  const savedCompanyId = cookieStore.get('selectedCompany')?.value
+  if (savedCompanyId) {
+    const hasAccess = companies.some((c) => c.id === savedCompanyId)
+    if (hasAccess) return savedCompanyId
   }
 
   // Default to first non-demo company, or demo if no other
