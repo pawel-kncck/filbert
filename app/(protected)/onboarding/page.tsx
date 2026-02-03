@@ -1,11 +1,9 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
-import { NipLookupButton } from '@/components/shared/nip-lookup-button'
-import type { GusFormattedResult } from '@/lib/gus/types'
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -14,24 +12,6 @@ export default function OnboardingPage() {
   const [nip, setNip] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [lookupInfo, setLookupInfo] = useState<string | null>(null)
-
-  const handleLookupResult = useCallback(
-    (data: GusFormattedResult) => {
-      setCompanyName(data.name)
-      setLookupInfo(data.isActive ? t('gus.found') : t('gus.inactive'))
-      setError(null)
-    },
-    [t]
-  )
-
-  const handleLookupError = useCallback(
-    (errorKey: string) => {
-      setLookupInfo(null)
-      setError(t(errorKey))
-    },
-    [t]
-  )
 
   const validateNip = (value: string): boolean => {
     const cleanNip = value.replace(/[\s-]/g, '')
@@ -183,30 +163,20 @@ export default function OnboardingPage() {
               >
                 NIP
               </label>
-              <div className="mt-1 flex gap-2">
-                <input
-                  id="nip"
-                  name="nip"
-                  type="text"
-                  required
-                  value={nip}
-                  onChange={handleNipChange}
-                  maxLength={13}
-                  className="block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
-                  placeholder="123-456-78-90"
-                />
-                <NipLookupButton
-                  nip={nip}
-                  onResult={handleLookupResult}
-                  onError={handleLookupError}
-                />
-              </div>
+              <input
+                id="nip"
+                name="nip"
+                type="text"
+                required
+                value={nip}
+                onChange={handleNipChange}
+                maxLength={13}
+                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                placeholder="123-456-78-90"
+              />
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                 {t('onboarding.nipHint')}
               </p>
-              {lookupInfo && (
-                <p className="mt-1 text-xs text-green-600 dark:text-green-400">{lookupInfo}</p>
-              )}
             </div>
           </div>
 

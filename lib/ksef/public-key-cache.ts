@@ -43,15 +43,17 @@ export async function getKsefPublicKey(environment: KsefEnvironment): Promise<st
   }
 
   const data = await response.json()
-  const certs: Array<{ pem: string; usage: string }> = data.certificates || data
+  const certs: Array<{ certificate: string; usage: string[] }> = data.certificates || data
 
-  const tokenCert = certs.find((c) => c.usage === 'KsefTokenEncryption')
+  const tokenCert = certs.find((c) => c.usage?.includes('KsefTokenEncryption'))
 
   if (!tokenCert) {
     throw new Error(`No KsefTokenEncryption certificate found for environment: ${environment}`)
   }
 
-  const pemCertificate = tokenCert.pem
+  // The certificate is base64-encoded DER, convert to PEM format
+  const base64Cert = tokenCert.certificate
+  const pemCertificate = `-----BEGIN CERTIFICATE-----\n${base64Cert.match(/.{1,64}/g)?.join('\n')}\n-----END CERTIFICATE-----`
   const publicKeyPem = extractPublicKeyFromCert(pemCertificate)
   const x509 = new X509Certificate(pemCertificate)
   const notAfter = new Date(x509.validTo)
