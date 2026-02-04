@@ -20,7 +20,7 @@ A comprehensive implementation plan for Filbert - a KSeF (Polish e-invoicing sys
 - Fixed sidebar navigation (240px)
 - Top bar with company selector and logout
 - Invoice tables for sales and purchases
-- Company switching via URL params
+- Company switching via React Context + cookies
 - Invoice statistics cards
 
 ### Phase 3: Invoice Features
@@ -63,7 +63,7 @@ A comprehensive implementation plan for Filbert - a KSeF (Polish e-invoicing sys
 - Company settings page at `/settings/company`
 - Edit company name (admin only, inline editing)
 - View NIP (read-only for all users)
-- KSeF credentials management (token + environment: test/demo/prod, admin only)
+- KSeF credentials management (token + certificate + environment: test/demo/prod)
 - Delete company with name-typing confirmation dialog (cascade delete, admin only)
 - Sidebar navigation entry with gear icon
 - Demo company shows unavailable message
@@ -71,16 +71,18 @@ A comprehensive implementation plan for Filbert - a KSeF (Polish e-invoicing sys
 
 ### Phase 8: KSeF Integration
 
-- KSeF API client for test/demo/prod environments
+- KSeF v2 API client for test/demo/prod environments
+- Token authentication with RSA-OAEP encryption (challenge-response)
+- Certificate authentication with XAdES-BES signatures
+- PEM and PKCS#12 certificate format support
 - Send sales invoices to KSeF (FA(3) XML generation, session management, status polling)
 - Fetch invoices from KSeF (query by date range, parse FA(3) XML, import with deduplication)
 - Invoice KSeF status tracking (pending → sent → accepted/rejected/error)
 - KSeF status badges on invoice table and detail pages
+- Raw XML storage and viewer for debugging
 - "Send to KSeF" button on sales invoice detail page
 - "Fetch from KSeF" section in company settings (admin only)
-- Error handling with user-friendly messages (auth failures, session errors, connection issues)
-- SHA-256 hash generation for QR code after successful send
-- Database columns: ksef_status, ksef_error, ksef_sent_at
+- Error handling with user-friendly messages
 
 ### Phase 11: GUS REGON API Connector
 
@@ -96,96 +98,34 @@ A comprehensive implementation plan for Filbert - a KSeF (Polish e-invoicing sys
 
 ### Phase 10: Single-Record Invoice Model
 
-Refactor the invoice schema from per-company duplicated records to a single-record model where each invoice exists once in the database with references to both the seller and buyer company. This eliminates data duplication and enables automatic cross-company invoice visibility (e.g., a sales invoice issued by one demo company appears as a purchase invoice for the receiving demo company).
+Refactor the invoice schema from per-company duplicated records to a single-record model where each invoice exists once in the database with references to both the seller and buyer company.
 
-#### 10a: Database Migration
+**Benefits:**
 
-**Migration** (`supabase/migrations/..._single_record_invoices.sql`):
+- Eliminates data duplication
+- Enables automatic cross-company invoice visibility
+- A sales invoice from Company A to Company B automatically appears in B's purchases
 
-- Add `seller_company_id UUID REFERENCES companies(id)` (nullable)
-- Add `buyer_company_id UUID REFERENCES companies(id)` (nullable)
-- Add CHECK constraint: `seller_company_id IS NOT NULL OR buyer_company_id IS NOT NULL`
-- Migrate existing data:
-  - `type = 'sales'` → set `seller_company_id = company_id`
-  - `type = 'purchase'` → set `buyer_company_id = company_id`
-- Cross-link demo companies: where `vendor_nip` or `customer_nip` matches a known company NIP, set the corresponding `seller_company_id` or `buyer_company_id`
-- Drop column `type` (derived from perspective: seller_company_id = my company → sales, buyer_company_id = my company → purchase)
-- Drop column `company_id`
-- Update indexes: replace `(company_id, type)` index with separate indexes on `seller_company_id` and `buyer_company_id`
-- Update unique constraint: replace `(company_id, invoice_number)` with `(seller_company_id, invoice_number) WHERE seller_company_id IS NOT NULL`
+**Key Changes:**
 
-**RLS policies** (`supabase/rls-policies.sql`):
+1. **Database Migration**
+   - Add `seller_company_id` and `buyer_company_id` columns (nullable)
+   - Migrate existing data based on `type` field
+   - Cross-link demo companies by matching NIP
+   - Drop `type` and `company_id` columns
+   - Update RLS policies for dual-company access
 
-- Update SELECT policy: allow if `seller_company_id` or `buyer_company_id` is in user's active companies or is a demo company
-- Update INSERT policy: allow if `seller_company_id` is in user's admin/member companies (only sellers create invoices)
+2. **Type Definitions**
+   - Replace `company_id` with `seller_company_id` / `buyer_company_id`
+   - Remove `type` field (derived from perspective)
 
-**SQL functions** (`supabase/migrations/...`):
+3. **Data Layer**
+   - Update queries to filter by `seller_company_id` or `buyer_company_id`
+   - Cross-link on invoice creation when counterparty NIP matches known company
 
-- `get_missing_vendors(p_company_id)` → filter by `buyer_company_id = p_company_id` instead of `company_id = ... AND type = 'purchase'`
-- `get_missing_customers(p_company_id)` → filter by `seller_company_id = p_company_id` instead of `company_id = ... AND type = 'sales'`
-- Same for `_count` variants
-
-#### 10b: Type Definitions & Data Layer
-
-**TypeScript types** (`lib/types/database.ts`):
-
-- Replace `company_id` with `seller_company_id` and `buyer_company_id` (both `string | null`)
-- Remove `type` field from `Invoice`, `InvoiceInsert`, `InvoiceUpdate`
-
-**Data fetching** (`lib/data/invoices.ts`):
-
-- `getInvoices(companyId, type)`:
-  - `type = 'sales'` → `.eq('seller_company_id', companyId)`
-  - `type = 'purchase'` → `.eq('buyer_company_id', companyId)`
-  - Also include cross-company invoices: a sales invoice from another company where `buyer_company_id = companyId` should show under purchases
-- `getInvoiceById(id, companyId)`: verify `seller_company_id = companyId OR buyer_company_id = companyId`
-- `getAllInvoicesForExport()`: same pattern as `getInvoices`
-
-#### 10c: API Routes
-
-**Invoice creation** (`app/api/invoices/route.ts`):
-
-- Set `seller_company_id` instead of `company_id` + `type: 'sales'`
-- Remove `type` from insert payload
-- Cross-link: if `customer_nip` matches a company in our system, set `buyer_company_id` to that company's ID
-
-**KSeF send** (`app/api/invoices/[id]/ksef/send/route.ts`):
-
-- Validate `invoice.seller_company_id === companyId` instead of `invoice.type === 'sales'`
-
-**KSeF fetch** (`app/api/companies/[companyId]/ksef/fetch/route.ts`):
-
-- Sales fetch: set `seller_company_id = companyId`, cross-link `buyer_company_id` if customer NIP matches a known company
-- Purchase fetch: set `buyer_company_id = companyId`, cross-link `seller_company_id` if vendor NIP matches a known company
-- Deduplication: before inserting, check if an invoice with the same `ksef_reference` already exists (it may have been fetched by the counterparty already) — if so, update the existing record to set the missing company_id
-
-#### 10d: Components
-
-Most components receive `type` as a prop from the URL route (`/sales` vs `/purchases`), so the interface stays the same. Changes needed:
-
-- `invoice-detail-page.tsx`: replace `invoice.type !== type` guard with check on `seller_company_id`/`buyer_company_id` matching current company
-- `invoice-table.tsx`: no `invoice.type` references to update (already uses prop-based `type`)
-- `ksef-send-button.tsx`: check `invoice.seller_company_id` instead of `invoice.type === 'sales'`
-- `invoice-form.tsx`: no changes (already creates sales invoices only)
-- `export-button.tsx`: no changes (already uses prop-based `type`)
-
-#### 10e: Seed Data
-
-**Rewrite** `supabase/seed-demo-invoices.sql`:
-
-- **Cross-company invoices** (single record, both FKs set):
-  - Demo Sp. z o.o. → Demo Klient: `seller_company_id = demo_sp`, `buyer_company_id = demo_klient`, same invoice number/date/amount visible from both sides
-  - Demo Dostawca → Demo Sp. z o.o.: `seller_company_id = demo_dostawca`, `buyer_company_id = demo_sp`
-  - Demo Dostawca → Demo Klient: `seller_company_id = demo_dostawca`, `buyer_company_id = demo_klient`
-- **External invoices** (one FK set, counterparty is text-only):
-  - Sales to external companies: `seller_company_id` set, `buyer_company_id` null
-  - Purchases from external vendors: `buyer_company_id` set, `seller_company_id` null
-
-#### 10f: Validation & Translation Updates
-
-- Update `createInvoiceSchema` (`lib/validations/invoice.ts`): remove `company_id`, add `seller_company_id`
-- Update i18n validation script if it references invoice type fields
-- No translation key changes needed (sales/purchase distinction is URL-based, not data-based)
+4. **Components**
+   - Update guards to check appropriate company ID
+   - No UI changes needed (type still derived from route)
 
 ---
 
@@ -205,15 +145,21 @@ Most components receive `type` as a prop from the URL route (`/sales` vs `/purch
 - In-app notification bell
 - Audit log (invoice CRUD, member changes, settings changes)
 
+### Phase 12: E2E Testing
+
+- Playwright test suite
+- User flow coverage (see docs/testing/USER_FLOWS.md)
+- CI integration
+
 ---
 
 ## Infrastructure & Quality
 
-### CI/CD Pipeline (Planned)
+### CI/CD Pipeline
 
-- GitHub Actions workflow with: `npm run lint`, `tsc --noEmit`, `npm run build`, `npm test`
+- GitHub Actions workflow: `npm run lint`, `tsc --noEmit`, `npm run build`
 - Preview deployments via Vercel
-- Branch protection rules on `main`
+- Concurrency groups to cancel redundant runs
 
 ---
 
@@ -242,23 +188,14 @@ Most components receive `type` as a prop from the URL route (`/sales` vs `/purch
 - `@/*` maps to project root
 - Example: `import { createClient } from '@/lib/supabase/server'`
 
-### Data Layer Pattern
+---
 
-```typescript
-// Server Component
-import { getTranslations } from 'next-intl/server'
+## Documentation
 
-export default async function Page() {
-  const t = await getTranslations('namespace')
-  // fetch data with server-side Supabase client
-}
-
-// Client Component
-;('use client')
-import { useTranslations } from 'next-intl'
-
-export function Component() {
-  const t = useTranslations('namespace')
-  // use client-side hooks
-}
-```
+| Document                                         | Description                |
+| ------------------------------------------------ | -------------------------- |
+| [PRD.md](./PRD.md)                               | Product requirements       |
+| [ARCHITECTURE.md](./ARCHITECTURE.md)             | Codebase architecture      |
+| [CONVENTIONS.md](./CONVENTIONS.md)               | Coding standards           |
+| [testing/USER_FLOWS.md](./testing/USER_FLOWS.md) | E2E test flows             |
+| [ksef/](./ksef/)                                 | KSeF integration reference |
