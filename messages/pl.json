@@ -476,9 +476,13 @@
         "type": "Typ",
         "environment": "Środowisko",
         "status": "Status",
+        "permissions": "Uprawnienia",
+        "expires": "Wygasa",
+        "default": "Domyślne",
         "lastVerified": "Ostatnia weryfikacja",
         "actions": "Akcje",
-        "never": "Nigdy"
+        "never": "Nigdy",
+        "noExpiry": "\u2014"
       },
       "status": {
         "valid": "Połączono",
@@ -504,9 +508,23 @@
       },
       "actions": {
         "testConnection": "Testuj połączenie",
+        "verify": "Weryfikuj",
+        "verifying": "Weryfikowanie...",
+        "setDefault": "Ustaw jako domyślne",
+        "removeDefault": "Usuń domyślne",
         "edit": "Edytuj",
         "delete": "Usuń",
         "deleteConfirm": "Czy na pewno chcesz usunąć te dane dostępowe?"
+      },
+      "permissions": {
+        "InvoiceRead": "Odczyt",
+        "InvoiceWrite": "Zapis",
+        "CredentialsRead": "Upr. O",
+        "CredentialsManage": "Upr. Z",
+        "Introspection": "Intro",
+        "SubunitManage": "Podj. Z",
+        "EnforcementOperations": "Egzek.",
+        "VatUeManage": "VAT UE"
       },
       "authMethods": {
         "token": "Token API",
@@ -543,7 +561,9 @@
       "removed": "Dane dostępowe usunięte",
       "testing": "Testowanie połączenia...",
       "testSuccess": "Połączenie udane",
-      "testFailed": "Połączenie nieudane"
+      "testFailed": "Połączenie nieudane",
+      "verifySuccess": "Dane dostępowe zweryfikowane pomyślnie",
+      "defaultSet": "Zaktualizowano domyślne dane dostępowe"
     },
     "delete": {
       "title": "Strefa zagrożenia",

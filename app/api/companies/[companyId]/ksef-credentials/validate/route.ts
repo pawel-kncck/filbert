@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdminAuth, isApiError, apiError, badRequest } from '@/lib/api/middleware'
-import { authenticateWithKsef, authenticateWithCertificate, KsefAuthError } from '@/lib/ksef/auth'
-import { parsePkcs12, parsePemCertificate, CertificateError } from '@/lib/ksef/certificate-crypto'
+import {
+  requireAdminAuth,
+  isApiError,
+  apiError,
+  badRequest,
+  type AdminContext,
+} from '@/lib/api/middleware'
+import { KsefAuthError } from '@/lib/ksef/auth'
+import { KsefApiClient } from '@/lib/ksef/api-client'
+import {
+  parsePkcs12,
+  parsePemCertificate,
+  CertificateError,
+  decryptPrivateKey,
+} from '@/lib/ksef/certificate-crypto'
 import type { KsefEnvironment } from '@/lib/ksef/types'
 
 const VALID_ENVIRONMENTS = ['test', 'demo', 'prod'] as const
@@ -33,28 +45,125 @@ export async function POST(
     return validateCertificate(request, company.nip)
   }
 
+  // JSON body — could be token validation or re-verify of existing credential
+  const body = await request.json()
+
+  if (body.credentialId) {
+    return reverifyExistingCredential(body.credentialId, auth.companyId, company.nip, auth.supabase)
+  }
+
   // Token validation via JSON
-  return validateToken(request, company.nip)
+  return validateToken(body, company.nip)
 }
 
-async function validateToken(request: NextRequest, nip: string) {
-  const body = await request.json()
+async function reverifyExistingCredential(
+  credentialId: string,
+  companyId: string,
+  nip: string,
+  supabase: AdminContext['supabase']
+) {
+  // Load credential from DB
+  const { data: credential, error } = await supabase
+    .from('company_ksef_credentials')
+    .select(
+      'id, company_id, token, environment, auth_method, certificate_pem, encrypted_private_key'
+    )
+    .eq('id', credentialId)
+    .eq('company_id', companyId)
+    .single()
+
+  if (error || !credential) {
+    return badRequest('Credential not found')
+  }
+
+  const env = credential.environment as KsefEnvironment
+  const client = new KsefApiClient(env)
+
+  try {
+    // Authenticate based on auth method
+    if (credential.auth_method === 'token') {
+      if (!credential.token) {
+        return NextResponse.json({ valid: false, error: 'No token stored for this credential' })
+      }
+      await client.authenticate(nip, credential.token)
+    } else {
+      if (!credential.certificate_pem || !credential.encrypted_private_key) {
+        return NextResponse.json({
+          valid: false,
+          error: 'No certificate stored for this credential',
+        })
+      }
+      const privateKeyPem = decryptPrivateKey(credential.encrypted_private_key)
+      await client.authenticateWithCert(nip, credential.certificate_pem, privateKeyPem)
+    }
+
+    // Query permissions
+    const permissions = await client.queryPersonalPermissions(nip)
+
+    // Update DB with results
+    await supabase
+      .from('company_ksef_credentials')
+      .update({
+        validation_status: 'valid',
+        validated_at: new Date().toISOString(),
+        validation_error: null,
+        granted_permissions: permissions,
+      })
+      .eq('id', credentialId)
+
+    return NextResponse.json({
+      valid: true,
+      permissions,
+      message: 'Credentials verified successfully',
+    })
+  } catch (err) {
+    const errorMessage = err instanceof KsefAuthError ? err.message : 'Failed to verify credentials'
+
+    // Update DB with failure
+    await supabase
+      .from('company_ksef_credentials')
+      .update({
+        validation_status: 'invalid',
+        validated_at: new Date().toISOString(),
+        validation_error: errorMessage,
+        granted_permissions: [],
+      })
+      .eq('id', credentialId)
+
+    return NextResponse.json({
+      valid: false,
+      error: errorMessage,
+      ...(err instanceof KsefAuthError && { code: err.code }),
+    })
+  }
+}
+
+async function validateToken(body: Record<string, unknown>, nip: string) {
   const { token, environment } = body
 
   if (!token || typeof token !== 'string' || token.trim().length === 0) {
     return badRequest('Token is required')
   }
 
-  if (!environment || !VALID_ENVIRONMENTS.includes(environment)) {
+  if (
+    !environment ||
+    !VALID_ENVIRONMENTS.includes(environment as (typeof VALID_ENVIRONMENTS)[number])
+  ) {
     return badRequest('Invalid environment. Must be test, demo, or prod')
   }
 
+  const env = environment as KsefEnvironment
+  const client = new KsefApiClient(env)
+
   try {
-    // Attempt to authenticate with KSeF
-    await authenticateWithKsef(environment as KsefEnvironment, nip, token.trim())
+    await client.authenticate(nip, token.trim())
+
+    // Also query permissions for new credentials
+    const permissions = await client.queryPersonalPermissions(nip)
 
     return NextResponse.json({
       valid: true,
+      permissions,
       message: 'Successfully connected to KSeF',
     })
   } catch (error) {
@@ -147,17 +256,18 @@ async function validateCertificate(request: NextRequest, nip: string) {
     })
   }
 
+  const env = environment as KsefEnvironment
+  const client = new KsefApiClient(env)
+
   try {
-    // Attempt to authenticate with KSeF using certificate
-    await authenticateWithCertificate(
-      environment as KsefEnvironment,
-      nip,
-      certificatePem,
-      privateKeyPem
-    )
+    await client.authenticateWithCert(nip, certificatePem, privateKeyPem)
+
+    // Also query permissions for new credentials
+    const permissions = await client.queryPersonalPermissions(nip)
 
     return NextResponse.json({
       valid: true,
+      permissions,
       message: 'Successfully connected to KSeF with certificate',
     })
   } catch (error) {

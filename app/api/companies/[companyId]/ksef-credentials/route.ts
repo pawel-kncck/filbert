@@ -12,6 +12,7 @@ import {
   encryptPrivateKey,
   CertificateError,
 } from '@/lib/ksef/certificate-crypto'
+import { X509Certificate } from 'node:crypto'
 
 const VALID_ENVIRONMENTS = ['test', 'demo', 'prod'] as const
 
@@ -27,9 +28,10 @@ export async function GET(
   const { data, error } = await auth.supabase
     .from('company_ksef_credentials')
     .select(
-      'id, company_id, token, environment, auth_method, certificate_pem, validated_at, validation_status, validation_error, name, created_at, updated_at'
+      'id, company_id, token, environment, auth_method, certificate_pem, validated_at, validation_status, validation_error, name, granted_permissions, is_default, certificate_expires_at, created_at, updated_at'
     )
     .eq('company_id', auth.companyId)
+    .order('is_default', { ascending: false })
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -211,6 +213,16 @@ async function handleCertificateUpload(request: NextRequest, auth: AdminContext)
     )
   }
 
+  // Extract certificate expiry date
+  let certificateExpiresAt: string | null = null
+  try {
+    const x509 = new X509Certificate(certificatePem)
+    certificateExpiresAt = new Date(x509.validTo).toISOString()
+  } catch {
+    // Non-fatal: skip expiry extraction if parsing fails
+    console.warn('[KSeF Credentials] Failed to extract certificate expiry date')
+  }
+
   const env = (environment as 'test' | 'demo' | 'prod') || 'test'
 
   // Check for existing credential with same environment + auth_method
@@ -235,6 +247,7 @@ async function handleCertificateUpload(request: NextRequest, auth: AdminContext)
         validated_at: status === 'valid' ? new Date().toISOString() : null,
         validation_status: status,
         validation_error: validationError || null,
+        certificate_expires_at: certificateExpiresAt,
       })
       .eq('id', existing.id)
       .select('id')
@@ -266,6 +279,7 @@ async function handleCertificateUpload(request: NextRequest, auth: AdminContext)
       validated_at: status === 'valid' ? new Date().toISOString() : null,
       validation_status: status,
       validation_error: validationError || null,
+      certificate_expires_at: certificateExpiresAt,
     })
     .select('id')
     .single()

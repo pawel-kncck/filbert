@@ -51,7 +51,7 @@ export async function PUT(
   }
 
   const body = await request.json()
-  const { name, validationStatus, validationError, validatedAt } = body
+  const { name, validationStatus, validationError, validatedAt, isDefault } = body
 
   const updateData: Record<string, unknown> = {}
 
@@ -71,6 +71,18 @@ export async function PUT(
     updateData.validated_at = validatedAt
   }
 
+  if (isDefault !== undefined) {
+    if (isDefault) {
+      // Clear is_default on all other credentials for this company
+      await auth.supabase
+        .from('company_ksef_credentials')
+        .update({ is_default: false })
+        .eq('company_id', auth.companyId)
+        .neq('id', credentialId)
+    }
+    updateData.is_default = isDefault
+  }
+
   if (Object.keys(updateData).length === 0) {
     return badRequest('No fields to update')
   }
@@ -79,7 +91,7 @@ export async function PUT(
     .from('company_ksef_credentials')
     .update(updateData)
     .eq('id', credentialId)
-    .select('id, validation_status, validation_error, validated_at, name')
+    .select('id, validation_status, validation_error, validated_at, name, is_default')
     .single()
 
   if (error) {

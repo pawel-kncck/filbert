@@ -307,6 +307,9 @@ export type Database = {
           validation_status: 'valid' | 'invalid' | 'pending'
           validation_error: string | null
           name: string | null
+          granted_permissions: string[] | null
+          is_default: boolean
+          certificate_expires_at: string | null
           created_at: string
           updated_at: string
         }
@@ -324,6 +327,9 @@ export type Database = {
           validation_status?: 'valid' | 'invalid' | 'pending'
           validation_error?: string | null
           name?: string | null
+          granted_permissions?: string[] | null
+          is_default?: boolean
+          certificate_expires_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -341,6 +347,9 @@ export type Database = {
           validation_status?: 'valid' | 'invalid' | 'pending'
           validation_error?: string | null
           name?: string | null
+          granted_permissions?: string[] | null
+          is_default?: boolean
+          certificate_expires_at?: string | null
           created_at?: string
           updated_at?: string
         }

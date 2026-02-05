@@ -28,9 +28,11 @@ export async function getKsefCredentials(companyId: string): Promise<KsefCredent
   const { data, error } = await supabase
     .from('company_ksef_credentials')
     .select(
-      'id, company_id, token, environment, auth_method, certificate_pem, encrypted_private_key, refresh_token, refresh_token_expires_at, validated_at, validation_status, validation_error, name, created_at, updated_at'
+      'id, company_id, token, environment, auth_method, certificate_pem, encrypted_private_key, refresh_token, refresh_token_expires_at, validated_at, validation_status, validation_error, name, granted_permissions, is_default, certificate_expires_at, created_at, updated_at'
     )
     .eq('company_id', companyId)
+    .order('is_default', { ascending: false })
+    .order('validation_status', { ascending: true })
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -47,7 +49,7 @@ export async function getKsefCredential(credentialId: string): Promise<KsefCrede
   const { data, error } = await supabase
     .from('company_ksef_credentials')
     .select(
-      'id, company_id, token, environment, auth_method, certificate_pem, encrypted_private_key, refresh_token, refresh_token_expires_at, validated_at, validation_status, validation_error, name, created_at, updated_at'
+      'id, company_id, token, environment, auth_method, certificate_pem, encrypted_private_key, refresh_token, refresh_token_expires_at, validated_at, validation_status, validation_error, name, granted_permissions, is_default, certificate_expires_at, created_at, updated_at'
     )
     .eq('id', credentialId)
     .single()

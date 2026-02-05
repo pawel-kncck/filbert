@@ -17,11 +17,12 @@ import { Badge } from '@/components/ui/badge'
 import { KsefAddCredentialModal } from './ksef-add-credential-modal'
 import {
   PlusIcon,
-  MoreHorizontalIcon,
   RefreshCwIcon,
   Trash2Icon,
   KeyIcon,
   FileTextIcon,
+  StarIcon,
+  ShieldCheckIcon,
 } from 'lucide-react'
 
 type Props = {
@@ -35,33 +36,55 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
   const router = useRouter()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [testingId, setTestingId] = useState<string | null>(null)
+  const [verifyingId, setVerifyingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
 
   const handleAddSuccess = () => {
     router.refresh()
   }
 
-  const handleTestConnection = async (credential: KsefCredentials) => {
-    setTestingId(credential.id)
+  const handleVerify = async (credential: KsefCredentials) => {
+    setVerifyingId(credential.id)
     setError(null)
     setSuccess(null)
-    setOpenDropdown(null)
 
     try {
-      // For testing, we need to re-authenticate. Since we don't store plain tokens,
-      // we'll just update the validation status based on the test result
+      const res = await fetch(`/api/companies/${companyId}/ksef-credentials/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credentialId: credential.id }),
+      })
+
+      const data = await res.json()
+
+      if (!data.valid) {
+        setError(data.error || tErrors('generic'))
+        return
+      }
+
+      setSuccess(t('verifySuccess'))
+      router.refresh()
+      setTimeout(() => setSuccess(null), 3000)
+    } catch {
+      setError(tErrors('connection'))
+    } finally {
+      setVerifyingId(null)
+    }
+  }
+
+  const handleSetDefault = async (credential: KsefCredentials) => {
+    setError(null)
+    setSuccess(null)
+
+    const newDefault = !credential.is_default
+
+    try {
       const res = await fetch(`/api/companies/${companyId}/ksef-credentials/${credential.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          validationStatus: 'valid',
-          validatedAt: new Date().toISOString(),
-          validationError: null,
-        }),
+        body: JSON.stringify({ isDefault: newDefault }),
       })
 
       if (!res.ok) {
@@ -70,13 +93,11 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
         return
       }
 
-      setSuccess(t('testSuccess'))
+      setSuccess(t('defaultSet'))
       router.refresh()
       setTimeout(() => setSuccess(null), 3000)
     } catch {
       setError(tErrors('connection'))
-    } finally {
-      setTestingId(null)
     }
   }
 
@@ -86,7 +107,6 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
     setDeletingId(credential.id)
     setError(null)
     setSuccess(null)
-    setOpenDropdown(null)
 
     try {
       const res = await fetch(`/api/companies/${companyId}/ksef-credentials/${credential.id}`, {
@@ -154,6 +174,25 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
     }
   }
 
+  const formatDate = (date: string) => {
+    try {
+      return new Date(date).toLocaleDateString()
+    } catch {
+      return date
+    }
+  }
+
+  const PERMISSION_KEYS = [
+    'InvoiceRead',
+    'InvoiceWrite',
+    'CredentialsRead',
+    'CredentialsManage',
+    'Introspection',
+    'SubunitManage',
+    'EnforcementOperations',
+    'VatUeManage',
+  ] as const
+
   return (
     <div className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
       <div className="flex items-center justify-between border-b border-zinc-200 p-4 dark:border-zinc-700">
@@ -163,7 +202,7 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
         </div>
         <Button onClick={() => setIsModalOpen(true)} size="sm">
           <PlusIcon className="mr-1 h-4 w-4" />
-          {credentials.length === 0 ? t('addCredentials') : t('addCredentials')}
+          {t('addCredentials')}
         </Button>
       </div>
 
@@ -187,16 +226,37 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">{t('table.default')}</TableHead>
               <TableHead>{t('table.type')}</TableHead>
               <TableHead>{t('table.environment')}</TableHead>
               <TableHead>{t('table.status')}</TableHead>
+              <TableHead>{t('table.permissions')}</TableHead>
+              <TableHead>{t('table.expires')}</TableHead>
               <TableHead>{t('table.lastVerified')}</TableHead>
-              <TableHead className="w-10"></TableHead>
+              <TableHead className="w-24"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {credentials.map((credential) => (
               <TableRow key={credential.id}>
+                <TableCell>
+                  <button
+                    type="button"
+                    onClick={() => handleSetDefault(credential)}
+                    className="rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                    title={
+                      credential.is_default ? t('actions.removeDefault') : t('actions.setDefault')
+                    }
+                  >
+                    <StarIcon
+                      className={`h-4 w-4 ${
+                        credential.is_default
+                          ? 'fill-yellow-500 text-yellow-500'
+                          : 'text-zinc-300 hover:text-yellow-500 dark:text-zinc-600'
+                      }`}
+                    />
+                  </button>
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {credential.auth_method === 'token' ? (
@@ -216,57 +276,63 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
                 </TableCell>
                 <TableCell>{getStatusBadge(credential.validation_status)}</TableCell>
                 <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {(credential.granted_permissions || []).map((scope) => {
+                      const isKnown = PERMISSION_KEYS.includes(
+                        scope as (typeof PERMISSION_KEYS)[number]
+                      )
+                      return (
+                        <span
+                          key={scope}
+                          className="inline-flex items-center rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                          title={scope}
+                        >
+                          {isKnown ? t(`permissions.${scope}` as Parameters<typeof t>[0]) : scope}
+                        </span>
+                      )
+                    })}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className="text-zinc-500 dark:text-zinc-400">
+                    {credential.certificate_expires_at
+                      ? formatDate(credential.certificate_expires_at)
+                      : t('table.noExpiry')}
+                  </span>
+                </TableCell>
+                <TableCell>
                   <span className="text-zinc-500 dark:text-zinc-400">
                     {formatLastVerified(credential.validated_at)}
                   </span>
                 </TableCell>
                 <TableCell>
-                  <div className="relative">
+                  <div className="flex items-center gap-1">
                     <button
                       type="button"
-                      onClick={() =>
-                        setOpenDropdown(openDropdown === credential.id ? null : credential.id)
-                      }
-                      disabled={testingId === credential.id || deletingId === credential.id}
+                      onClick={() => handleVerify(credential)}
+                      disabled={verifyingId === credential.id}
                       className="rounded p-1 hover:bg-zinc-100 disabled:opacity-50 dark:hover:bg-zinc-700"
+                      title={t('actions.verify')}
                     >
-                      {testingId === credential.id || deletingId === credential.id ? (
+                      {verifyingId === credential.id ? (
                         <RefreshCwIcon className="h-4 w-4 animate-spin text-zinc-500" />
                       ) : (
-                        <MoreHorizontalIcon className="h-4 w-4 text-zinc-500" />
+                        <ShieldCheckIcon className="h-4 w-4 text-zinc-500 hover:text-blue-600" />
                       )}
                     </button>
-
-                    {openDropdown === credential.id && (
-                      <>
-                        {/* Backdrop to close dropdown */}
-                        <button
-                          type="button"
-                          className="fixed inset-0 z-10 cursor-default"
-                          onClick={() => setOpenDropdown(null)}
-                          onKeyDown={(e) => e.key === 'Escape' && setOpenDropdown(null)}
-                          aria-label="Close menu"
-                        />
-                        <div className="absolute right-0 z-20 mt-1 w-48 rounded-md border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
-                          <button
-                            type="button"
-                            onClick={() => handleTestConnection(credential)}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                          >
-                            <RefreshCwIcon className="h-4 w-4" />
-                            {t('actions.testConnection')}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(credential)}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                          >
-                            <Trash2Icon className="h-4 w-4" />
-                            {t('actions.delete')}
-                          </button>
-                        </div>
-                      </>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(credential)}
+                      disabled={deletingId === credential.id}
+                      className="rounded p-1 hover:bg-zinc-100 disabled:opacity-50 dark:hover:bg-zinc-700"
+                      title={t('actions.delete')}
+                    >
+                      {deletingId === credential.id ? (
+                        <RefreshCwIcon className="h-4 w-4 animate-spin text-zinc-500" />
+                      ) : (
+                        <Trash2Icon className="h-4 w-4 text-zinc-400 hover:text-red-600" />
+                      )}
+                    </button>
                   </div>
                 </TableCell>
               </TableRow>

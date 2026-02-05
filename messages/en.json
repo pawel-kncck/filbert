@@ -476,9 +476,13 @@
         "type": "Type",
         "environment": "Environment",
         "status": "Status",
+        "permissions": "Permissions",
+        "expires": "Expires",
+        "default": "Default",
         "lastVerified": "Last Verified",
         "actions": "Actions",
-        "never": "Never"
+        "never": "Never",
+        "noExpiry": "\u2014"
       },
       "status": {
         "valid": "Connected",
@@ -504,9 +508,23 @@
       },
       "actions": {
         "testConnection": "Test Connection",
+        "verify": "Verify",
+        "verifying": "Verifying...",
+        "setDefault": "Set as default",
+        "removeDefault": "Remove default",
         "edit": "Edit",
         "delete": "Delete",
         "deleteConfirm": "Are you sure you want to delete this credential?"
+      },
+      "permissions": {
+        "InvoiceRead": "Read",
+        "InvoiceWrite": "Write",
+        "CredentialsRead": "Cred R",
+        "CredentialsManage": "Cred M",
+        "Introspection": "Intro",
+        "SubunitManage": "Sub M",
+        "EnforcementOperations": "Enforce",
+        "VatUeManage": "VAT UE"
       },
       "authMethods": {
         "token": "API Token",
@@ -543,7 +561,9 @@
       "removed": "Credentials removed",
       "testing": "Testing connection...",
       "testSuccess": "Connection successful",
-      "testFailed": "Connection failed"
+      "testFailed": "Connection failed",
+      "verifySuccess": "Credentials verified successfully",
+      "defaultSet": "Default credential updated"
     },
     "delete": {
       "title": "Danger zone",

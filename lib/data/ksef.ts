@@ -11,7 +11,7 @@ export async function getKsefCredentialsForCompany(
   let query = supabase
     .from('company_ksef_credentials')
     .select(
-      'id, company_id, token, environment, auth_method, certificate_pem, encrypted_private_key, refresh_token, refresh_token_expires_at, validated_at, validation_status, validation_error, name, created_at, updated_at'
+      'id, company_id, token, environment, auth_method, certificate_pem, encrypted_private_key, refresh_token, refresh_token_expires_at, validated_at, validation_status, validation_error, name, granted_permissions, is_default, certificate_expires_at, created_at, updated_at'
     )
     .eq('company_id', companyId)
 
@@ -20,8 +20,9 @@ export async function getKsefCredentialsForCompany(
     query = query.eq('environment', environment)
   }
 
-  // Prefer valid credentials, then order by most recent
+  // Prefer default credential, then valid credentials, then most recent
   const { data, error } = await query
+    .order('is_default', { ascending: false })
     .order('validation_status', { ascending: true }) // 'valid' comes before 'pending'/'invalid'
     .order('created_at', { ascending: false })
     .limit(1)
