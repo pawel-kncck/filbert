@@ -109,7 +109,11 @@ export default async function CompanySettingsPage({ searchParams }: Props) {
         )}
 
         {isAdmin && (
-          <KsefFetchSection companyId={currentCompanyId} hasCredentials={credentials.length > 0} />
+          <KsefFetchSection
+            companyId={currentCompanyId}
+            hasCredentials={credentials.length > 0}
+            hasDefaultCredential={credentials.some((c) => c.is_default)}
+          />
         )}
 
         {isAdmin && (

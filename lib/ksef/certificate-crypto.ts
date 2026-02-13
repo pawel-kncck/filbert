@@ -1,4 +1,11 @@
-import { randomBytes, createCipheriv, createDecipheriv, createHash } from 'node:crypto'
+import {
+  randomBytes,
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  X509Certificate,
+  createPrivateKey,
+} from 'node:crypto'
 import forge from 'node-forge'
 
 export type ParsedCertificate = {
@@ -12,6 +19,7 @@ export type ParsedCertificate = {
  * Parses PEM-formatted certificate and private key strings.
  * Accepts .crt/.pem certificate and .key/.pem private key files.
  * Supports encrypted private keys when password is provided.
+ * Handles both RSA and EC key types via Node.js native crypto.
  */
 export function parsePemCertificate(
   certificatePem: string,
@@ -19,38 +27,39 @@ export function parsePemCertificate(
   password?: string
 ): ParsedCertificate {
   try {
-    const cert = forge.pki.certificateFromPem(certificatePem)
+    // Parse certificate using Node.js native X509Certificate (handles RSA + EC)
+    const x509 = new X509Certificate(certificatePem)
+    const cnMatch = x509.subject.match(/CN=([^,\n]+)/)
+    const commonName = cnMatch ? cnMatch[1]!.trim() : null
+    const notAfter = new Date(x509.validTo)
 
-    // Try to parse the private key - it might be encrypted
-    let privateKey: forge.pki.PrivateKey
+    // Parse private key using Node.js native createPrivateKey (handles RSA + EC)
     let decryptedKeyPem: string
 
     if (privateKeyPem.includes('ENCRYPTED')) {
-      // Encrypted private key - requires password
       if (!password) {
         throw new CertificateError(
           'PASSWORD_REQUIRED',
           'Private key is encrypted. Password is required.'
         )
       }
-      privateKey = forge.pki.decryptRsaPrivateKey(privateKeyPem, password)
-      if (!privateKey) {
+      try {
+        const keyObject = createPrivateKey({
+          key: privateKeyPem,
+          passphrase: password,
+        })
+        decryptedKeyPem = keyObject.export({ type: 'pkcs8', format: 'pem' }).toString()
+      } catch {
         throw new CertificateError(
           'INVALID_PASSWORD',
           'Failed to decrypt private key. Check the password.'
         )
       }
-      // Convert to unencrypted PEM for storage (will be encrypted with our key)
-      decryptedKeyPem = forge.pki.privateKeyToPem(privateKey)
     } else {
-      // Unencrypted private key
-      privateKey = forge.pki.privateKeyFromPem(privateKeyPem)
-      decryptedKeyPem = privateKeyPem.trim()
+      // Validate the key can be parsed (catches format errors early)
+      const keyObject = createPrivateKey({ key: privateKeyPem })
+      decryptedKeyPem = keyObject.export({ type: 'pkcs8', format: 'pem' }).toString()
     }
-
-    const cn = cert.subject.getField('CN')
-    const commonName = cn ? String(cn.value) : null
-    const notAfter = cert.validity.notAfter
 
     return {
       certificatePem: certificatePem.trim(),

@@ -7,9 +7,10 @@ import { useTranslations } from 'next-intl'
 type Props = {
   companyId: string
   hasCredentials: boolean
+  hasDefaultCredential: boolean
 }
 
-export function KsefFetchSection({ companyId, hasCredentials }: Props) {
+export function KsefFetchSection({ companyId, hasCredentials, hasDefaultCredential }: Props) {
   const t = useTranslations('ksef.fetch')
   const tErrors = useTranslations('ksef.errors')
   const router = useRouter()
@@ -29,6 +30,15 @@ export function KsefFetchSection({ companyId, hasCredentials }: Props) {
       <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
         <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{t('title')}</h2>
         <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{t('noCredentials')}</p>
+      </div>
+    )
+  }
+
+  if (!hasDefaultCredential) {
+    return (
+      <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
+        <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{t('title')}</h2>
+        <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{t('noDefaultCredential')}</p>
       </div>
     )
   }

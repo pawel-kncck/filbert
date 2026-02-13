@@ -517,14 +517,14 @@
         "deleteConfirm": "Czy na pewno chcesz usunąć te dane dostępowe?"
       },
       "permissions": {
-        "InvoiceRead": "Odczyt",
-        "InvoiceWrite": "Zapis",
-        "CredentialsRead": "Upr. O",
-        "CredentialsManage": "Upr. Z",
-        "Introspection": "Intro",
-        "SubunitManage": "Podj. Z",
-        "EnforcementOperations": "Egzek.",
-        "VatUeManage": "VAT UE"
+        "InvoiceRead": "Odczyt faktur",
+        "InvoiceWrite": "Zapis faktur",
+        "CredentialsRead": "Odczyt uprawnień",
+        "CredentialsManage": "Zarządzanie uprawnieniami",
+        "Introspection": "Introspekcja",
+        "SubunitManage": "Zarządzanie podjednostkami",
+        "EnforcementOperations": "Operacje egzekucyjne",
+        "VatUeManage": "Zarządzanie VAT UE"
       },
       "authMethods": {
         "token": "Token API",
@@ -621,7 +621,8 @@
       "fetching": "Pobieranie...",
       "result": "Zaimportowano {imported} faktur, {skipped} pominięto (duplikaty)",
       "noResults": "Nie znaleziono nowych faktur w KSeF dla wybranego okresu",
-      "noCredentials": "Najpierw skonfiguruj dane dostępowe KSeF powyżej"
+      "noCredentials": "Najpierw skonfiguruj dane dostępowe KSeF powyżej",
+      "noDefaultCredential": "Ustaw domyślne dane dostępowe KSeF przed pobieraniem faktur"
     },
     "status": {
       "pending": "Wysyłanie...",

@@ -131,5 +131,18 @@ export async function DELETE(
     return apiError('INTERNAL_ERROR', error.message, 500)
   }
 
+  // If exactly one credential remains and it's not default, make it default
+  const { data: remaining } = await auth.supabase
+    .from('company_ksef_credentials')
+    .select('id, is_default')
+    .eq('company_id', auth.companyId)
+
+  if (remaining && remaining.length === 1 && !remaining[0]!.is_default) {
+    await auth.supabase
+      .from('company_ksef_credentials')
+      .update({ is_default: true })
+      .eq('id', remaining[0]!.id)
+  }
+
   return NextResponse.json({ success: true })
 }

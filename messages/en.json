@@ -517,14 +517,14 @@
         "deleteConfirm": "Are you sure you want to delete this credential?"
       },
       "permissions": {
-        "InvoiceRead": "Read",
-        "InvoiceWrite": "Write",
-        "CredentialsRead": "Cred R",
-        "CredentialsManage": "Cred M",
-        "Introspection": "Intro",
-        "SubunitManage": "Sub M",
-        "EnforcementOperations": "Enforce",
-        "VatUeManage": "VAT UE"
+        "InvoiceRead": "Invoice Read",
+        "InvoiceWrite": "Invoice Write",
+        "CredentialsRead": "Credentials Read",
+        "CredentialsManage": "Credentials Manage",
+        "Introspection": "Introspection",
+        "SubunitManage": "Subunit Manage",
+        "EnforcementOperations": "Enforcement Ops",
+        "VatUeManage": "VAT UE Manage"
       },
       "authMethods": {
         "token": "API Token",
@@ -621,7 +621,8 @@
       "fetching": "Fetching...",
       "result": "Imported {imported} invoices, {skipped} skipped (duplicates)",
       "noResults": "No new invoices found in KSeF for the selected period",
-      "noCredentials": "Configure KSeF credentials above first"
+      "noCredentials": "Configure KSeF credentials above first",
+      "noDefaultCredential": "Set a default KSeF credential before fetching invoices"
     },
     "status": {
       "pending": "Sending...",

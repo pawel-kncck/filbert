@@ -70,7 +70,7 @@ function parseValidationStatus(status: string | null | undefined): ValidationSta
 
 async function handleTokenSave(request: NextRequest, auth: AdminContext) {
   const body = await request.json()
-  const { token, environment, name, validationStatus, validationError } = body
+  const { token, environment, name, validationStatus, validationError, grantedPermissions } = body
 
   if (!token || typeof token !== 'string' || token.trim().length === 0) {
     return badRequest('Token is required')
@@ -80,7 +80,7 @@ async function handleTokenSave(request: NextRequest, auth: AdminContext) {
     return badRequest('Invalid environment. Must be test, demo, or prod')
   }
 
-  const env = environment || 'test'
+  const env = environment || 'prod'
   const status = parseValidationStatus(validationStatus)
 
   // Check for existing credential with same environment + auth_method
@@ -102,6 +102,7 @@ async function handleTokenSave(request: NextRequest, auth: AdminContext) {
         validated_at: status === 'valid' ? new Date().toISOString() : null,
         validation_status: status,
         validation_error: validationError || null,
+        ...(Array.isArray(grantedPermissions) && { granted_permissions: grantedPermissions }),
       })
       .eq('id', existing.id)
       .select('id')
@@ -126,6 +127,7 @@ async function handleTokenSave(request: NextRequest, auth: AdminContext) {
       validated_at: status === 'valid' ? new Date().toISOString() : null,
       validation_status: status,
       validation_error: validationError || null,
+      ...(Array.isArray(grantedPermissions) && { granted_permissions: grantedPermissions }),
     })
     .select('id')
     .single()
@@ -137,10 +139,26 @@ async function handleTokenSave(request: NextRequest, auth: AdminContext) {
     return apiError('INTERNAL_ERROR', error.message, 500)
   }
 
+  // Auto-set as default if this is the only credential
+  await autoSetDefaultIfOnly(auth, data.id)
+
   return NextResponse.json({ success: true, id: data.id })
 }
 
 async function handleCertificateUpload(request: NextRequest, auth: AdminContext) {
+  try {
+    return await handleCertificateUploadInner(request, auth)
+  } catch (err) {
+    console.error('[KSeF Credentials] Unhandled error in certificate upload:', err)
+    return apiError(
+      'INTERNAL_ERROR',
+      err instanceof Error ? err.message : 'Unexpected error saving certificate',
+      500
+    )
+  }
+}
+
+async function handleCertificateUploadInner(request: NextRequest, auth: AdminContext) {
   let formData: FormData
   try {
     formData = await request.formData()
@@ -157,6 +175,16 @@ async function handleCertificateUpload(request: NextRequest, auth: AdminContext)
   const name = formData.get('name') as string | null
   const validationStatus = formData.get('validationStatus') as string | null
   const validationError = formData.get('validationError') as string | null
+  const grantedPermissionsRaw = formData.get('grantedPermissions') as string | null
+  let grantedPermissions: string[] | undefined
+  if (grantedPermissionsRaw) {
+    try {
+      const parsed = JSON.parse(grantedPermissionsRaw)
+      if (Array.isArray(parsed)) grantedPermissions = parsed
+    } catch {
+      // ignore invalid JSON
+    }
+  }
 
   if (!certificateFile) {
     return badRequest('Certificate file is required')
@@ -223,7 +251,7 @@ async function handleCertificateUpload(request: NextRequest, auth: AdminContext)
     console.warn('[KSeF Credentials] Failed to extract certificate expiry date')
   }
 
-  const env = (environment as 'test' | 'demo' | 'prod') || 'test'
+  const env = (environment as 'test' | 'demo' | 'prod') || 'prod'
 
   // Check for existing credential with same environment + auth_method
   const { data: existing } = await auth.supabase
@@ -248,12 +276,14 @@ async function handleCertificateUpload(request: NextRequest, auth: AdminContext)
         validation_status: status,
         validation_error: validationError || null,
         certificate_expires_at: certificateExpiresAt,
+        ...(Array.isArray(grantedPermissions) && { granted_permissions: grantedPermissions }),
       })
       .eq('id', existing.id)
       .select('id')
       .single()
 
     if (error) {
+      console.error('[KSeF Credentials] DB update error:', error)
       return apiError('INTERNAL_ERROR', error.message, 500)
     }
 
@@ -280,18 +310,37 @@ async function handleCertificateUpload(request: NextRequest, auth: AdminContext)
       validation_status: status,
       validation_error: validationError || null,
       certificate_expires_at: certificateExpiresAt,
+      ...(Array.isArray(grantedPermissions) && { granted_permissions: grantedPermissions }),
     })
     .select('id')
     .single()
 
   if (error) {
+    console.error('[KSeF Credentials] DB insert error:', error)
     if (error.code === '23505') {
       return badRequest('Credential for this environment and auth method already exists')
     }
     return apiError('INTERNAL_ERROR', error.message, 500)
   }
 
+  // Auto-set as default if this is the only credential
+  await autoSetDefaultIfOnly(auth, data.id)
+
   return NextResponse.json({ success: true, id: data.id, authMethod: 'certificate' })
+}
+
+async function autoSetDefaultIfOnly(auth: AdminContext, newId: string) {
+  const { count } = await auth.supabase
+    .from('company_ksef_credentials')
+    .select('id', { count: 'exact', head: true })
+    .eq('company_id', auth.companyId)
+
+  if (count === 1) {
+    await auth.supabase
+      .from('company_ksef_credentials')
+      .update({ is_default: true })
+      .eq('id', newId)
+  }
 }
 
 export async function DELETE(
