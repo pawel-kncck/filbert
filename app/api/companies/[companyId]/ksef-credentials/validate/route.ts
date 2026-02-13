@@ -279,9 +279,11 @@ async function validateCertificate(request: NextRequest, nip: string) {
       })
     }
 
+    const detail = error instanceof Error ? error.message : 'Unknown error'
+    console.error('[KSeF Credentials] Certificate auth failed:', detail)
     return NextResponse.json({
       valid: false,
-      error: 'Failed to validate certificate credentials',
+      error: `Failed to validate certificate credentials: ${detail}`,
     })
   }
 }

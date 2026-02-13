@@ -1,137 +1,169 @@
-import { SignedXml } from 'xml-crypto'
-import { createHash, randomUUID } from 'node:crypto'
+import { ExclusiveCanonicalization, C14nCanonicalization } from 'xml-crypto'
+import { createHash, createPrivateKey, createSign, randomUUID } from 'node:crypto'
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom'
 
-const KSEF_AUTH_REQUEST_NS =
-  'http://ksef.mf.gov.pl/schema/gtw/svc/online/auth/request/2021/10/01/0001'
+const KSEF_AUTH_TOKEN_NS = 'http://ksef.mf.gov.pl/auth/token/2.0'
+const DSIG_NS = 'http://www.w3.org/2000/09/xmldsig#'
+const XADES_NS = 'http://uri.etsi.org/01903/v1.3.2#'
+const C14N_URI = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315'
+const EXC_C14N_URI = 'http://www.w3.org/2001/10/xml-exc-c14n#'
+const ENVELOPED_SIG_URI = 'http://www.w3.org/2000/09/xmldsig#enveloped-signature'
+const SHA256_URI = 'http://www.w3.org/2001/04/xmlenc#sha256'
 
 /**
- * Builds the KSeF authentication InitRequest XML for certificate-based auth.
+ * Builds the KSeF AuthTokenRequest XML for certificate-based auth
+ * submitted to /v2/auth/xades-signature.
  */
 export function buildAuthInitRequestXml(challenge: string, nip: string): string {
   return [
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
-    `<InitRequest xmlns="${KSEF_AUTH_REQUEST_NS}">`,
-    '  <Context>',
-    `    <Challenge>${escapeXml(challenge)}</Challenge>`,
-    '    <Identifier xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="SubjectIdentifierByCompanyType">',
-    `      <Identifier>${escapeXml(nip)}</Identifier>`,
-    '    </Identifier>',
-    '  </Context>',
-    '</InitRequest>',
+    `<AuthTokenRequest xmlns="${KSEF_AUTH_TOKEN_NS}">`,
+    `  <Challenge>${escapeXml(challenge)}</Challenge>`,
+    '  <ContextIdentifier>',
+    `    <Nip>${escapeXml(nip)}</Nip>`,
+    '  </ContextIdentifier>',
+    '  <SubjectIdentifierType>certificateSubject</SubjectIdentifierType>',
+    '</AuthTokenRequest>',
   ].join('\n')
 }
 
 /**
  * Signs an XML document with XAdES-BES enveloped signature using the provided
- * certificate and private key (both PEM-encoded).
+ * certificate and private key (both PEM-encoded). Supports both RSA and EC keys.
  *
- * XAdES-BES adds:
- * - SigningTime
- * - SigningCertificateV2 (SHA-256 cert digest)
+ * Uses inclusive Canonical XML (c14n) for SignedInfo canonicalization to match
+ * KSeF's .NET-based signature verification. The inherited default namespace from
+ * the parent document is included in the canonical form so that the signed bytes
+ * match what the server computes during verification.
  */
 export function signXmlWithXades(
   xml: string,
   certificatePem: string,
   privateKeyPem: string
 ): string {
+  // Detect key type for signature algorithm
+  const keyObject = createPrivateKey({ key: privateKeyPem })
+  const isEc = keyObject.asymmetricKeyType === 'ec'
+  const sigAlgUri = isEc
+    ? 'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256'
+    : 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+
+  // Setup identifiers and certificate info
   const certDer = pemToDer(certificatePem)
   const certDigest = createHash('sha256').update(certDer).digest('base64')
   const certBase64 = certDer.toString('base64')
-
   const sigId = `xmldsig-${randomUUID()}`
   const signedPropsId = `${sigId}-signedprops`
+  const keyInfoId = `${sigId}-keyinfo`
   const signingTime = new Date().toISOString()
 
-  // Build XAdES QualifyingProperties as a string for the Object element
-  const xadesObject = buildXadesObject(sigId, signedPropsId, signingTime, certDigest)
+  const incC14n = new C14nCanonicalization()
+  const excC14n = new ExclusiveCanonicalization()
 
-  const sig = new SignedXml({
-    privateKey: privateKeyPem,
-    canonicalizationAlgorithm: 'http://www.w3.org/2001/10/xml-exc-c14n#',
-    signatureAlgorithm: 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
-  })
+  // Step 1: Compute digest of the root element.
+  // The enveloped-signature transform removes <ds:Signature> children,
+  // but since we haven't added one yet the canonical form is just the root element.
+  const doc = new DOMParser().parseFromString(xml, 'text/xml')
+  const canonRoot = incC14n.process(doc.documentElement, {}).toString()
+  const rootDigest = createHash('sha256').update(canonRoot).digest('base64')
 
-  sig.addReference({
-    xpath: '/*',
-    transforms: ['http://www.w3.org/2000/09/xmldsig#enveloped-signature'],
-    digestAlgorithm: 'http://www.w3.org/2001/04/xmlenc#sha256',
-  })
+  // Extract the root element's default namespace — needed for inclusive c14n of
+  // the embedded SignedInfo, where this namespace is inherited from the ancestor.
+  const rootDefaultNs = doc.documentElement.namespaceURI || ''
 
-  // Add reference to the SignedProperties for XAdES compliance
-  sig.addReference({
-    uri: `#${signedPropsId}`,
-    transforms: ['http://www.w3.org/2001/10/xml-exc-c14n#'],
-    digestAlgorithm: 'http://www.w3.org/2001/04/xmlenc#sha256',
-    isEmptyUri: false,
-  })
+  // Step 2: Build SignedProperties and compute its digest.
+  // The reference transform for SignedProperties uses exclusive c14n.
+  const signedPropsXml =
+    `<xades:SignedProperties xmlns:xades="${XADES_NS}" xmlns:ds="${DSIG_NS}" Id="${signedPropsId}">` +
+    `<xades:SignedSignatureProperties>` +
+    `<xades:SigningTime>${signingTime}</xades:SigningTime>` +
+    `<xades:SigningCertificateV2>` +
+    `<xades:Cert>` +
+    `<xades:CertDigest>` +
+    `<ds:DigestMethod Algorithm="${SHA256_URI}"/>` +
+    `<ds:DigestValue>${certDigest}</ds:DigestValue>` +
+    `</xades:CertDigest>` +
+    `</xades:Cert>` +
+    `</xades:SigningCertificateV2>` +
+    `</xades:SignedSignatureProperties>` +
+    `</xades:SignedProperties>`
 
-  // Set the signing certificate for KeyInfo
-  ;(sig as unknown as Record<string, unknown>).signingCert = certBase64
-  sig.keyInfoAttributes = { Id: `${sigId}-keyinfo` }
+  const signedPropsDoc = new DOMParser().parseFromString(signedPropsXml, 'text/xml')
+  const canonSignedProps = excC14n.process(signedPropsDoc.documentElement, {}).toString()
+  const signedPropsDigest = createHash('sha256').update(canonSignedProps).digest('base64')
 
-  sig.computeSignature(xml, {
-    location: { reference: '/*', action: 'append' },
-    prefix: 'ds',
-  })
+  // Step 3: Build SignedInfo (with both references).
+  // Uses inclusive c14n as CanonicalizationMethod for KSeF compatibility.
+  // Only declare xmlns:ds here — the inherited default namespace from the parent
+  // document will be injected into the canonical form via string replacement below.
+  const signedInfoXml =
+    `<ds:SignedInfo xmlns:ds="${DSIG_NS}">` +
+    `<ds:CanonicalizationMethod Algorithm="${C14N_URI}"/>` +
+    `<ds:SignatureMethod Algorithm="${sigAlgUri}"/>` +
+    `<ds:Reference URI="">` +
+    `<ds:Transforms>` +
+    `<ds:Transform Algorithm="${ENVELOPED_SIG_URI}"/>` +
+    `</ds:Transforms>` +
+    `<ds:DigestMethod Algorithm="${SHA256_URI}"/>` +
+    `<ds:DigestValue>${rootDigest}</ds:DigestValue>` +
+    `</ds:Reference>` +
+    `<ds:Reference URI="#${signedPropsId}" Type="http://uri.etsi.org/01903#SignedProperties">` +
+    `<ds:Transforms>` +
+    `<ds:Transform Algorithm="${EXC_C14N_URI}"/>` +
+    `</ds:Transforms>` +
+    `<ds:DigestMethod Algorithm="${SHA256_URI}"/>` +
+    `<ds:DigestValue>${signedPropsDigest}</ds:DigestValue>` +
+    `</ds:Reference>` +
+    `</ds:SignedInfo>`
 
-  // Now inject the XAdES Object into the Signature element
-  const signedXml = sig.getSignedXml()
-  return injectXadesObject(signedXml, xadesObject)
-}
-
-function buildXadesObject(
-  sigId: string,
-  signedPropsId: string,
-  signingTime: string,
-  certDigest: string
-): string {
-  return [
-    `<ds:Object>`,
-    `  <xades:QualifyingProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Target="#${sigId}">`,
-    `    <xades:SignedProperties Id="${signedPropsId}">`,
-    `      <xades:SignedSignatureProperties>`,
-    `        <xades:SigningTime>${signingTime}</xades:SigningTime>`,
-    `        <xades:SigningCertificateV2>`,
-    `          <xades:Cert>`,
-    `            <xades:CertDigest>`,
-    `              <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>`,
-    `              <ds:DigestValue>${certDigest}</ds:DigestValue>`,
-    `            </xades:CertDigest>`,
-    `          </xades:Cert>`,
-    `        </xades:SigningCertificateV2>`,
-    `      </xades:SignedSignatureProperties>`,
-    `    </xades:SignedProperties>`,
-    `  </xades:QualifyingProperties>`,
-    `</ds:Object>`,
-  ].join('\n')
-}
-
-/**
- * Injects the XAdES Object element into an existing Signature element.
- */
-function injectXadesObject(signedXml: string, xadesObject: string): string {
-  const doc = new DOMParser().parseFromString(signedXml, 'text/xml')
-
-  // Find the ds:Signature element
-  const sigElements = doc.getElementsByTagNameNS('http://www.w3.org/2000/09/xmldsig#', 'Signature')
-  if (sigElements.length === 0) {
-    throw new Error('No Signature element found in signed XML')
+  // Step 4: Canonicalize SignedInfo for signing.
+  // Use inclusive c14n, then inject the inherited default namespace from the parent
+  // document via string replacement. This is necessary because xml-crypto's c14n
+  // doesn't propagate ancestor namespace context when processing a standalone subtree.
+  // KSeF's .NET verifier computes the canonical form with the inherited namespace
+  // included, so the signed bytes must match.
+  const signedInfoDoc = new DOMParser().parseFromString(signedInfoXml, 'text/xml')
+  let canonSignedInfo = incC14n.process(signedInfoDoc.documentElement, {}).toString()
+  if (rootDefaultNs) {
+    canonSignedInfo = canonSignedInfo.replace(
+      `<ds:SignedInfo xmlns:ds="${DSIG_NS}">`,
+      `<ds:SignedInfo xmlns="${rootDefaultNs}" xmlns:ds="${DSIG_NS}">`
+    )
   }
 
-  const sigElement = sigElements[0]!
+  // Step 5: Compute signature value.
+  // For ECDSA, XML DSig requires IEEE P1363 format (raw r||s), not DER.
+  const signer = createSign('SHA256')
+  signer.update(canonSignedInfo)
+  const signatureValue = isEc
+    ? signer.sign({ key: privateKeyPem, dsaEncoding: 'ieee-p1363' }, 'base64')
+    : signer.sign(privateKeyPem, 'base64')
 
-  // Parse the XAdES Object fragment
-  const objDoc = new DOMParser().parseFromString(
-    `<root xmlns:ds="http://www.w3.org/2000/09/xmldsig#">${xadesObject}</root>`,
-    'text/xml'
-  )
-  const objElement = objDoc.documentElement.firstChild
+  // Step 6: Assemble the complete ds:Signature element.
+  // Strip xmlns:ds from SignedInfo since it's inherited from the parent ds:Signature.
+  const embeddedSignedInfoXml = signedInfoXml.replace(` xmlns:ds="${DSIG_NS}"`, '')
 
-  if (objElement) {
-    const imported = doc.importNode(objElement, true)
-    sigElement.appendChild(imported)
-  }
+  const signatureElementXml =
+    `<ds:Signature xmlns:ds="${DSIG_NS}" Id="${sigId}">` +
+    embeddedSignedInfoXml +
+    `<ds:SignatureValue>${signatureValue}</ds:SignatureValue>` +
+    `<ds:KeyInfo Id="${keyInfoId}">` +
+    `<ds:X509Data>` +
+    `<ds:X509Certificate>${certBase64}</ds:X509Certificate>` +
+    `</ds:X509Data>` +
+    `</ds:KeyInfo>` +
+    `<ds:Object>` +
+    `<xades:QualifyingProperties xmlns:xades="${XADES_NS}" Target="#${sigId}">` +
+    // SignedProperties (strip redundant namespace declarations)
+    signedPropsXml.replace(` xmlns:xades="${XADES_NS}"`, '').replace(` xmlns:ds="${DSIG_NS}"`, '') +
+    `</xades:QualifyingProperties>` +
+    `</ds:Object>` +
+    `</ds:Signature>`
+
+  // Step 7: Inject into the original document.
+  const sigDoc = new DOMParser().parseFromString(signatureElementXml, 'text/xml')
+  const importedSig = doc.importNode(sigDoc.documentElement, true)
+  doc.documentElement.appendChild(importedSig)
 
   return new XMLSerializer().serializeToString(doc)
 }

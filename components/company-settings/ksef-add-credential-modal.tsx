@@ -32,7 +32,7 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
   const [authMethod, setAuthMethod] = useState<AuthMethod | null>(null)
   const [certificateFormat, setCertificateFormat] = useState<CertificateFormat>('pkcs12')
   const [token, setToken] = useState('')
-  const [environment, setEnvironment] = useState<'test' | 'demo' | 'prod'>('test')
+  const [environment, setEnvironment] = useState<'test' | 'demo' | 'prod'>('prod')
   const [showToken, setShowToken] = useState(false)
   const [certificateFile, setCertificateFile] = useState<File | null>(null)
   const [privateKeyFile, setPrivateKeyFile] = useState<File | null>(null)
@@ -51,7 +51,7 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
     setStep('select-type')
     setAuthMethod(null)
     setToken('')
-    setEnvironment('test')
+    setEnvironment('prod')
     setCertificateFile(null)
     setPrivateKeyFile(null)
     setCertificatePassword('')
@@ -88,6 +88,7 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
     if (!authMethod) return
 
     setError(null)
+    let grantedPermissions: string[] | undefined
 
     if (!skipValidation) {
       setStep('verifying')
@@ -130,6 +131,10 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
           setStep('result')
           return
         }
+
+        if (validateData.permissions) {
+          grantedPermissions = validateData.permissions
+        }
       } catch {
         setVerifyResult({ success: false, message: 'Connection error during validation' })
         setStep('result')
@@ -149,6 +154,7 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
             token: token.trim(),
             environment,
             validationStatus: skipValidation ? 'pending' : 'valid',
+            grantedPermissions,
           }),
         })
       } else {
@@ -157,6 +163,10 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
         formData.append('certificateFormat', certificateFormat)
         formData.append('environment', environment)
         formData.append('validationStatus', skipValidation ? 'pending' : 'valid')
+
+        if (grantedPermissions) {
+          formData.append('grantedPermissions', JSON.stringify(grantedPermissions))
+        }
 
         if (certificateFormat === 'pkcs12') {
           formData.append('certificatePassword', certificatePassword)

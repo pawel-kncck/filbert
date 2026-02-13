@@ -126,10 +126,12 @@ export async function authenticateWithKsef(
 
     console.log('[KSeF Auth] Poll response:', JSON.stringify(statusRes, null, 2))
 
-    // v2 API may use different field names
-    const processingCode = (statusRes.processingCode ??
-      statusRes.status ??
-      statusRes.authenticationStatus) as number | string | undefined
+    // Status may be a direct number/string or a nested object { code: 200, ... }
+    const rawStatus = statusRes.processingCode ?? statusRes.status ?? statusRes.authenticationStatus
+    const processingCode =
+      typeof rawStatus === 'object' && rawStatus !== null
+        ? (rawStatus as { code?: number | string }).code
+        : (rawStatus as number | string | undefined)
     console.log('[KSeF Auth] Processing code:', processingCode)
 
     // Check for success - might be 200, "200", "completed", etc.
@@ -257,14 +259,16 @@ export async function authenticateWithCertificate(
     throw new KsefAuthError('CHALLENGE_FAILED', 'Missing challenge in response')
   }
 
-  // Step 2-3: Build and sign the InitRequest XML
+  // Step 2-3: Build and sign the AuthTokenRequest XML
   const initRequestXml = buildAuthInitRequestXml(challenge, nip)
+  console.log('[KSeF Auth Cert] Unsigned XML:\n', initRequestXml)
   const signedXml = signXmlWithXades(initRequestXml, certificatePem, privateKeyPem)
+  console.log('[KSeF Auth Cert] Signed XML:\n', signedXml)
 
   // Step 4: Submit signed XML
-  const certRes = await fetchJson(`${baseUrl}/v2/auth/certificate`, {
+  const certRes = await fetchJson(`${baseUrl}/v2/auth/xades-signature`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/octet-stream' },
+    headers: { 'Content-Type': 'application/xml' },
     body: signedXml,
   })
 
@@ -294,9 +298,12 @@ export async function authenticateWithCertificate(
 
     console.log('[KSeF Auth Cert] Poll response:', JSON.stringify(statusRes, null, 2))
 
-    const processingCode = (statusRes.processingCode ??
-      statusRes.status ??
-      statusRes.authenticationStatus) as number | string | undefined
+    // Status may be a direct number/string or a nested object { code: 200, ... }
+    const rawStatus = statusRes.processingCode ?? statusRes.status ?? statusRes.authenticationStatus
+    const processingCode =
+      typeof rawStatus === 'object' && rawStatus !== null
+        ? (rawStatus as { code?: number | string }).code
+        : (rawStatus as number | string | undefined)
     console.log('[KSeF Auth Cert] Processing code:', processingCode)
 
     if (
@@ -339,11 +346,44 @@ export async function authenticateWithCertificate(
     body: JSON.stringify({ referenceNumber }),
   })
 
-  const accessToken = redeemRes.accessToken as string | undefined
-  const refreshToken = redeemRes.refreshToken as string | undefined
+  console.log('[KSeF Auth Cert] Redeem response:', JSON.stringify(redeemRes, null, 2))
+
+  // v2 API may return tokens in different formats — check common patterns
+  let accessToken: string | undefined
+  let refreshToken: string | undefined
+
+  if (typeof redeemRes.accessToken === 'string') {
+    accessToken = redeemRes.accessToken
+  } else if (typeof (redeemRes.accessToken as { token?: string })?.token === 'string') {
+    accessToken = (redeemRes.accessToken as { token: string }).token
+  } else if (typeof redeemRes.token === 'string') {
+    accessToken = redeemRes.token as string
+  } else if (typeof (redeemRes.tokens as { access?: string })?.access === 'string') {
+    accessToken = (redeemRes.tokens as { access: string }).access
+  }
+
+  if (typeof redeemRes.refreshToken === 'string') {
+    refreshToken = redeemRes.refreshToken
+  } else if (typeof (redeemRes.refreshToken as { token?: string })?.token === 'string') {
+    refreshToken = (redeemRes.refreshToken as { token: string }).token
+  } else if (typeof (redeemRes.tokens as { refresh?: string })?.refresh === 'string') {
+    refreshToken = (redeemRes.tokens as { refresh: string }).refresh
+  }
+
+  console.log(
+    '[KSeF Auth Cert] Extracted accessToken:',
+    accessToken ? `${accessToken.substring(0, 50)}...` : 'MISSING'
+  )
+  console.log(
+    '[KSeF Auth Cert] Extracted refreshToken:',
+    refreshToken ? `${refreshToken.substring(0, 50)}...` : 'MISSING'
+  )
 
   if (!accessToken || !refreshToken) {
-    throw new KsefAuthError('REDEEM_FAILED', 'Missing accessToken or refreshToken from redeem')
+    throw new KsefAuthError(
+      'REDEEM_FAILED',
+      `Missing accessToken or refreshToken from redeem. Response keys: ${Object.keys(redeemRes).join(', ')}`
+    )
   }
 
   const accessTokenExpiresAt = parseJwtExpiry(accessToken)
