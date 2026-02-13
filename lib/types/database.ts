@@ -294,6 +294,7 @@ export type Database = {
       }
       company_ksef_credentials: {
         Row: {
+          id: string
           company_id: string
           token: string | null
           environment: 'test' | 'demo' | 'prod'
@@ -302,10 +303,18 @@ export type Database = {
           encrypted_private_key: string | null
           refresh_token: string | null
           refresh_token_expires_at: string | null
+          validated_at: string | null
+          validation_status: 'valid' | 'invalid' | 'pending'
+          validation_error: string | null
+          name: string | null
+          granted_permissions: string[] | null
+          is_default: boolean
+          certificate_expires_at: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
+          id?: string
           company_id: string
           token?: string | null
           environment?: 'test' | 'demo' | 'prod'
@@ -314,10 +323,18 @@ export type Database = {
           encrypted_private_key?: string | null
           refresh_token?: string | null
           refresh_token_expires_at?: string | null
+          validated_at?: string | null
+          validation_status?: 'valid' | 'invalid' | 'pending'
+          validation_error?: string | null
+          name?: string | null
+          granted_permissions?: string[] | null
+          is_default?: boolean
+          certificate_expires_at?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
+          id?: string
           company_id?: string
           token?: string | null
           environment?: 'test' | 'demo' | 'prod'
@@ -326,6 +343,13 @@ export type Database = {
           encrypted_private_key?: string | null
           refresh_token?: string | null
           refresh_token_expires_at?: string | null
+          validated_at?: string | null
+          validation_status?: 'valid' | 'invalid' | 'pending'
+          validation_error?: string | null
+          name?: string | null
+          granted_permissions?: string[] | null
+          is_default?: boolean
+          certificate_expires_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -333,7 +357,7 @@ export type Database = {
           {
             foreignKeyName: 'company_ksef_credentials_company_id_fkey'
             columns: ['company_id']
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: 'companies'
             referencedColumns: ['id']
           },

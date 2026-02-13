@@ -22,19 +22,39 @@ export async function getCompanyById(companyId: string): Promise<Company | null>
   return data
 }
 
-export async function getKsefCredentials(companyId: string): Promise<KsefCredentials | null> {
+export async function getKsefCredentials(companyId: string): Promise<KsefCredentials[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('company_ksef_credentials')
     .select(
-      'company_id, token, environment, auth_method, certificate_pem, encrypted_private_key, refresh_token, refresh_token_expires_at, created_at, updated_at'
+      'id, company_id, token, environment, auth_method, certificate_pem, encrypted_private_key, refresh_token, refresh_token_expires_at, validated_at, validation_status, validation_error, name, granted_permissions, is_default, certificate_expires_at, created_at, updated_at'
     )
     .eq('company_id', companyId)
+    .order('is_default', { ascending: false })
+    .order('validation_status', { ascending: true })
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    Sentry.captureException(error)
+    throw error
+  }
+
+  return data || []
+}
+
+export async function getKsefCredential(credentialId: string): Promise<KsefCredentials | null> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('company_ksef_credentials')
+    .select(
+      'id, company_id, token, environment, auth_method, certificate_pem, encrypted_private_key, refresh_token, refresh_token_expires_at, validated_at, validation_status, validation_error, name, granted_permissions, is_default, certificate_expires_at, created_at, updated_at'
+    )
+    .eq('id', credentialId)
     .single()
 
   if (error) {
-    // PGRST116 = no rows found, which is expected when no credentials exist
     if (error.code === 'PGRST116') {
       return null
     }

@@ -258,6 +258,34 @@ export class KsefApiClient {
     return response.text()
   }
 
+  /**
+   * Queries personal permissions for the authenticated user.
+   * Returns an array of unique permission scope strings.
+   */
+  async queryPersonalPermissions(nip: string): Promise<string[]> {
+    this.requireAuth()
+
+    const response = await this.request(
+      'POST',
+      '/v2/permissions/query/personal/grants?pageSize=100',
+      {
+        contextIdentifier: { type: 'Nip', value: nip },
+        permissionState: 'Active',
+      }
+    )
+
+    if (!response.ok) {
+      console.warn('[KSeF Client] Permissions query failed:', response.status)
+      return []
+    }
+
+    const data = await response.json()
+    const permissions = data.permissions || []
+    return [
+      ...new Set(permissions.map((p: { permissionScope: string }) => p.permissionScope)),
+    ] as string[]
+  }
+
   getSessionRef(): string | null {
     return this.sessionRef
   }

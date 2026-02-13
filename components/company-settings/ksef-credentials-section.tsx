@@ -1,60 +1,90 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { KsefCredentials } from '@/lib/types/database'
-
-type AuthMethod = 'token' | 'certificate'
-type CertificateFormat = 'pkcs12' | 'pem'
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { KsefAddCredentialModal } from './ksef-add-credential-modal'
+import {
+  PlusIcon,
+  RefreshCwIcon,
+  Trash2Icon,
+  KeyIcon,
+  FileTextIcon,
+  StarIcon,
+  ShieldCheckIcon,
+} from 'lucide-react'
 
 type Props = {
   companyId: string
-  credentials: KsefCredentials | null
+  credentials: KsefCredentials[]
 }
 
 export function KsefCredentialsSection({ companyId, credentials }: Props) {
   const t = useTranslations('companySettings.ksef')
-  const tCommon = useTranslations('common')
   const tErrors = useTranslations('companySettings.errors')
   const router = useRouter()
 
-  const [authMethod, setAuthMethod] = useState<AuthMethod>('token')
-  const [certificateFormat, setCertificateFormat] = useState<CertificateFormat>('pkcs12')
-  const [token, setToken] = useState('')
-  const [environment, setEnvironment] = useState<'test' | 'demo' | 'prod'>('test')
-  const [showToken, setShowToken] = useState(false)
-  const [certificateFile, setCertificateFile] = useState<File | null>(null)
-  const [privateKeyFile, setPrivateKeyFile] = useState<File | null>(null)
-  const [certificatePassword, setCertificatePassword] = useState('')
-  const [showCertPassword, setShowCertPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [verifyingId, setVerifyingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const keyFileInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (credentials) {
-      setAuthMethod(credentials.auth_method)
-      setToken(credentials.token || '')
-      setEnvironment(credentials.environment)
-    }
-  }, [credentials])
+  const handleAddSuccess = () => {
+    router.refresh()
+  }
 
-  const handleSaveToken = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!token.trim()) return
-
-    setLoading(true)
+  const handleVerify = async (credential: KsefCredentials) => {
+    setVerifyingId(credential.id)
     setError(null)
     setSuccess(null)
 
     try {
-      const res = await fetch(`/api/companies/${companyId}/ksef-credentials`, {
+      const res = await fetch(`/api/companies/${companyId}/ksef-credentials/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: token.trim(), environment }),
+        body: JSON.stringify({ credentialId: credential.id }),
+      })
+
+      const data = await res.json()
+
+      if (!data.valid) {
+        setError(data.error || tErrors('generic'))
+        return
+      }
+
+      setSuccess(t('verifySuccess'))
+      router.refresh()
+      setTimeout(() => setSuccess(null), 3000)
+    } catch {
+      setError(tErrors('connection'))
+    } finally {
+      setVerifyingId(null)
+    }
+  }
+
+  const handleSetDefault = async (credential: KsefCredentials) => {
+    setError(null)
+    setSuccess(null)
+
+    const newDefault = !credential.is_default
+
+    try {
+      const res = await fetch(`/api/companies/${companyId}/ksef-credentials/${credential.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isDefault: newDefault }),
       })
 
       if (!res.ok) {
@@ -63,80 +93,23 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
         return
       }
 
-      setSuccess(t('saved'))
+      setSuccess(t('defaultSet'))
       router.refresh()
       setTimeout(() => setSuccess(null), 3000)
     } catch {
       setError(tErrors('connection'))
-    } finally {
-      setLoading(false)
     }
   }
 
-  const handleSaveCertificate = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleDelete = async (credential: KsefCredentials) => {
+    if (!confirm(t('actions.deleteConfirm'))) return
 
-    // Validate based on format
-    if (certificateFormat === 'pkcs12') {
-      if (!certificateFile || !certificatePassword) return
-    } else {
-      if (!certificateFile || !privateKeyFile) return
-    }
-
-    setLoading(true)
+    setDeletingId(credential.id)
     setError(null)
     setSuccess(null)
 
     try {
-      const formData = new FormData()
-      formData.append('certificate', certificateFile!)
-      formData.append('certificateFormat', certificateFormat)
-      formData.append('environment', environment)
-
-      if (certificateFormat === 'pkcs12') {
-        formData.append('certificatePassword', certificatePassword)
-      } else {
-        formData.append('privateKey', privateKeyFile!)
-        if (certificatePassword) {
-          formData.append('privateKeyPassword', certificatePassword)
-        }
-      }
-
-      const res = await fetch(`/api/companies/${companyId}/ksef-credentials`, {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.error?.message || tErrors('generic'))
-        return
-      }
-
-      setSuccess(t('saved'))
-      setCertificatePassword('')
-      setCertificateFile(null)
-      setPrivateKeyFile(null)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      if (keyFileInputRef.current) keyFileInputRef.current.value = ''
-      router.refresh()
-      setTimeout(() => setSuccess(null), 3000)
-    } catch {
-      setError(tErrors('connection'))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleRemove = async () => {
-    if (!confirm(t('removeConfirm'))) return
-
-    setLoading(true)
-    setError(null)
-    setSuccess(null)
-
-    try {
-      const res = await fetch(`/api/companies/${companyId}/ksef-credentials`, {
+      const res = await fetch(`/api/companies/${companyId}/ksef-credentials/${credential.id}`, {
         method: 'DELETE',
       })
 
@@ -146,373 +119,234 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
         return
       }
 
-      setToken('')
-      setEnvironment('test')
-      setCertificateFile(null)
-      setCertificatePassword('')
-      if (fileInputRef.current) fileInputRef.current.value = ''
       setSuccess(t('removed'))
       router.refresh()
       setTimeout(() => setSuccess(null), 3000)
     } catch {
       setError(tErrors('connection'))
     } finally {
-      setLoading(false)
+      setDeletingId(null)
     }
   }
 
-  const tabClass = (method: AuthMethod) =>
-    `px-4 py-2 text-sm font-medium rounded-t-md border-b-2 transition-colors ${
-      authMethod === method
-        ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-        : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300'
-    }`
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'valid':
+        return (
+          <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+            <span className="mr-1 inline-block h-2 w-2 rounded-full bg-green-500" />
+            {t('status.valid')}
+          </Badge>
+        )
+      case 'invalid':
+        return (
+          <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+            <span className="mr-1 inline-block h-2 w-2 rounded-full bg-red-500" />
+            {t('status.invalid')}
+          </Badge>
+        )
+      default:
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+            <span className="mr-1 inline-block h-2 w-2 rounded-full bg-yellow-500" />
+            {t('status.pending')}
+          </Badge>
+        )
+    }
+  }
+
+  const formatLastVerified = (date: string | null) => {
+    if (!date) return t('table.never')
+    try {
+      const now = Date.now()
+      const then = new Date(date).getTime()
+      const diffMs = now - then
+      const diffMinutes = Math.floor(diffMs / (1000 * 60))
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+      if (diffMinutes < 1) return 'just now'
+      if (diffMinutes < 60) return `${diffMinutes} min ago`
+      if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+    } catch {
+      return t('table.never')
+    }
+  }
+
+  const formatDate = (date: string) => {
+    try {
+      return new Date(date).toLocaleDateString()
+    } catch {
+      return date
+    }
+  }
+
+  const PERMISSION_KEYS = [
+    'InvoiceRead',
+    'InvoiceWrite',
+    'CredentialsRead',
+    'CredentialsManage',
+    'Introspection',
+    'SubunitManage',
+    'EnforcementOperations',
+    'VatUeManage',
+  ] as const
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
-      <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{t('title')}</h2>
-      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{t('description')}</p>
+    <div className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
+      <div className="flex items-center justify-between border-b border-zinc-200 p-4 dark:border-zinc-700">
+        <div>
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{t('title')}</h2>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{t('description')}</p>
+        </div>
+        <Button onClick={() => setIsModalOpen(true)} size="sm">
+          <PlusIcon className="mr-1 h-4 w-4" />
+          {t('addCredentials')}
+        </Button>
+      </div>
 
       {error && (
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <div className="mx-4 mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="mt-4 rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
+        <div className="mx-4 mt-4 rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
           {success}
         </div>
       )}
 
-      {/* Auth method tabs */}
-      <div className="mt-4 flex gap-1 border-b border-zinc-200 dark:border-zinc-700">
-        <button type="button" className={tabClass('token')} onClick={() => setAuthMethod('token')}>
-          {t('authMethods.token')}
-        </button>
-        <button
-          type="button"
-          className={tabClass('certificate')}
-          onClick={() => setAuthMethod('certificate')}
-        >
-          {t('authMethods.certificate')}
-        </button>
-      </div>
-
-      {/* Token auth form */}
-      {authMethod === 'token' && (
-        <form onSubmit={handleSaveToken} className="mt-4 space-y-4">
-          <div>
-            <label
-              htmlFor="ksef-token"
-              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            >
-              {t('token')}
-            </label>
-            <div className="relative mt-1">
-              <input
-                id="ksef-token"
-                type={showToken ? 'text' : 'password'}
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                placeholder={t('tokenPlaceholder')}
-                className="block w-full rounded-md border border-zinc-300 px-3 py-2 pr-10 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
-              />
-              <button
-                type="button"
-                onClick={() => setShowToken(!showToken)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
-              >
-                <EyeIcon open={showToken} />
-              </button>
-            </div>
-          </div>
-
-          <EnvironmentSelector environment={environment} onChange={setEnvironment} t={t} />
-
-          <div className="flex items-center gap-2">
-            <button
-              type="submit"
-              disabled={loading || !token.trim()}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? tCommon('loading') : t('save')}
-            </button>
-
-            {credentials && (
-              <button
-                type="button"
-                onClick={handleRemove}
-                disabled={loading}
-                className="rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
-              >
-                {t('remove')}
-              </button>
-            )}
-          </div>
-        </form>
-      )}
-
-      {/* Certificate auth form */}
-      {authMethod === 'certificate' && (
-        <form onSubmit={handleSaveCertificate} className="mt-4 space-y-4">
-          {credentials?.auth_method === 'certificate' && credentials.certificate_pem && (
-            <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
-              {t('certificateActive')}
-            </div>
-          )}
-
-          {/* Certificate format selector */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              {t('certificateFormatLabel')}
-            </label>
-            <div className="mt-2 flex gap-4">
-              <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-                <input
-                  type="radio"
-                  name="certFormat"
-                  value="pkcs12"
-                  checked={certificateFormat === 'pkcs12'}
-                  onChange={() => setCertificateFormat('pkcs12')}
-                  className="text-blue-600 focus:ring-blue-500"
-                />
-                {t('formatPkcs12')}
-              </label>
-              <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-                <input
-                  type="radio"
-                  name="certFormat"
-                  value="pem"
-                  checked={certificateFormat === 'pem'}
-                  onChange={() => setCertificateFormat('pem')}
-                  className="text-blue-600 focus:ring-blue-500"
-                />
-                {t('formatPem')}
-              </label>
-            </div>
-          </div>
-
-          {/* PKCS#12 format inputs */}
-          {certificateFormat === 'pkcs12' && (
-            <>
-              <div>
-                <label
-                  htmlFor="ksef-certificate"
-                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                >
-                  {t('certificateFile')}
-                </label>
-                <input
-                  ref={fileInputRef}
-                  id="ksef-certificate"
-                  type="file"
-                  accept=".p12,.pfx"
-                  onChange={(e) => setCertificateFile(e.target.files?.[0] || null)}
-                  className="mt-1 block w-full text-sm text-zinc-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 dark:text-zinc-300 dark:file:bg-blue-900/20 dark:file:text-blue-400"
-                />
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  {t('certificateFileHint')}
-                </p>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="ksef-cert-password"
-                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                >
-                  {t('certificatePassword')}
-                </label>
-                <div className="relative mt-1">
-                  <input
-                    id="ksef-cert-password"
-                    type={showCertPassword ? 'text' : 'password'}
-                    value={certificatePassword}
-                    onChange={(e) => setCertificatePassword(e.target.value)}
-                    placeholder={t('certificatePasswordPlaceholder')}
-                    className="block w-full rounded-md border border-zinc-300 px-3 py-2 pr-10 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
-                  />
+      {credentials.length === 0 ? (
+        <div className="p-8 text-center">
+          <p className="text-zinc-500 dark:text-zinc-400">{t('noCredentials')}</p>
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10">{t('table.default')}</TableHead>
+              <TableHead>{t('table.type')}</TableHead>
+              <TableHead>{t('table.environment')}</TableHead>
+              <TableHead>{t('table.status')}</TableHead>
+              <TableHead>{t('table.permissions')}</TableHead>
+              <TableHead>{t('table.expires')}</TableHead>
+              <TableHead>{t('table.lastVerified')}</TableHead>
+              <TableHead className="w-24"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {credentials.map((credential) => (
+              <TableRow key={credential.id}>
+                <TableCell>
                   <button
                     type="button"
-                    onClick={() => setShowCertPassword(!showCertPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+                    onClick={() => handleSetDefault(credential)}
+                    className="rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                    title={
+                      credential.is_default ? t('actions.removeDefault') : t('actions.setDefault')
+                    }
                   >
-                    <EyeIcon open={showCertPassword} />
+                    <StarIcon
+                      className={`h-4 w-4 ${
+                        credential.is_default
+                          ? 'fill-yellow-500 text-yellow-500'
+                          : 'text-zinc-300 hover:text-yellow-500 dark:text-zinc-600'
+                      }`}
+                    />
                   </button>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* PEM format inputs */}
-          {certificateFormat === 'pem' && (
-            <>
-              <div>
-                <label
-                  htmlFor="ksef-certificate-pem"
-                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                >
-                  {t('certificateFilePem')}
-                </label>
-                <input
-                  ref={fileInputRef}
-                  id="ksef-certificate-pem"
-                  type="file"
-                  accept=".crt,.pem,.cer"
-                  onChange={(e) => setCertificateFile(e.target.files?.[0] || null)}
-                  className="mt-1 block w-full text-sm text-zinc-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 dark:text-zinc-300 dark:file:bg-blue-900/20 dark:file:text-blue-400"
-                />
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  {t('certificateFilePemHint')}
-                </p>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="ksef-private-key"
-                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                >
-                  {t('privateKeyFile')}
-                </label>
-                <input
-                  ref={keyFileInputRef}
-                  id="ksef-private-key"
-                  type="file"
-                  accept=".key,.pem"
-                  onChange={(e) => setPrivateKeyFile(e.target.files?.[0] || null)}
-                  className="mt-1 block w-full text-sm text-zinc-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 dark:text-zinc-300 dark:file:bg-blue-900/20 dark:file:text-blue-400"
-                />
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  {t('privateKeyFileHint')}
-                </p>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="ksef-pem-password"
-                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                >
-                  {t('privateKeyPassword')}
-                </label>
-                <div className="relative mt-1">
-                  <input
-                    id="ksef-pem-password"
-                    type={showCertPassword ? 'text' : 'password'}
-                    value={certificatePassword}
-                    onChange={(e) => setCertificatePassword(e.target.value)}
-                    placeholder={t('privateKeyPasswordPlaceholder')}
-                    className="block w-full rounded-md border border-zinc-300 px-3 py-2 pr-10 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCertPassword(!showCertPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
-                  >
-                    <EyeIcon open={showCertPassword} />
-                  </button>
-                </div>
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  {t('privateKeyPasswordHint')}
-                </p>
-              </div>
-            </>
-          )}
-
-          <EnvironmentSelector environment={environment} onChange={setEnvironment} t={t} />
-
-          <div className="flex items-center gap-2">
-            <button
-              type="submit"
-              disabled={
-                loading ||
-                !certificateFile ||
-                (certificateFormat === 'pkcs12' ? !certificatePassword : !privateKeyFile)
-              }
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? tCommon('loading') : t('uploadCertificate')}
-            </button>
-
-            {credentials && (
-              <button
-                type="button"
-                onClick={handleRemove}
-                disabled={loading}
-                className="rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
-              >
-                {t('remove')}
-              </button>
-            )}
-          </div>
-        </form>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {credential.auth_method === 'token' ? (
+                      <KeyIcon className="h-4 w-4 text-zinc-500" />
+                    ) : (
+                      <FileTextIcon className="h-4 w-4 text-zinc-500" />
+                    )}
+                    <span className="text-zinc-900 dark:text-white">
+                      {t(`authMethods.${credential.auth_method}`)}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className="text-zinc-700 dark:text-zinc-300">
+                    {t(`environments.${credential.environment}`)}
+                  </span>
+                </TableCell>
+                <TableCell>{getStatusBadge(credential.validation_status)}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {(credential.granted_permissions || []).map((scope) => {
+                      const isKnown = PERMISSION_KEYS.includes(
+                        scope as (typeof PERMISSION_KEYS)[number]
+                      )
+                      return (
+                        <span
+                          key={scope}
+                          className="inline-flex items-center rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                          title={scope}
+                        >
+                          {isKnown ? t(`permissions.${scope}` as Parameters<typeof t>[0]) : scope}
+                        </span>
+                      )
+                    })}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className="text-zinc-500 dark:text-zinc-400">
+                    {credential.certificate_expires_at
+                      ? formatDate(credential.certificate_expires_at)
+                      : t('table.noExpiry')}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-zinc-500 dark:text-zinc-400">
+                    {formatLastVerified(credential.validated_at)}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleVerify(credential)}
+                      disabled={verifyingId === credential.id}
+                      className="rounded p-1 hover:bg-zinc-100 disabled:opacity-50 dark:hover:bg-zinc-700"
+                      title={t('actions.verify')}
+                    >
+                      {verifyingId === credential.id ? (
+                        <RefreshCwIcon className="h-4 w-4 animate-spin text-zinc-500" />
+                      ) : (
+                        <ShieldCheckIcon className="h-4 w-4 text-zinc-500 hover:text-blue-600" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(credential)}
+                      disabled={deletingId === credential.id}
+                      className="rounded p-1 hover:bg-zinc-100 disabled:opacity-50 dark:hover:bg-zinc-700"
+                      title={t('actions.delete')}
+                    >
+                      {deletingId === credential.id ? (
+                        <RefreshCwIcon className="h-4 w-4 animate-spin text-zinc-500" />
+                      ) : (
+                        <Trash2Icon className="h-4 w-4 text-zinc-400 hover:text-red-600" />
+                      )}
+                    </button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
-      {!credentials && (
-        <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">{t('noCredentials')}</p>
-      )}
-    </div>
-  )
-}
-
-function EnvironmentSelector({
-  environment,
-  onChange,
-  t,
-}: {
-  environment: 'test' | 'demo' | 'prod'
-  onChange: (value: 'test' | 'demo' | 'prod') => void
-  t: ReturnType<typeof useTranslations>
-}) {
-  return (
-    <div>
-      <label
-        htmlFor="ksef-environment"
-        className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-      >
-        {t('environment')}
-      </label>
-      <select
-        id="ksef-environment"
-        value={environment}
-        onChange={(e) => onChange(e.target.value as 'test' | 'demo' | 'prod')}
-        className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
-      >
-        <option value="test">{t('environments.test')}</option>
-        <option value="demo">{t('environments.demo')}</option>
-        <option value="prod">{t('environments.prod')}</option>
-      </select>
-    </div>
-  )
-}
-
-function EyeIcon({ open }: { open: boolean }) {
-  if (open) {
-    return (
-      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-        />
-      </svg>
-    )
-  }
-
-  return (
-    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+      <KsefAddCredentialModal
+        companyId={companyId}
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onSuccess={handleAddSuccess}
       />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-      />
-    </svg>
+    </div>
   )
 }

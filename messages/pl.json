@@ -469,7 +469,63 @@
     "nameUpdated": "Nazwa firmy zaktualizowana",
     "ksef": {
       "title": "Dane dostępowe KSeF",
-      "description": "Skonfiguruj dane dostępowe do połączenia z KSeF (Krajowym Systemem e-Faktur).",
+      "description": "Zarządzaj danymi uwierzytelniającymi do KSeF",
+      "addCredentials": "Dodaj dane dostępowe",
+      "noCredentials": "Brak skonfigurowanych danych dostępowych",
+      "table": {
+        "type": "Typ",
+        "environment": "Środowisko",
+        "status": "Status",
+        "permissions": "Uprawnienia",
+        "expires": "Wygasa",
+        "default": "Domyślne",
+        "lastVerified": "Ostatnia weryfikacja",
+        "actions": "Akcje",
+        "never": "Nigdy",
+        "noExpiry": "\u2014"
+      },
+      "status": {
+        "valid": "Połączono",
+        "invalid": "Błąd",
+        "pending": "Nie zweryfikowano"
+      },
+      "modal": {
+        "addTitle": "Dodaj dane dostępowe KSeF",
+        "editTitle": "Edytuj dane dostępowe KSeF",
+        "selectType": "Wybierz metodę uwierzytelniania",
+        "tokenOption": "Token API",
+        "certificateOption": "Certyfikat",
+        "tokenDescription": "Użyj tokenu API wygenerowanego w KSeF do uwierzytelnienia",
+        "certificateDescription": "Użyj kwalifikowanego certyfikatu elektronicznego do uwierzytelnienia",
+        "verifying": "Weryfikowanie danych dostępowych...",
+        "connectingTo": "Łączenie z KSeF",
+        "success": "Pomyślnie połączono z KSeF",
+        "verifyAndSave": "Zweryfikuj i zapisz",
+        "saveWithoutVerify": "Zapisz bez weryfikacji",
+        "done": "Gotowe",
+        "tryAgain": "Spróbuj ponownie",
+        "back": "Wstecz"
+      },
+      "actions": {
+        "testConnection": "Testuj połączenie",
+        "verify": "Weryfikuj",
+        "verifying": "Weryfikowanie...",
+        "setDefault": "Ustaw jako domyślne",
+        "removeDefault": "Usuń domyślne",
+        "edit": "Edytuj",
+        "delete": "Usuń",
+        "deleteConfirm": "Czy na pewno chcesz usunąć te dane dostępowe?"
+      },
+      "permissions": {
+        "InvoiceRead": "Odczyt",
+        "InvoiceWrite": "Zapis",
+        "CredentialsRead": "Upr. O",
+        "CredentialsManage": "Upr. Z",
+        "Introspection": "Intro",
+        "SubunitManage": "Podj. Z",
+        "EnforcementOperations": "Egzek.",
+        "VatUeManage": "VAT UE"
+      },
       "authMethods": {
         "token": "Token API",
         "certificate": "Certyfikat"
@@ -503,7 +559,11 @@
       "removeConfirm": "Czy na pewno chcesz usunąć dane dostępowe KSeF?",
       "saved": "Dane dostępowe zapisane",
       "removed": "Dane dostępowe usunięte",
-      "noCredentials": "Brak skonfigurowanych danych dostępowych KSeF"
+      "testing": "Testowanie połączenia...",
+      "testSuccess": "Połączenie udane",
+      "testFailed": "Połączenie nieudane",
+      "verifySuccess": "Dane dostępowe zweryfikowane pomyślnie",
+      "defaultSet": "Zaktualizowano domyślne dane dostępowe"
     },
     "delete": {
       "title": "Strefa zagrożenia",

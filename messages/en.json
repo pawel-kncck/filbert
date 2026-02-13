@@ -468,10 +468,66 @@
     "nipReadOnly": "NIP cannot be changed",
     "nameUpdated": "Company name updated",
     "ksef": {
-      "title": "KSeF credentials",
-      "description": "Configure credentials for connecting to the KSeF (National e-Invoice System).",
+      "title": "KSeF Credentials",
+      "description": "Manage authentication credentials for KSeF",
+      "addCredentials": "Add Credentials",
+      "noCredentials": "No credentials configured",
+      "table": {
+        "type": "Type",
+        "environment": "Environment",
+        "status": "Status",
+        "permissions": "Permissions",
+        "expires": "Expires",
+        "default": "Default",
+        "lastVerified": "Last Verified",
+        "actions": "Actions",
+        "never": "Never",
+        "noExpiry": "\u2014"
+      },
+      "status": {
+        "valid": "Connected",
+        "invalid": "Failed",
+        "pending": "Not verified"
+      },
+      "modal": {
+        "addTitle": "Add KSeF Credentials",
+        "editTitle": "Edit KSeF Credentials",
+        "selectType": "Select authentication method",
+        "tokenOption": "API Token",
+        "certificateOption": "Certificate",
+        "tokenDescription": "Use a KSeF-generated API token for authentication",
+        "certificateDescription": "Use a qualified electronic certificate for authentication",
+        "verifying": "Verifying credentials...",
+        "connectingTo": "Connecting to KSeF",
+        "success": "Connected to KSeF successfully",
+        "verifyAndSave": "Verify & Save",
+        "saveWithoutVerify": "Save without verifying",
+        "done": "Done",
+        "tryAgain": "Try Again",
+        "back": "Back"
+      },
+      "actions": {
+        "testConnection": "Test Connection",
+        "verify": "Verify",
+        "verifying": "Verifying...",
+        "setDefault": "Set as default",
+        "removeDefault": "Remove default",
+        "edit": "Edit",
+        "delete": "Delete",
+        "deleteConfirm": "Are you sure you want to delete this credential?"
+      },
+      "permissions": {
+        "InvoiceRead": "Read",
+        "InvoiceWrite": "Write",
+        "CredentialsRead": "Cred R",
+        "CredentialsManage": "Cred M",
+        "Introspection": "Intro",
+        "SubunitManage": "Sub M",
+        "EnforcementOperations": "Enforce",
+        "VatUeManage": "VAT UE"
+      },
       "authMethods": {
-        "token": "API token",
+        "token": "API Token",
         "certificate": "Certificate"
       },
       "token": "API token",
@@ -503,7 +559,11 @@
       "removeConfirm": "Are you sure you want to remove KSeF credentials?",
       "saved": "Credentials saved",
       "removed": "Credentials removed",
-      "noCredentials": "No KSeF credentials configured"
+      "testing": "Testing connection...",
+      "testSuccess": "Connection successful",
+      "testFailed": "Connection failed",
+      "verifySuccess": "Credentials verified successfully",
+      "defaultSet": "Default credential updated"
     },
     "delete": {
       "title": "Danger zone",

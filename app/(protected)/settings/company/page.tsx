@@ -72,7 +72,7 @@ export default async function CompanySettingsPage({ searchParams }: Props) {
   }
 
   // Fetch KSeF credentials (only visible to admins via RLS)
-  const credentials = isAdmin ? await getKsefCredentials(currentCompanyId) : null
+  const credentials = isAdmin ? await getKsefCredentials(currentCompanyId) : []
 
   return (
     <AppShell
@@ -109,7 +109,7 @@ export default async function CompanySettingsPage({ searchParams }: Props) {
         )}
 
         {isAdmin && (
-          <KsefFetchSection companyId={currentCompanyId} hasCredentials={!!credentials} />
+          <KsefFetchSection companyId={currentCompanyId} hasCredentials={credentials.length > 0} />
         )}
 
         {isAdmin && (

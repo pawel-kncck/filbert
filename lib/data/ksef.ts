@@ -3,16 +3,29 @@ import * as Sentry from '@sentry/nextjs'
 import type { KsefCredentials } from '@/lib/types/database'
 
 export async function getKsefCredentialsForCompany(
-  companyId: string
+  companyId: string,
+  environment?: 'test' | 'demo' | 'prod'
 ): Promise<KsefCredentials | null> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('company_ksef_credentials')
     .select(
-      'company_id, token, environment, auth_method, certificate_pem, encrypted_private_key, refresh_token, refresh_token_expires_at, created_at, updated_at'
+      'id, company_id, token, environment, auth_method, certificate_pem, encrypted_private_key, refresh_token, refresh_token_expires_at, validated_at, validation_status, validation_error, name, granted_permissions, is_default, certificate_expires_at, created_at, updated_at'
     )
     .eq('company_id', companyId)
+
+  // If environment is specified, filter by it
+  if (environment) {
+    query = query.eq('environment', environment)
+  }
+
+  // Prefer default credential, then valid credentials, then most recent
+  const { data, error } = await query
+    .order('is_default', { ascending: false })
+    .order('validation_status', { ascending: true }) // 'valid' comes before 'pending'/'invalid'
+    .order('created_at', { ascending: false })
+    .limit(1)
     .single()
 
   if (error) {
