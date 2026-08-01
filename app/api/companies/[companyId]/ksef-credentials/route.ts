@@ -6,15 +6,10 @@ import {
   badRequest,
   type AdminContext,
 } from '@/lib/api/middleware'
-import {
-  parsePkcs12,
-  parsePemCertificate,
-  encryptPrivateKey,
-  CertificateError,
-} from '@/lib/ksef/certificate-crypto'
+import { encryptPrivateKey, CertificateError } from '@/lib/ksef/certificate-crypto'
+import { parseCertificateUpload } from '@/lib/ksef/certificate-upload'
+import { isKsefEnvironment } from '@/lib/ksef/types'
 import { X509Certificate } from 'node:crypto'
-
-const VALID_ENVIRONMENTS = ['test', 'demo', 'prod'] as const
 
 export async function GET(
   request: NextRequest,
@@ -76,7 +71,7 @@ async function handleTokenSave(request: NextRequest, auth: AdminContext) {
     return badRequest('Token is required')
   }
 
-  if (environment && !VALID_ENVIRONMENTS.includes(environment)) {
+  if (environment && !isKsefEnvironment(environment)) {
     return badRequest('Invalid environment. Must be test, demo, or prod')
   }
 
@@ -166,79 +161,39 @@ async function handleCertificateUploadInner(request: NextRequest, auth: AdminCon
     return badRequest('Invalid form data')
   }
 
-  const certificateFile = formData.get('certificate') as File | null
-  const certificateFormat = (formData.get('certificateFormat') as string) || 'pkcs12'
-  const password = formData.get('certificatePassword') as string | null
-  const privateKeyPassword = formData.get('privateKeyPassword') as string | null
-  const privateKeyFile = formData.get('privateKey') as File | null
-  const environment = formData.get('environment') as string | null
-  const name = formData.get('name') as string | null
-  const validationStatus = formData.get('validationStatus') as string | null
-  const validationError = formData.get('validationError') as string | null
-  const grantedPermissionsRaw = formData.get('grantedPermissions') as string | null
-  let grantedPermissions: string[] | undefined
-  if (grantedPermissionsRaw) {
-    try {
-      const parsed = JSON.parse(grantedPermissionsRaw)
-      if (Array.isArray(parsed)) grantedPermissions = parsed
-    } catch {
-      // ignore invalid JSON
+  const parsed = await parseCertificateUpload(formData)
+  if (!parsed.ok) {
+    if (parsed.reason === 'config_error') {
+      return apiError('CONFIG_ERROR', parsed.message, 500)
     }
+    return badRequest(parsed.message)
   }
 
-  if (!certificateFile) {
-    return badRequest('Certificate file is required')
-  }
+  const {
+    certificatePem,
+    environment,
+    name,
+    validationStatus,
+    validationError,
+    grantedPermissions,
+  } = parsed
 
-  if (certificateFormat === 'pkcs12' && !password) {
-    return badRequest('Certificate password is required for PKCS#12 files')
-  }
-
-  if (certificateFormat === 'pem' && !privateKeyFile) {
-    return badRequest('Private key file is required for PEM format')
-  }
-
-  if (
-    environment &&
-    !VALID_ENVIRONMENTS.includes(environment as (typeof VALID_ENVIRONMENTS)[number])
-  ) {
+  if (environment && !isKsefEnvironment(environment)) {
     return badRequest('Invalid environment. Must be test, demo, or prod')
   }
 
-  let certificatePem: string
   let encryptedPrivateKey: string
-
   try {
-    if (certificateFormat === 'pem') {
-      // Parse PEM format (separate certificate and private key files)
-      const certContent = await certificateFile.text()
-      const keyContent = await privateKeyFile!.text()
-      const parsed = parsePemCertificate(certContent, keyContent, privateKeyPassword || undefined)
-      certificatePem = parsed.certificatePem
-      encryptedPrivateKey = encryptPrivateKey(parsed.privateKeyPem)
-    } else {
-      // Parse PKCS#12 format
-      const buffer = Buffer.from(await certificateFile.arrayBuffer())
-      const parsed = parsePkcs12(buffer, password!)
-      certificatePem = parsed.certificatePem
-      encryptedPrivateKey = encryptPrivateKey(parsed.privateKeyPem)
-    }
+    encryptedPrivateKey = encryptPrivateKey(parsed.privateKeyPem)
   } catch (err) {
-    if (err instanceof CertificateError) {
-      if (err.code === 'MISSING_ENCRYPTION_KEY') {
-        return apiError(
-          'CONFIG_ERROR',
-          'Server is not configured for certificate authentication',
-          500
-        )
-      }
-      return badRequest(err.message)
+    if (err instanceof CertificateError && err.code === 'MISSING_ENCRYPTION_KEY') {
+      return apiError(
+        'CONFIG_ERROR',
+        'Server is not configured for certificate authentication',
+        500
+      )
     }
-    return badRequest(
-      certificateFormat === 'pem'
-        ? 'Failed to parse certificate or private key file.'
-        : 'Failed to parse certificate file. Check the file and password.'
-    )
+    throw err
   }
 
   // Extract certificate expiry date

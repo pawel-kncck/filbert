@@ -1,4 +1,10 @@
-export type KsefEnvironment = 'test' | 'demo' | 'prod'
+export const KSEF_ENVIRONMENTS = ['test', 'demo', 'prod'] as const
+
+export type KsefEnvironment = (typeof KSEF_ENVIRONMENTS)[number]
+
+export function isKsefEnvironment(value: unknown): value is KsefEnvironment {
+  return KSEF_ENVIRONMENTS.includes(value as KsefEnvironment)
+}
 
 export type KsefAuthMethod = 'token' | 'certificate'
 

@@ -8,15 +8,9 @@ import {
 } from '@/lib/api/middleware'
 import { KsefAuthError } from '@/lib/ksef/auth'
 import { KsefApiClient } from '@/lib/ksef/api-client'
-import {
-  parsePkcs12,
-  parsePemCertificate,
-  CertificateError,
-  decryptPrivateKey,
-} from '@/lib/ksef/certificate-crypto'
-import type { KsefEnvironment } from '@/lib/ksef/types'
-
-const VALID_ENVIRONMENTS = ['test', 'demo', 'prod'] as const
+import { decryptPrivateKey } from '@/lib/ksef/certificate-crypto'
+import { parseCertificateUpload } from '@/lib/ksef/certificate-upload'
+import { isKsefEnvironment, type KsefEnvironment } from '@/lib/ksef/types'
 
 export async function POST(
   request: NextRequest,
@@ -145,15 +139,11 @@ async function validateToken(body: Record<string, unknown>, nip: string) {
     return badRequest('Token is required')
   }
 
-  if (
-    !environment ||
-    !VALID_ENVIRONMENTS.includes(environment as (typeof VALID_ENVIRONMENTS)[number])
-  ) {
+  if (!isKsefEnvironment(environment)) {
     return badRequest('Invalid environment. Must be test, demo, or prod')
   }
 
-  const env = environment as KsefEnvironment
-  const client = new KsefApiClient(env)
+  const client = new KsefApiClient(environment)
 
   try {
     await client.authenticate(nip, token.trim())
@@ -190,77 +180,30 @@ async function validateCertificate(request: NextRequest, nip: string) {
     return badRequest('Invalid form data')
   }
 
-  const certificateFile = formData.get('certificate') as File | null
-  const certificateFormat = (formData.get('certificateFormat') as string) || 'pkcs12'
-  const password = formData.get('certificatePassword') as string | null
-  const privateKeyPassword = formData.get('privateKeyPassword') as string | null
-  const privateKeyFile = formData.get('privateKey') as File | null
-  const environment = formData.get('environment') as string | null
-
-  if (!certificateFile) {
-    return badRequest('Certificate file is required')
+  const parsed = await parseCertificateUpload(formData)
+  if (!parsed.ok) {
+    switch (parsed.reason) {
+      case 'bad_request':
+        return badRequest(parsed.message)
+      case 'config_error':
+        return apiError('CONFIG_ERROR', parsed.message, 500)
+      case 'parse_error':
+        return NextResponse.json({
+          valid: false,
+          error: parsed.message,
+          ...(parsed.code && { code: parsed.code }),
+        })
+    }
   }
 
-  if (certificateFormat === 'pkcs12' && !password) {
-    return badRequest('Certificate password is required for PKCS#12 files')
-  }
-
-  if (certificateFormat === 'pem' && !privateKeyFile) {
-    return badRequest('Private key file is required for PEM format')
-  }
-
-  if (
-    !environment ||
-    !VALID_ENVIRONMENTS.includes(environment as (typeof VALID_ENVIRONMENTS)[number])
-  ) {
+  if (!isKsefEnvironment(parsed.environment)) {
     return badRequest('Invalid environment. Must be test, demo, or prod')
   }
 
-  let certificatePem: string
-  let privateKeyPem: string
+  const client = new KsefApiClient(parsed.environment)
 
   try {
-    if (certificateFormat === 'pem') {
-      const certContent = await certificateFile.text()
-      const keyContent = await privateKeyFile!.text()
-      const parsed = parsePemCertificate(certContent, keyContent, privateKeyPassword || undefined)
-      certificatePem = parsed.certificatePem
-      privateKeyPem = parsed.privateKeyPem
-    } else {
-      const buffer = Buffer.from(await certificateFile.arrayBuffer())
-      const parsed = parsePkcs12(buffer, password!)
-      certificatePem = parsed.certificatePem
-      privateKeyPem = parsed.privateKeyPem
-    }
-  } catch (err) {
-    if (err instanceof CertificateError) {
-      if (err.code === 'MISSING_ENCRYPTION_KEY') {
-        return apiError(
-          'CONFIG_ERROR',
-          'Server is not configured for certificate authentication',
-          500
-        )
-      }
-      return NextResponse.json({
-        valid: false,
-        error: err.message,
-        code: err.code,
-      })
-    }
-    return NextResponse.json({
-      valid: false,
-      error:
-        certificateFormat === 'pem'
-          ? 'Failed to parse certificate or private key file.'
-          : 'Failed to parse certificate file. Check the file and password.',
-    })
-  }
-
-  const env = environment as KsefEnvironment
-  const client = new KsefApiClient(env)
-
-  try {
-    await client.authenticateWithCert(nip, certificatePem, privateKeyPem)
+    await client.authenticateWithCert(nip, parsed.certificatePem, parsed.privateKeyPem)
 
     // Also query permissions for new credentials
     const permissions = await client.queryPersonalPermissions(nip)
