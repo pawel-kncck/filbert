@@ -1,4 +1,4 @@
-import { publicEncrypt, constants, X509Certificate } from 'node:crypto'
+import { publicEncrypt, constants, createHash, X509Certificate } from 'node:crypto'
 
 /**
  * Encrypts a KSeF authorization token with RSA-OAEP for the v2 auth flow.
@@ -25,6 +25,14 @@ export function encryptKsefToken(token: string, timestampMs: number, publicKeyPe
   const result = encrypted.toString('base64')
   console.log('[KSeF Crypto] Encrypted result starts with:', result.substring(0, 40))
   return result
+}
+
+/**
+ * SHA-256 of UTF-8 content as unpadded base64url — the hash format
+ * KSeF invoice QR codes expect.
+ */
+export function sha256Base64Url(content: string): string {
+  return createHash('sha256').update(content, 'utf-8').digest('base64url')
 }
 
 /**

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireInvoiceAccess, isApiError, apiError, toErrorMessage } from '@/lib/api/middleware'
-import { getKsefCredentialsForCompany, updateInvoiceKsefStatus } from '@/lib/data/ksef'
+import { getKsefCredentialsForCompany } from '@/lib/data/ksef'
 import { KsefApiError } from '@/lib/ksef/api-client'
-import { authenticateKsefClient } from '@/lib/ksef/authenticate-client'
-import { buildFA3Xml } from '@/lib/ksef/fa3-xml-builder'
+import { sendInvoiceToKsef } from '@/lib/ksef/send-invoice'
 import * as Sentry from '@sentry/nextjs'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -27,13 +26,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return apiError('BAD_REQUEST', 'Invoice is already being sent to KSeF', 400)
   }
 
-  // Get KSeF credentials
   const credentials = await getKsefCredentialsForCompany(invoice.company_id)
   if (!credentials) {
     return apiError('BAD_REQUEST', 'KSeF credentials not configured', 400)
   }
 
-  // Get company info
   const { data: company } = await auth.supabase
     .from('companies')
     .select('name, nip')
@@ -44,7 +41,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return apiError('NOT_FOUND', 'Company not found', 404)
   }
 
-  // Fetch invoice items
   const { data: items } = await auth.supabase
     .from('invoice_items')
     .select('*')
@@ -55,82 +51,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return apiError('BAD_REQUEST', 'Invoice has no items', 400)
   }
 
-  // Mark as pending
-  await updateInvoiceKsefStatus(invoice.id, {
-    ksef_status: 'pending',
-    ksef_error: null,
-    ksef_sent_at: new Date().toISOString(),
-  })
-
-  // Build XML
-  const xml = buildFA3Xml({ invoice, items })
-
-  // Send to KSeF
   try {
-    const client = await authenticateKsefClient(credentials, company.nip)
-    await client.openSession()
-    const sessionRef = client.getSessionRef()!
-    const result = await client.sendInvoice(xml)
+    const result = await sendInvoiceToKsef({ invoice, items, credentials, nip: company.nip })
 
-    // Poll for status
-    let status = await client.getInvoiceStatus(sessionRef, result.elementReferenceNumber)
-    let attempts = 0
-    const maxAttempts = 10
-
-    while (!status.ksefReferenceNumber && attempts < maxAttempts) {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      status = await client.getInvoiceStatus(sessionRef, result.elementReferenceNumber)
-      attempts++
+    if (result.status === 'accepted') {
+      return NextResponse.json({ success: true, ksefReference: result.ksefReference })
     }
 
-    await client.closeSession()
-
-    if (status.ksefReferenceNumber) {
-      // Generate hash from XML for QR code
-      const encoder = new TextEncoder()
-      const xmlData = encoder.encode(xml)
-      const hashBuffer = await crypto.subtle.digest('SHA-256', xmlData)
-      const hashArray = new Uint8Array(hashBuffer)
-      const hashBase64Url = btoa(String.fromCharCode(...hashArray))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '')
-
-      await updateInvoiceKsefStatus(invoice.id, {
-        ksef_status: 'accepted',
-        ksef_reference: status.ksefReferenceNumber,
-        ksef_hash: hashBase64Url,
-        ksef_error: null,
-      })
-
-      return NextResponse.json({
-        success: true,
-        ksefReference: status.ksefReferenceNumber,
-      })
-    } else {
-      await updateInvoiceKsefStatus(invoice.id, {
-        ksef_status: 'sent',
-        ksef_error: null,
-      })
-
-      return NextResponse.json({
-        success: true,
-        status: 'sent',
-        message: 'Invoice sent, awaiting KSeF confirmation',
-      })
-    }
+    return NextResponse.json({
+      success: true,
+      status: 'sent',
+      message: 'Invoice sent, awaiting KSeF confirmation',
+    })
   } catch (error) {
-    const errorMessage = toErrorMessage(error)
-
     Sentry.captureException(error)
 
-    await updateInvoiceKsefStatus(invoice.id, {
-      ksef_status: 'error',
-      ksef_error: errorMessage,
-    })
-
     const code = error instanceof KsefApiError ? error.code : 'KSEF_ERROR'
-
-    return apiError(code, errorMessage, 500)
+    return apiError(code, toErrorMessage(error), 500)
   }
 }

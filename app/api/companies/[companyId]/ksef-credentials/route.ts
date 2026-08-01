@@ -9,6 +9,12 @@ import {
 import { encryptPrivateKey, CertificateError } from '@/lib/ksef/certificate-crypto'
 import { parseCertificateUpload } from '@/lib/ksef/certificate-upload'
 import { isKsefEnvironment } from '@/lib/ksef/types'
+import {
+  upsertTokenCredential,
+  upsertCertificateCredential,
+  deleteCredential,
+  type UpsertResult,
+} from '@/lib/data/ksef-credentials'
 import { X509Certificate } from 'node:crypto'
 
 export async function GET(
@@ -56,11 +62,11 @@ export async function POST(
   return handleTokenSave(request, auth)
 }
 
-type ValidationStatus = 'valid' | 'invalid' | 'pending'
-
-function parseValidationStatus(status: string | null | undefined): ValidationStatus {
-  if (status === 'valid' || status === 'invalid') return status
-  return 'pending'
+function upsertErrorResponse(result: Extract<UpsertResult, { ok: false }>) {
+  if (result.reason === 'duplicate') {
+    return badRequest(result.message)
+  }
+  return apiError('INTERNAL_ERROR', result.message, 500)
 }
 
 async function handleTokenSave(request: NextRequest, auth: AdminContext) {
@@ -71,73 +77,29 @@ async function handleTokenSave(request: NextRequest, auth: AdminContext) {
     return badRequest('Token is required')
   }
 
-  if (environment && !isKsefEnvironment(environment)) {
+  const env = environment || 'prod'
+  if (!isKsefEnvironment(env)) {
     return badRequest('Invalid environment. Must be test, demo, or prod')
   }
 
-  const env = environment || 'prod'
-  const status = parseValidationStatus(validationStatus)
+  const result = await upsertTokenCredential(auth.supabase, auth.companyId, {
+    token,
+    environment: env,
+    name,
+    validationStatus,
+    validationError,
+    grantedPermissions: Array.isArray(grantedPermissions) ? grantedPermissions : undefined,
+  })
 
-  // Check for existing credential with same environment + auth_method
-  const { data: existing } = await auth.supabase
-    .from('company_ksef_credentials')
-    .select('id')
-    .eq('company_id', auth.companyId)
-    .eq('environment', env)
-    .eq('auth_method', 'token')
-    .single()
-
-  if (existing) {
-    // Update existing credential
-    const { data, error } = await auth.supabase
-      .from('company_ksef_credentials')
-      .update({
-        token: token.trim(),
-        name: name || null,
-        validated_at: status === 'valid' ? new Date().toISOString() : null,
-        validation_status: status,
-        validation_error: validationError || null,
-        ...(Array.isArray(grantedPermissions) && { granted_permissions: grantedPermissions }),
-      })
-      .eq('id', existing.id)
-      .select('id')
-      .single()
-
-    if (error) {
-      return apiError('INTERNAL_ERROR', error.message, 500)
-    }
-
-    return NextResponse.json({ success: true, id: data.id, updated: true })
+  if (!result.ok) {
+    return upsertErrorResponse(result)
   }
 
-  // Insert new credential
-  const { data, error } = await auth.supabase
-    .from('company_ksef_credentials')
-    .insert({
-      company_id: auth.companyId,
-      auth_method: 'token' as const,
-      token: token.trim(),
-      environment: env,
-      name: name || null,
-      validated_at: status === 'valid' ? new Date().toISOString() : null,
-      validation_status: status,
-      validation_error: validationError || null,
-      ...(Array.isArray(grantedPermissions) && { granted_permissions: grantedPermissions }),
-    })
-    .select('id')
-    .single()
-
-  if (error) {
-    if (error.code === '23505') {
-      return badRequest('Credential for this environment and auth method already exists')
-    }
-    return apiError('INTERNAL_ERROR', error.message, 500)
-  }
-
-  // Auto-set as default if this is the only credential
-  await autoSetDefaultIfOnly(auth, data.id)
-
-  return NextResponse.json({ success: true, id: data.id })
+  return NextResponse.json({
+    success: true,
+    id: result.id,
+    ...(result.updated && { updated: true }),
+  })
 }
 
 async function handleCertificateUpload(request: NextRequest, auth: AdminContext) {
@@ -178,7 +140,8 @@ async function handleCertificateUploadInner(request: NextRequest, auth: AdminCon
     grantedPermissions,
   } = parsed
 
-  if (environment && !isKsefEnvironment(environment)) {
+  const env = environment || 'prod'
+  if (!isKsefEnvironment(env)) {
     return badRequest('Invalid environment. Must be test, demo, or prod')
   }
 
@@ -206,96 +169,27 @@ async function handleCertificateUploadInner(request: NextRequest, auth: AdminCon
     console.warn('[KSeF Credentials] Failed to extract certificate expiry date')
   }
 
-  const env = (environment as 'test' | 'demo' | 'prod') || 'prod'
+  const result = await upsertCertificateCredential(auth.supabase, auth.companyId, {
+    certificatePem,
+    encryptedPrivateKey,
+    certificateExpiresAt,
+    environment: env,
+    name,
+    validationStatus,
+    validationError,
+    grantedPermissions,
+  })
 
-  // Check for existing credential with same environment + auth_method
-  const { data: existing } = await auth.supabase
-    .from('company_ksef_credentials')
-    .select('id')
-    .eq('company_id', auth.companyId)
-    .eq('environment', env)
-    .eq('auth_method', 'certificate')
-    .single()
-
-  const status = parseValidationStatus(validationStatus)
-
-  if (existing) {
-    // Update existing credential
-    const { data, error } = await auth.supabase
-      .from('company_ksef_credentials')
-      .update({
-        certificate_pem: certificatePem,
-        encrypted_private_key: encryptedPrivateKey,
-        name: name || null,
-        validated_at: status === 'valid' ? new Date().toISOString() : null,
-        validation_status: status,
-        validation_error: validationError || null,
-        certificate_expires_at: certificateExpiresAt,
-        ...(Array.isArray(grantedPermissions) && { granted_permissions: grantedPermissions }),
-      })
-      .eq('id', existing.id)
-      .select('id')
-      .single()
-
-    if (error) {
-      console.error('[KSeF Credentials] DB update error:', error)
-      return apiError('INTERNAL_ERROR', error.message, 500)
-    }
-
-    return NextResponse.json({
-      success: true,
-      id: data.id,
-      authMethod: 'certificate',
-      updated: true,
-    })
+  if (!result.ok) {
+    return upsertErrorResponse(result)
   }
 
-  // Insert new credential
-  const { data, error } = await auth.supabase
-    .from('company_ksef_credentials')
-    .insert({
-      company_id: auth.companyId,
-      auth_method: 'certificate' as const,
-      token: null,
-      environment: env,
-      certificate_pem: certificatePem,
-      encrypted_private_key: encryptedPrivateKey,
-      name: name || null,
-      validated_at: status === 'valid' ? new Date().toISOString() : null,
-      validation_status: status,
-      validation_error: validationError || null,
-      certificate_expires_at: certificateExpiresAt,
-      ...(Array.isArray(grantedPermissions) && { granted_permissions: grantedPermissions }),
-    })
-    .select('id')
-    .single()
-
-  if (error) {
-    console.error('[KSeF Credentials] DB insert error:', error)
-    if (error.code === '23505') {
-      return badRequest('Credential for this environment and auth method already exists')
-    }
-    return apiError('INTERNAL_ERROR', error.message, 500)
-  }
-
-  // Auto-set as default if this is the only credential
-  await autoSetDefaultIfOnly(auth, data.id)
-
-  return NextResponse.json({ success: true, id: data.id, authMethod: 'certificate' })
-}
-
-async function autoSetDefaultIfOnly(auth: AdminContext, newId: string) {
-  const { count } = await auth.supabase
-    .from('company_ksef_credentials')
-    .select('id', { count: 'exact', head: true })
-    .eq('company_id', auth.companyId)
-
-  if (count === 1) {
-    await auth.supabase
-      .from('company_ksef_credentials')
-      .update({ is_default: true })
-      .eq('id', newId)
-  }
+  return NextResponse.json({
+    success: true,
+    id: result.id,
+    authMethod: 'certificate',
+    ...(result.updated && { updated: true }),
+  })
 }
 
 export async function DELETE(
@@ -307,7 +201,6 @@ export async function DELETE(
   const auth = await requireAdminAuth(companyId)
   if (isApiError(auth)) return auth
 
-  // Get credential ID from query params
   const url = new URL(request.url)
   const credentialId = url.searchParams.get('id')
 
@@ -315,24 +208,13 @@ export async function DELETE(
     return badRequest('Credential ID is required')
   }
 
-  // Verify the credential belongs to this company before deleting
-  const { data: credential } = await auth.supabase
-    .from('company_ksef_credentials')
-    .select('id, company_id')
-    .eq('id', credentialId)
-    .single()
+  const result = await deleteCredential(auth.supabase, auth.companyId, credentialId)
 
-  if (!credential || credential.company_id !== auth.companyId) {
-    return badRequest('Credential not found')
-  }
-
-  const { error } = await auth.supabase
-    .from('company_ksef_credentials')
-    .delete()
-    .eq('id', credentialId)
-
-  if (error) {
-    return apiError('INTERNAL_ERROR', error.message, 500)
+  if (!result.ok) {
+    if (result.reason === 'not_found') {
+      return badRequest(result.message)
+    }
+    return apiError('INTERNAL_ERROR', result.message, 500)
   }
 
   return NextResponse.json({ success: true })
