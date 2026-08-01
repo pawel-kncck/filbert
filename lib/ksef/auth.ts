@@ -115,113 +115,11 @@ export async function authenticateWithKsef(
   }
 
   // Step 4: Poll for auth completion (requires Bearer token)
-  const startTime = Date.now()
-  while (Date.now() - startTime < AUTH_POLL_TIMEOUT_MS) {
-    const statusRes = await fetchJson(`${baseUrl}/v2/auth/${referenceNumber}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-    })
+  await pollAuthStatus(baseUrl, referenceNumber, authToken, '[KSeF Auth]')
 
-    console.log('[KSeF Auth] Poll response:', JSON.stringify(statusRes, null, 2))
-
-    // Status may be a direct number/string or a nested object { code: 200, ... }
-    const rawStatus = statusRes.processingCode ?? statusRes.status ?? statusRes.authenticationStatus
-    const processingCode =
-      typeof rawStatus === 'object' && rawStatus !== null
-        ? (rawStatus as { code?: number | string }).code
-        : (rawStatus as number | string | undefined)
-    console.log('[KSeF Auth] Processing code:', processingCode)
-
-    // Check for success - might be 200, "200", "completed", etc.
-    if (
-      processingCode === 200 ||
-      processingCode === '200' ||
-      processingCode === 'completed' ||
-      statusRes.completed === true
-    ) {
-      console.log('[KSeF Auth] Polling complete!')
-      break
-    }
-
-    // Check for in-progress
-    if (
-      processingCode === 100 ||
-      processingCode === '100' ||
-      processingCode === 'pending' ||
-      statusRes.pending === true
-    ) {
-      await sleep(AUTH_POLL_INTERVAL_MS)
-      continue
-    }
-
-    // If we get here with an unknown status, log it and break (might already be complete)
-    console.log('[KSeF Auth] Unknown status, assuming complete')
-    break
-  }
-
-  if (Date.now() - startTime >= AUTH_POLL_TIMEOUT_MS) {
-    throw new KsefAuthError('AUTH_TIMEOUT', 'KSeF authentication timed out after 2 minutes')
-  }
-
-  // Step 5: Redeem token (one-time call, requires Bearer token)
+  // Steps 5-6: Redeem token (one-time call, requires Bearer token) and parse expiry
   console.log('[KSeF Auth] Redeeming token for referenceNumber:', referenceNumber)
-  const redeemRes = await fetchJson(`${baseUrl}/v2/auth/token/redeem`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${authToken}`,
-    },
-    body: JSON.stringify({ referenceNumber }),
-  })
-
-  console.log('[KSeF Auth] Redeem response:', JSON.stringify(redeemRes, null, 2))
-  console.log('[KSeF Auth] Redeem response keys:', Object.keys(redeemRes))
-
-  // v2 API may return tokens in different formats - check common patterns
-  let accessToken: string | undefined
-  let refreshToken: string | undefined
-
-  // Try direct string fields first
-  if (typeof redeemRes.accessToken === 'string') {
-    accessToken = redeemRes.accessToken
-  } else if (typeof (redeemRes.accessToken as { token?: string })?.token === 'string') {
-    accessToken = (redeemRes.accessToken as { token: string }).token
-  } else if (typeof redeemRes.token === 'string') {
-    accessToken = redeemRes.token as string
-  } else if (typeof (redeemRes.tokens as { access?: string })?.access === 'string') {
-    accessToken = (redeemRes.tokens as { access: string }).access
-  }
-
-  if (typeof redeemRes.refreshToken === 'string') {
-    refreshToken = redeemRes.refreshToken
-  } else if (typeof (redeemRes.refreshToken as { token?: string })?.token === 'string') {
-    refreshToken = (redeemRes.refreshToken as { token: string }).token
-  } else if (typeof (redeemRes.tokens as { refresh?: string })?.refresh === 'string') {
-    refreshToken = (redeemRes.tokens as { refresh: string }).refresh
-  }
-
-  console.log(
-    '[KSeF Auth] Extracted accessToken:',
-    accessToken ? `${accessToken.substring(0, 50)}...` : 'MISSING'
-  )
-  console.log(
-    '[KSeF Auth] Extracted refreshToken:',
-    refreshToken ? `${refreshToken.substring(0, 50)}...` : 'MISSING'
-  )
-
-  if (!accessToken || !refreshToken) {
-    throw new KsefAuthError(
-      'REDEEM_FAILED',
-      `Missing accessToken or refreshToken from redeem. Response keys: ${Object.keys(redeemRes).join(', ')}`
-    )
-  }
-
-  // Step 6: Parse JWT exp for expiry
-  const accessTokenExpiresAt = parseJwtExpiry(accessToken)
-
-  return { accessToken, refreshToken, accessTokenExpiresAt }
+  return redeemTokens(baseUrl, referenceNumber, authToken, '[KSeF Auth]')
 }
 
 /**
@@ -284,19 +182,36 @@ export async function authenticateWithCertificate(
   // Note: Certificate auth may also return authenticationToken - extract if present
   const certAuthToken = (certRes.authenticationToken as { token?: string } | undefined)?.token
 
+  await pollAuthStatus(baseUrl, referenceNumber, certAuthToken, '[KSeF Auth Cert]')
+
+  // Step 6: Redeem token (same as token auth)
+  return redeemTokens(baseUrl, referenceNumber, certAuthToken, '[KSeF Auth Cert]')
+}
+
+/**
+ * Polls GET /auth/{referenceNumber} until the authentication completes.
+ * Resolves on success (or unknown status, which may mean already complete);
+ * throws AUTH_TIMEOUT after AUTH_POLL_TIMEOUT_MS.
+ */
+async function pollAuthStatus(
+  baseUrl: string,
+  referenceNumber: string,
+  bearerToken: string | undefined,
+  logPrefix: string
+): Promise<void> {
+  const headers: Record<string, string> = {}
+  if (bearerToken) {
+    headers['Authorization'] = `Bearer ${bearerToken}`
+  }
+
   const startTime = Date.now()
   while (Date.now() - startTime < AUTH_POLL_TIMEOUT_MS) {
-    const pollHeaders: Record<string, string> = {}
-    if (certAuthToken) {
-      pollHeaders['Authorization'] = `Bearer ${certAuthToken}`
-    }
-
     const statusRes = await fetchJson(`${baseUrl}/v2/auth/${referenceNumber}`, {
       method: 'GET',
-      headers: pollHeaders,
+      headers,
     })
 
-    console.log('[KSeF Auth Cert] Poll response:', JSON.stringify(statusRes, null, 2))
+    console.log(`${logPrefix} Poll response:`, JSON.stringify(statusRes, null, 2))
 
     // Status may be a direct number/string or a nested object { code: 200, ... }
     const rawStatus = statusRes.processingCode ?? statusRes.status ?? statusRes.authenticationStatus
@@ -304,18 +219,20 @@ export async function authenticateWithCertificate(
       typeof rawStatus === 'object' && rawStatus !== null
         ? (rawStatus as { code?: number | string }).code
         : (rawStatus as number | string | undefined)
-    console.log('[KSeF Auth Cert] Processing code:', processingCode)
+    console.log(`${logPrefix} Processing code:`, processingCode)
 
+    // Check for success - might be 200, "200", "completed", etc.
     if (
       processingCode === 200 ||
       processingCode === '200' ||
       processingCode === 'completed' ||
       statusRes.completed === true
     ) {
-      console.log('[KSeF Auth Cert] Polling complete!')
-      break
+      console.log(`${logPrefix} Polling complete!`)
+      return
     }
 
+    // Check for in-progress
     if (
       processingCode === 100 ||
       processingCode === '100' ||
@@ -326,32 +243,42 @@ export async function authenticateWithCertificate(
       continue
     }
 
-    console.log('[KSeF Auth Cert] Unknown status, assuming complete')
-    break
+    // Unknown status: might already be complete
+    console.log(`${logPrefix} Unknown status, assuming complete`)
+    return
   }
 
-  if (Date.now() - startTime >= AUTH_POLL_TIMEOUT_MS) {
-    throw new KsefAuthError('AUTH_TIMEOUT', 'KSeF authentication timed out after 2 minutes')
-  }
+  throw new KsefAuthError('AUTH_TIMEOUT', 'KSeF authentication timed out after 2 minutes')
+}
 
-  // Step 6: Redeem token (same as token auth)
-  const redeemHeaders: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (certAuthToken) {
-    redeemHeaders['Authorization'] = `Bearer ${certAuthToken}`
+/**
+ * Redeems the one-time token at POST /auth/token/redeem and extracts
+ * access/refresh tokens, tolerating the several response shapes the
+ * v2 API has been observed to return.
+ */
+async function redeemTokens(
+  baseUrl: string,
+  referenceNumber: string,
+  bearerToken: string | undefined,
+  logPrefix: string
+): Promise<KsefAuthTokens> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (bearerToken) {
+    headers['Authorization'] = `Bearer ${bearerToken}`
   }
 
   const redeemRes = await fetchJson(`${baseUrl}/v2/auth/token/redeem`, {
     method: 'POST',
-    headers: redeemHeaders,
+    headers,
     body: JSON.stringify({ referenceNumber }),
   })
 
-  console.log('[KSeF Auth Cert] Redeem response:', JSON.stringify(redeemRes, null, 2))
+  console.log(`${logPrefix} Redeem response:`, JSON.stringify(redeemRes, null, 2))
 
-  // v2 API may return tokens in different formats — check common patterns
   let accessToken: string | undefined
   let refreshToken: string | undefined
 
+  // Try direct string fields first
   if (typeof redeemRes.accessToken === 'string') {
     accessToken = redeemRes.accessToken
   } else if (typeof (redeemRes.accessToken as { token?: string })?.token === 'string') {
@@ -371,11 +298,11 @@ export async function authenticateWithCertificate(
   }
 
   console.log(
-    '[KSeF Auth Cert] Extracted accessToken:',
+    `${logPrefix} Extracted accessToken:`,
     accessToken ? `${accessToken.substring(0, 50)}...` : 'MISSING'
   )
   console.log(
-    '[KSeF Auth Cert] Extracted refreshToken:',
+    `${logPrefix} Extracted refreshToken:`,
     refreshToken ? `${refreshToken.substring(0, 50)}...` : 'MISSING'
   )
 
