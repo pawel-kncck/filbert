@@ -1,7 +1,8 @@
 'use client'
 
-import { useTranslations, useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import type { Invoice, InvoiceItem } from '@/lib/types/database'
+import { useFormatters } from '@/lib/hooks/use-formatters'
 import { KsefQrCode } from './ksef-qr-code'
 import { generateKsefQrUrl } from '@/lib/ksef/generate-qr-data'
 
@@ -12,29 +13,9 @@ type Props = {
 
 export function KsefInvoiceView({ invoice, items }: Props) {
   const t = useTranslations('invoices.preview')
-  const locale = useLocale()
+  const { formatCurrency: formatCurrencyIn, formatDate, formatNumber } = useFormatters()
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale === 'pl' ? 'pl-PL' : 'en-US', {
-      style: 'currency',
-      currency: invoice.currency,
-    }).format(amount)
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(locale === 'pl' ? 'pl-PL' : 'en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
-  }
-
-  const formatNumber = (value: number, decimals: number) => {
-    return new Intl.NumberFormat(locale === 'pl' ? 'pl-PL' : 'en-US', {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    }).format(value)
-  }
+  const formatCurrency = (amount: number) => formatCurrencyIn(amount, invoice.currency)
 
   const qrUrl = generateKsefQrUrl(invoice)
 

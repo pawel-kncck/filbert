@@ -1,8 +1,7 @@
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import { getUserCompanies, getDefaultCompanyId } from '@/lib/data/companies'
 import { getInvoiceById } from '@/lib/data/invoices'
+import { requirePageCompanyContext } from '@/lib/data/page-context'
 import { getInvoiceItems } from '@/lib/data/invoice-items'
 import { getKsefCredentialsForCompany } from '@/lib/data/ksef'
 import { AppShell } from '@/components/layout/app-shell'
@@ -10,8 +9,8 @@ import { InvoiceItemsTable } from '@/components/invoices/invoice-items-table'
 import { KsefPreviewButton } from '@/components/invoices/ksef-preview-button'
 import { KsefSendButton } from '@/components/invoices/ksef-send-button'
 import { KsefStatusBadge } from '@/components/invoices/ksef-status-badge'
-import { getTranslations, getLocale } from 'next-intl/server'
-import type { Locale } from '@/lib/i18n/config'
+import { getTranslations } from 'next-intl/server'
+import { formatCurrency, formatDateLong } from '@/lib/i18n/formatters'
 
 type Props = {
   type: 'sales' | 'purchase'
@@ -22,29 +21,8 @@ type Props = {
 export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
   const { id } = await params
   const { company } = await searchParams
-  const supabase = await createClient()
   const t = await getTranslations()
-  const locale = (await getLocale()) as Locale
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  const companies = await getUserCompanies(user.id)
-
-  if (companies.length === 0) {
-    redirect('/onboarding')
-  }
-
-  const currentCompanyId = await getDefaultCompanyId(companies, company || null)
-
-  if (!currentCompanyId) {
-    redirect('/onboarding')
-  }
+  const { user, locale, companies, currentCompanyId } = await requirePageCompanyContext(company)
 
   const invoice = await getInvoiceById(id, currentCompanyId)
 
@@ -55,21 +33,6 @@ export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
   const items = await getInvoiceItems(invoice.id)
   const credentials = await getKsefCredentialsForCompany(currentCompanyId)
   const hasCredentials = !!credentials
-
-  const formatCurrency = (amount: number, currency: string = 'PLN') => {
-    return new Intl.NumberFormat(locale === 'pl' ? 'pl-PL' : 'en-US', {
-      style: 'currency',
-      currency,
-    }).format(amount)
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(locale === 'pl' ? 'pl-PL' : 'en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  }
 
   const getSourceLabel = (source: string) => {
     switch (source) {
@@ -130,7 +93,7 @@ export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
                 {t('invoices.detail.issueDate')}
               </p>
               <p className="text-lg font-medium text-zinc-900 dark:text-white">
-                {formatDate(invoice.issue_date)}
+                {formatDateLong(invoice.issue_date, locale)}
               </p>
             </div>
           </div>
@@ -204,13 +167,13 @@ export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
             <div>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">{t('invoices.detail.net')}</p>
               <p className="text-2xl font-semibold text-zinc-900 dark:text-white">
-                {formatCurrency(invoice.net_amount, invoice.currency)}
+                {formatCurrency(invoice.net_amount, locale, invoice.currency)}
               </p>
             </div>
             <div>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">VAT</p>
               <p className="text-2xl font-semibold text-zinc-900 dark:text-white">
-                {formatCurrency(invoice.vat_amount, invoice.currency)}
+                {formatCurrency(invoice.vat_amount, locale, invoice.currency)}
               </p>
             </div>
             <div>
@@ -218,7 +181,7 @@ export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
                 {t('invoices.detail.gross')}
               </p>
               <p className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
-                {formatCurrency(invoice.gross_amount, invoice.currency)}
+                {formatCurrency(invoice.gross_amount, locale, invoice.currency)}
               </p>
             </div>
           </div>
@@ -251,7 +214,7 @@ export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
                 {t('invoices.detail.added')}
               </dt>
               <dd className="mt-1 text-sm font-medium text-zinc-900 dark:text-white">
-                {formatDate(invoice.created_at)}
+                {formatDateLong(invoice.created_at, locale)}
               </dd>
             </div>
           </dl>

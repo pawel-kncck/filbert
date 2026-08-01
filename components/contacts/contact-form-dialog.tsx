@@ -11,19 +11,22 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { NipLookupButton } from '@/components/shared/nip-lookup-button'
-import type { Customer } from '@/lib/types/database'
+import type { Contact, ContactEntity } from '@/lib/types/contacts'
 import type { GusFormattedResult } from '@/lib/gus/types'
+import { CONTACT_UI } from './config'
 
 type Props = {
+  entity: ContactEntity
   open: boolean
   onOpenChange: (open: boolean) => void
   companyId: string
-  customer?: Customer | null
+  contact?: Contact | null
 }
 
-export function CustomerFormDialog({ open, onOpenChange, companyId, customer }: Props) {
+export function ContactFormDialog({ entity, open, onOpenChange, companyId, contact }: Props) {
+  const config = CONTACT_UI[entity]
   const router = useRouter()
-  const t = useTranslations('customers')
+  const t = useTranslations(config.namespace)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -36,18 +39,18 @@ export function CustomerFormDialog({ open, onOpenChange, companyId, customer }: 
 
   useEffect(() => {
     if (open) {
-      setName(customer?.name || '')
-      setNip(customer?.nip || '')
-      setAddress(customer?.address || '')
-      setEmail(customer?.email || '')
-      setPhone(customer?.phone || '')
-      setNotes(customer?.notes || '')
+      setName(contact?.name || '')
+      setNip(contact?.nip || '')
+      setAddress(contact?.address || '')
+      setEmail(contact?.email || '')
+      setPhone(contact?.phone || '')
+      setNotes(contact?.notes || '')
       setError(null)
     }
-  }, [open, customer])
+  }, [open, contact])
 
   const tGus = useTranslations('gus')
-  const isEdit = !!customer
+  const isEdit = !!contact
 
   const handleLookupResult = useCallback((data: GusFormattedResult) => {
     setName(data.name)
@@ -69,7 +72,7 @@ export function CustomerFormDialog({ open, onOpenChange, companyId, customer }: 
     setError(null)
 
     try {
-      const endpoint = isEdit ? `/api/customers/${customer.id}` : '/api/customers'
+      const endpoint = isEdit ? `${config.apiBase}/${contact.id}` : config.apiBase
       const method = isEdit ? 'PUT' : 'POST'
 
       const res = await fetch(endpoint, {

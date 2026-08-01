@@ -32,8 +32,11 @@ export function formatDateLong(dateString: string, locale: Locale): string {
   })
 }
 
-export function formatNumber(amount: number, locale: Locale): string {
-  return new Intl.NumberFormat(getLocaleCode(locale)).format(amount)
+export function formatNumber(amount: number, locale: Locale, decimals?: number): string {
+  return new Intl.NumberFormat(getLocaleCode(locale), {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(amount)
 }
 
 export function formatPercent(value: number, locale: Locale): string {

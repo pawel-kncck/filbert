@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations, useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { Invoice } from '@/lib/types/database'
+import { useFormatters } from '@/lib/hooks/use-formatters'
 import { KsefPreviewModal } from './ksef-preview-modal'
 import { KsefStatusBadge } from './ksef-status-badge'
 
@@ -15,23 +16,8 @@ type Props = {
 export function InvoiceTable({ invoices, type }: Props) {
   const router = useRouter()
   const t = useTranslations()
-  const locale = useLocale()
+  const { formatCurrency, formatDate } = useFormatters()
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null)
-
-  const formatCurrency = (amount: number, currency: string = 'PLN') => {
-    return new Intl.NumberFormat(locale === 'pl' ? 'pl-PL' : 'en-US', {
-      style: 'currency',
-      currency,
-    }).format(amount)
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(locale === 'pl' ? 'pl-PL' : 'en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
-  }
 
   if (invoices.length === 0) {
     return (

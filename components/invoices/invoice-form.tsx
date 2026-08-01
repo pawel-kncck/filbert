@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { validateFA3 } from '@/lib/ksef/fa3-validator'
+import { normalizeNip } from '@/lib/validations/nip'
 import type { Invoice, InvoiceItem } from '@/lib/types/database'
 
 type ItemRow = {
@@ -162,7 +163,7 @@ export function InvoiceForm({
     setError('')
     setFieldErrors({})
 
-    const cleanNip = customerNip ? customerNip.replace(/[-\s]/g, '') : null
+    const cleanNip = customerNip ? normalizeNip(customerNip) : null
 
     // Build validation data
     const validationData = {

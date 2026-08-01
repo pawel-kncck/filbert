@@ -1,6 +1,79 @@
 import { createClient } from '@/lib/supabase/server'
-import { Invoice } from '@/lib/types/database'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { Database, Invoice } from '@/lib/types/database'
+import type { CreateInvoiceInput } from '@/lib/validations/invoice'
 import * as Sentry from '@sentry/nextjs'
+
+const roundMoney = (value: number) => Math.round(value * 100) / 100
+
+export type CreateInvoiceWithItemsResult =
+  | { ok: true; invoice: Invoice }
+  | { ok: false; message: string }
+
+/**
+ * Creates a sales invoice with its item rows. The insert is not
+ * transactional (no RPC yet): if item insertion fails, the invoice row
+ * is deleted as compensation.
+ */
+export async function createInvoiceWithItems(
+  supabase: SupabaseClient<Database>,
+  input: CreateInvoiceInput,
+  vendor: { name: string; nip: string }
+): Promise<CreateInvoiceWithItemsResult> {
+  const { company_id, invoice_number, issue_date, customer_name, customer_nip, currency, items } =
+    input
+
+  const net_amount = items.reduce((sum, item) => sum + item.net_amount, 0)
+  const vat_amount = items.reduce((sum, item) => sum + item.vat_amount, 0)
+  const gross_amount = items.reduce((sum, item) => sum + item.gross_amount, 0)
+
+  const { data: invoice, error: invoiceError } = await supabase
+    .from('invoices')
+    .insert({
+      company_id,
+      type: 'sales',
+      invoice_number: invoice_number.trim(),
+      issue_date,
+      vendor_name: vendor.name,
+      vendor_nip: vendor.nip,
+      customer_name: customer_name.trim(),
+      customer_nip: customer_nip || null,
+      net_amount: roundMoney(net_amount),
+      vat_amount: roundMoney(vat_amount),
+      gross_amount: roundMoney(gross_amount),
+      currency,
+      source: 'manual',
+    })
+    .select()
+    .single()
+
+  if (invoiceError) {
+    return { ok: false, message: invoiceError.message }
+  }
+
+  const itemRows = items.map((item, index) => ({
+    invoice_id: invoice.id,
+    position: index + 1,
+    description: item.description.trim(),
+    quantity: item.quantity,
+    unit: item.unit,
+    unit_price: item.unit_price,
+    vat_rate: item.vat_rate,
+    net_amount: roundMoney(item.net_amount),
+    vat_amount: roundMoney(item.vat_amount),
+    gross_amount: roundMoney(item.gross_amount),
+  }))
+
+  const { error: itemsError } = await supabase.from('invoice_items').insert(itemRows)
+
+  if (itemsError) {
+    // Compensating delete — keep the pair of writes all-or-nothing
+    await supabase.from('invoices').delete().eq('id', invoice.id)
+    return { ok: false, message: itemsError.message }
+  }
+
+  return { ok: true, invoice }
+}
 
 export type InvoiceFilters = {
   search?: string

@@ -3,15 +3,19 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import type { ContactEntity } from '@/lib/types/contacts'
+import { CONTACT_UI } from './config'
 
 type Props = {
+  entity: ContactEntity
   missingCount: number
   companyId: string
 }
 
-export function MissingVendorsAlert({ missingCount, companyId }: Props) {
+export function MissingContactsAlert({ entity, missingCount, companyId }: Props) {
+  const config = CONTACT_UI[entity]
   const router = useRouter()
-  const t = useTranslations('vendors')
+  const t = useTranslations(config.namespace)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -22,7 +26,7 @@ export function MissingVendorsAlert({ missingCount, companyId }: Props) {
     setError(null)
 
     try {
-      const res = await fetch('/api/vendors/sync', {
+      const res = await fetch(`${config.apiBase}/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ companyId }),

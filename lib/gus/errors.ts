@@ -8,6 +8,18 @@ export type GusErrorCode =
   | 'PARSE_ERROR'
   | 'API_ERROR'
 
+/** HTTP status to return to our API clients for each GUS error code. */
+export const GUS_ERROR_HTTP_STATUS: Record<GusErrorCode, number> = {
+  NOT_FOUND: 404,
+  INVALID_NIP: 400,
+  RATE_LIMITED: 429,
+  AUTH_FAILED: 503,
+  SESSION_FAILED: 503,
+  CONNECTION_ERROR: 503,
+  PARSE_ERROR: 502,
+  API_ERROR: 502,
+}
+
 export class GusApiError extends Error {
   code: GusErrorCode
   statusCode: number

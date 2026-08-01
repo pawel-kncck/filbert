@@ -26,7 +26,14 @@
 # misc
 .DS_Store
 *.pem
+*.dmg
 .local-test/
+
+# supabase
+supabase/.temp/
+
+# local reference material (not for the repo)
+docs/ksef/openapi.json
 
 # debug
 npm-debug.log*

@@ -3,28 +3,31 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { CustomerFormDialog } from './customer-form-dialog'
-import type { Customer } from '@/lib/types/database'
+import type { Contact, ContactEntity } from '@/lib/types/contacts'
+import { ContactFormDialog } from './contact-form-dialog'
+import { CONTACT_UI } from './config'
 
 type Props = {
-  customer: Customer
+  entity: ContactEntity
+  contact: Contact
   companyId: string
   isAdmin: boolean
 }
 
-export function CustomerActions({ customer, companyId, isAdmin }: Props) {
+export function ContactActions({ entity, contact, companyId, isAdmin }: Props) {
+  const config = CONTACT_UI[entity]
   const router = useRouter()
-  const t = useTranslations('customers')
+  const t = useTranslations(config.namespace)
   const [editOpen, setEditOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleShowInvoices = () => {
-    router.push(`/sales?search=${encodeURIComponent(customer.name)}`)
+    router.push(`${config.invoiceListPath}?search=${encodeURIComponent(contact.name)}`)
   }
 
   const handleCreateInvoice = () => {
-    router.push(`/sales/new?customer=${customer.id}`)
+    router.push(`/sales/new?customer=${contact.id}`)
   }
 
   const handleDelete = async () => {
@@ -34,7 +37,7 @@ export function CustomerActions({ customer, companyId, isAdmin }: Props) {
     setError(null)
 
     try {
-      const res = await fetch(`/api/customers/${customer.id}`, {
+      const res = await fetch(`${config.apiBase}/${contact.id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ companyId }),
@@ -75,22 +78,29 @@ export function CustomerActions({ customer, companyId, isAdmin }: Props) {
           </svg>
         </button>
 
-        {/* Create invoice */}
-        <button
-          onClick={handleCreateInvoice}
-          className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-green-600 dark:hover:bg-zinc-700"
-          title={t('actions.createInvoice')}
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
+        {/* Create invoice (customers only — invoices are issued to customers) */}
+        {entity === 'customer' && (
+          <button
+            onClick={handleCreateInvoice}
+            className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-green-600 dark:hover:bg-zinc-700"
+            title={t('actions.createInvoice')}
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </button>
+        )}
 
         {/* Edit */}
         <button
           onClick={() => setEditOpen(true)}
           className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700"
-          title={t('actions.editCustomer')}
+          title={t(config.editLabelKey)}
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -108,7 +118,7 @@ export function CustomerActions({ customer, companyId, isAdmin }: Props) {
             onClick={handleDelete}
             disabled={loading}
             className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600 disabled:opacity-50 dark:hover:bg-zinc-700"
-            title={t('actions.deleteCustomer')}
+            title={t(config.deleteLabelKey)}
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -122,11 +132,12 @@ export function CustomerActions({ customer, companyId, isAdmin }: Props) {
         )}
       </div>
 
-      <CustomerFormDialog
+      <ContactFormDialog
+        entity={entity}
         open={editOpen}
         onOpenChange={setEditOpen}
         companyId={companyId}
-        customer={customer}
+        contact={contact}
       />
     </>
   )

@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useNipLookup } from '@/lib/hooks/use-nip-lookup'
+import { isValidNip as isValidNipFormat } from '@/lib/validations/nip'
 import type { GusFormattedResult } from '@/lib/gus/types'
 
 type Props = {
@@ -15,8 +16,7 @@ export function NipLookupButton({ nip, onResult, onError }: Props) {
   const t = useTranslations()
   const { loading, error, data, lookup, reset } = useNipLookup()
 
-  const cleanNip = nip.replace(/[-\s]/g, '')
-  const isValidNip = /^\d{10}$/.test(cleanNip)
+  const isValidNip = isValidNipFormat(nip)
 
   useEffect(() => {
     if (data) {

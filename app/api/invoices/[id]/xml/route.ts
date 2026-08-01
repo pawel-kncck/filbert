@@ -1,30 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { requireInvoiceAccess, isApiError, apiError } from '@/lib/api/middleware'
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const auth = await requireInvoiceAccess(id)
+  if (isApiError(auth)) return auth
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const { data: invoice, error } = await supabase
-    .from('invoices')
-    .select('ksef_xml, ksef_reference, invoice_number')
-    .eq('id', id)
-    .single()
-
-  if (error || !invoice) {
-    return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
-  }
+  const { invoice } = auth
 
   if (!invoice.ksef_xml) {
-    return NextResponse.json({ error: 'No XML available for this invoice' }, { status: 404 })
+    return apiError('NOT_FOUND', 'No XML available for this invoice', 404)
   }
 
   return new NextResponse(invoice.ksef_xml, {

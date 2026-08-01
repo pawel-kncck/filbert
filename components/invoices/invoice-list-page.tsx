@@ -1,15 +1,12 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { getUserCompanies, getDefaultCompanyId } from '@/lib/data/companies'
 import { getInvoices, getAllInvoicesForExport, PAGE_SIZE } from '@/lib/data/invoices'
+import { requirePageCompanyContext } from '@/lib/data/page-context'
 import { AppShell } from '@/components/layout/app-shell'
 import { InvoiceTable } from '@/components/invoices/invoice-table'
 import { InvoiceStats } from '@/components/invoices/invoice-stats'
 import { InvoiceFilters } from '@/components/invoices/invoice-filters'
 import { Pagination } from '@/components/invoices/pagination'
 import { ExportButton } from '@/components/invoices/export-button'
-import { getTranslations, getLocale } from 'next-intl/server'
-import type { Locale } from '@/lib/i18n/config'
+import { getTranslations } from 'next-intl/server'
 
 type Props = {
   type: 'sales' | 'purchase'
@@ -24,29 +21,9 @@ type Props = {
 
 export async function InvoiceListPage({ type, searchParams }: Props) {
   const params = await searchParams
-  const supabase = await createClient()
   const t = await getTranslations()
-  const locale = (await getLocale()) as Locale
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  const companies = await getUserCompanies(user.id)
-
-  if (companies.length === 0) {
-    redirect('/onboarding')
-  }
-
-  const currentCompanyId = await getDefaultCompanyId(companies, params.company || null)
-
-  if (!currentCompanyId) {
-    redirect('/onboarding')
-  }
+  const { user, locale, companies, currentCompanyId, currentCompany } =
+    await requirePageCompanyContext(params.company)
 
   const currentPage = parseInt(params.page || '1', 10)
   const filters = {
@@ -63,7 +40,6 @@ export async function InvoiceListPage({ type, searchParams }: Props) {
 
   const allInvoices = await getAllInvoicesForExport(currentCompanyId, type, filters)
 
-  const currentCompany = companies.find((c) => c.id === currentCompanyId)
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
   const titleKey = type === 'sales' ? 'invoices.sales.title' : 'invoices.purchases.title'
 

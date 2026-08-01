@@ -1,6 +1,7 @@
 'use client'
 
-import { useTranslations, useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
+import { useFormatters } from '@/lib/hooks/use-formatters'
 
 type Props = {
   totalCount: number
@@ -18,20 +19,13 @@ export function InvoiceStats({
   currency = 'PLN',
 }: Props) {
   const t = useTranslations('invoices.stats')
-  const locale = useLocale()
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale === 'pl' ? 'pl-PL' : 'en-US', {
-      style: 'currency',
-      currency,
-    }).format(amount)
-  }
+  const { formatCurrency } = useFormatters()
 
   const stats = [
     { label: t('count'), value: totalCount.toString() },
-    { label: t('sumNet'), value: formatCurrency(totalNet) },
-    { label: t('sumVat'), value: formatCurrency(totalVat) },
-    { label: t('sumGross'), value: formatCurrency(totalGross) },
+    { label: t('sumNet'), value: formatCurrency(totalNet, currency) },
+    { label: t('sumVat'), value: formatCurrency(totalVat, currency) },
+    { label: t('sumGross'), value: formatCurrency(totalGross, currency) },
   ]
 
   return (
