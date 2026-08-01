@@ -4,6 +4,7 @@ import {
   KsefAuthError,
   type KsefAuthTokens,
 } from './auth'
+import { ksefDebug, ksefWarn, describeSecret, redactHeaders } from './logger'
 import { V2_BASE_URLS } from './types'
 export type { KsefEnvironment, KsefAuthMethod } from './types'
 import type { KsefEnvironment } from './types'
@@ -53,15 +54,15 @@ export class KsefApiClient {
    */
   async authenticate(nip: string, token: string): Promise<KsefAuthTokens> {
     this.authTokens = await authenticateWithKsef(this.environment, nip, token)
-    console.log(
-      '[KSeF Client] Auth complete, accessToken starts with:',
-      this.authTokens.accessToken?.substring(0, 50)
+    ksefDebug(
+      'KSeF Client',
+      'Auth complete. accessToken:',
+      describeSecret(this.authTokens.accessToken),
+      '| refreshToken:',
+      describeSecret(this.authTokens.refreshToken),
+      '| expiresAt:',
+      this.authTokens.accessTokenExpiresAt
     )
-    console.log(
-      '[KSeF Client] Auth complete, refreshToken starts with:',
-      this.authTokens.refreshToken?.substring(0, 50)
-    )
-    console.log('[KSeF Client] Auth complete, expiresAt:', this.authTokens.accessTokenExpiresAt)
     return this.authTokens
   }
 
@@ -200,10 +201,11 @@ export class KsefApiClient {
       },
     }
 
-    console.log('[KSeF Client] ========== INVOICE QUERY ==========')
-    console.log('[KSeF Client] Endpoint: POST /v2/invoices/query/metadata')
-    console.log('[KSeF Client] Request body:')
-    console.log(JSON.stringify(queryBody, null, 2))
+    ksefDebug(
+      'KSeF Client',
+      'Invoice query POST /v2/invoices/query/metadata:',
+      JSON.stringify(queryBody)
+    )
 
     const response = await this.request('POST', '/v2/invoices/query/metadata', queryBody)
 
@@ -213,12 +215,13 @@ export class KsefApiClient {
     }
 
     const data = await response.json()
-    console.log('[KSeF Client] ========== INVOICE QUERY RESPONSE ==========')
-    console.log(JSON.stringify(data, null, 2))
 
     // v2 API returns 'invoices' array
     const items = data.invoices || data.invoiceHeaderList || []
-    console.log('[KSeF Client] Found', items.length, 'invoices')
+    // The response body lists every counterparty name, NIP and amount in range —
+    // commercial data, so it stays behind KSEF_DEBUG. The count does not.
+    ksefDebug('KSeF Client', 'Invoice query response:', JSON.stringify(data))
+    ksefDebug('KSeF Client', 'Found', items.length, 'invoices')
 
     return items.map((item: Record<string, unknown>) => {
       // v2 response format:
@@ -275,7 +278,7 @@ export class KsefApiClient {
     )
 
     if (!response.ok) {
-      console.warn('[KSeF Client] Permissions query failed:', response.status)
+      ksefWarn('KSeF Client', 'Permissions query failed:', response.status)
       return []
     }
 
@@ -314,8 +317,14 @@ export class KsefApiClient {
       headers['Content-Type'] = 'application/json'
     }
 
-    console.log(`[KSeF Client] Request: ${method} ${this.baseUrl}${path}`)
-    console.log('[KSeF Client] Headers:', JSON.stringify(headers, null, 2))
+    // `headers` carries `Authorization: Bearer <accessToken>` on every
+    // authenticated call — redactHeaders masks it unconditionally.
+    ksefDebug(
+      'KSeF Client',
+      `Request: ${method} ${this.baseUrl}${path}`,
+      '| headers:',
+      JSON.stringify(redactHeaders(headers))
+    )
 
     try {
       const response = await fetch(`${this.baseUrl}${path}`, {
@@ -323,7 +332,7 @@ export class KsefApiClient {
         headers,
         body: body ? (isRawBody ? body : JSON.stringify(body)) : undefined,
       })
-      console.log(`[KSeF Client] Response status: ${response.status}`)
+      ksefDebug('KSeF Client', `Response status: ${response.status}`)
       return response
     } catch (error) {
       throw new KsefApiError(
