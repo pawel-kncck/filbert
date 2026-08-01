@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isUserCompanyAdmin, isUserCompanyMember } from '@/lib/data/members'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/lib/types/database'
+import type { Database, Invoice } from '@/lib/types/database'
 
 export type ApiError = {
   error: {
@@ -87,6 +87,67 @@ export async function requireMemberAuth(
   return { user, supabase, companyId }
 }
 
+export type UserContext = {
+  user: { id: string; email?: string }
+  supabase: SupabaseClient<Database>
+}
+
+/**
+ * Requires a signed-in user without any company-membership check.
+ * Use for endpoints where row access is enforced purely by RLS.
+ */
+export async function requireUserAuth(): Promise<UserContext | NextResponse<ApiError>> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return unauthorized()
+  }
+
+  return { user, supabase }
+}
+
+export type InvoiceContext = MemberContext & { invoice: Invoice }
+
+/**
+ * Fetches an invoice (RLS-scoped) and requires membership in its company.
+ * Returns 404 if the invoice doesn't exist or isn't visible to the user.
+ */
+export async function requireInvoiceAccess(
+  invoiceId: string
+): Promise<InvoiceContext | NextResponse<ApiError>> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return unauthorized()
+  }
+
+  const { data: invoice } = await supabase.from('invoices').select('*').eq('id', invoiceId).single()
+
+  if (!invoice) {
+    return apiError('NOT_FOUND', 'Invoice not found', 404)
+  }
+
+  const isMember = await isUserCompanyMember(user.id, invoice.company_id)
+  if (!isMember) {
+    return forbidden()
+  }
+
+  return { user, supabase, companyId: invoice.company_id, invoice }
+}
+
 export function isApiError(result: unknown): result is NextResponse<ApiError> {
   return result instanceof NextResponse
+}
+
+/**
+ * Narrows an unknown thrown value to a human-readable message.
+ */
+export function toErrorMessage(error: unknown, fallback: string = 'Unknown error'): string {
+  return error instanceof Error ? error.message : fallback
 }

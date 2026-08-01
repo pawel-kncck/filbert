@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { requireMemberAuth, isApiError, apiError, unauthorized } from '@/lib/api/middleware'
+import { requireInvoiceAccess, isApiError, apiError, toErrorMessage } from '@/lib/api/middleware'
 import { getKsefCredentialsForCompany, updateInvoiceKsefStatus } from '@/lib/data/ksef'
 import { KsefApiError } from '@/lib/ksef/api-client'
 import { authenticateKsefClient } from '@/lib/ksef/authenticate-client'
@@ -10,26 +9,10 @@ import * as Sentry from '@sentry/nextjs'
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  // Authenticate user first
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return unauthorized()
-  }
-
-  // Fetch invoice (RLS ensures user can only see their companies' invoices)
-  const { data: invoice } = await supabase.from('invoices').select('*').eq('id', id).single()
-
-  if (!invoice) {
-    return apiError('NOT_FOUND', 'Invoice not found', 404)
-  }
-
-  // Verify membership
-  const auth = await requireMemberAuth(invoice.company_id)
+  const auth = await requireInvoiceAccess(id)
   if (isApiError(auth)) return auth
+
+  const { invoice } = auth
 
   // Validate invoice is eligible for sending
   if (invoice.type !== 'sales') {
@@ -137,12 +120,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       })
     }
   } catch (error) {
-    const errorMessage =
-      error instanceof KsefApiError
-        ? error.message
-        : error instanceof Error
-          ? error.message
-          : 'Unknown error'
+    const errorMessage = toErrorMessage(error)
 
     Sentry.captureException(error)
 

@@ -1,31 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { requireMemberAuth, isApiError, apiError, unauthorized } from '@/lib/api/middleware'
+import { requireInvoiceAccess, isApiError, apiError, toErrorMessage } from '@/lib/api/middleware'
 import { getKsefCredentialsForCompany, updateInvoiceKsefStatus } from '@/lib/data/ksef'
 import { authenticateKsefClient } from '@/lib/ksef/authenticate-client'
-import { KsefApiError } from '@/lib/ksef/api-client'
 import * as Sentry from '@sentry/nextjs'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return unauthorized()
-  }
-
-  const { data: invoice } = await supabase.from('invoices').select('*').eq('id', id).single()
-
-  if (!invoice) {
-    return apiError('NOT_FOUND', 'Invoice not found', 404)
-  }
-
-  const auth = await requireMemberAuth(invoice.company_id)
+  const auth = await requireInvoiceAccess(id)
   if (isApiError(auth)) return auth
+
+  const { invoice } = auth
 
   if (!invoice.ksef_status || !['pending', 'sent'].includes(invoice.ksef_status)) {
     return apiError('BAD_REQUEST', 'Invoice does not have a pending KSeF submission', 400)
@@ -77,13 +62,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   } catch (error) {
     Sentry.captureException(error)
 
-    const errorMessage =
-      error instanceof KsefApiError
-        ? error.message
-        : error instanceof Error
-          ? error.message
-          : 'Unknown error'
-
-    return apiError('KSEF_ERROR', errorMessage, 500)
+    return apiError('KSEF_ERROR', toErrorMessage(error), 500)
   }
 }

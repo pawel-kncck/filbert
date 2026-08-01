@@ -103,7 +103,7 @@ Every layer is a copy-paste pair: API routes (3 pairs), `lib/data/customers.ts`/
 - [x] 1.2 auth.ts dedup
 - [x] 1.3 certificate upload parsing
 - [x] 1.4 status-route cert bug + authenticate-client adoption
-- [ ] 1.5 middleware consistency
+- [x] 1.5 middleware consistency
 - [ ] 1.6 fat-route extraction
 - [ ] 1.7 Zod schema merge
 - [ ] 1.8 customers/vendors dedup

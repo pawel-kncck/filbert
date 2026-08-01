@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdminAuth, isApiError, apiError, badRequest } from '@/lib/api/middleware'
+import {
+  requireAdminAuth,
+  isApiError,
+  apiError,
+  badRequest,
+  toErrorMessage,
+} from '@/lib/api/middleware'
 import { getKsefCredentialsForCompany } from '@/lib/data/ksef'
 import { KsefApiError, KsefAuthError } from '@/lib/ksef/api-client'
 import { authenticateKsefClient } from '@/lib/ksef/authenticate-client'
@@ -165,12 +171,7 @@ export async function POST(
 
     Sentry.captureException(error)
 
-    const errorMessage =
-      error instanceof KsefApiError || error instanceof KsefAuthError
-        ? error.message
-        : error instanceof Error
-          ? error.message
-          : 'Unknown error'
+    const errorMessage = toErrorMessage(error)
 
     const errorCode =
       error instanceof KsefAuthError

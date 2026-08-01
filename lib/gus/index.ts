@@ -1,5 +1,5 @@
 export { GusApiClient } from './api-client'
-export { GusApiError } from './errors'
+export { GusApiError, GUS_ERROR_HTTP_STATUS } from './errors'
 export type { GusErrorCode } from './errors'
 export type { GusEnvironment, GusEntityType, GusCompanyData, GusFormattedResult } from './types'
 export { formatGusResult } from './format'
