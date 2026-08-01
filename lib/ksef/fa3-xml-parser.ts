@@ -1,3 +1,30 @@
+/**
+ * Parses FA(3) invoice XML downloaded from KSeF into the app's invoice shape.
+ *
+ * **Field reference: `docs/ksef/FA3_FIELD_MAPPING.md`.** FA(3) field names are
+ * positional (`P_7`, `P_11`, `P_13_1`…) and carry no meaning on their own —
+ * consult that document before touching a field here. Its "Parsing Notes"
+ * section describes the amount-derivation and summary-vs-items rules this file
+ * implements, and "Common Issues" covers the failure modes they exist to
+ * handle. The authoritative schema is `docs/ksef/schemat_FA(3)_v1-0E.xsd`;
+ * `lib/ksef/fa3-xml-builder.ts` writes the same format.
+ *
+ * This parser is deliberately lenient, because it consumes documents produced
+ * by every other vendor's software, not just ours:
+ *
+ * - **Amounts are derived when absent.** An invoice may be priced net (`P_9A`,
+ *   `P_11`) or gross (`P_9B`, `P_11A`), and may omit `P_11Vat`. Missing values
+ *   are reconstructed from whichever combination is present plus the VAT rate,
+ *   rather than defaulting to zero.
+ * - **Summary totals win over line sums.** The `P_13_*` / `P_14_*` summary
+ *   fields are the official totals, so they are preferred; item sums are the
+ *   fallback when the summary is absent or zero.
+ * - **The root element is located flexibly** (`Faktura`, a namespaced variant,
+ *   or the first object node), since namespace prefixes vary by issuer.
+ *
+ * Set `KSEF_DEBUG` to trace field-by-field extraction; the traces include full
+ * invoice contents and are off by default (see `./logger`).
+ */
 import { XMLParser } from 'fast-xml-parser'
 
 import { ksefDebug } from './logger'
@@ -28,6 +55,10 @@ export type ParsedKsefInvoice = {
   items: ParsedKsefItem[]
 }
 
+/**
+ * UN/ECE Recommendation 20 codes back to app unit labels — the inverse of
+ * `UNIT_MAP` in `fa3-xml-builder.ts`. Unknown codes pass through unchanged.
+ */
 const UNIT_REVERSE_MAP: Record<string, string> = {
   C62: 'szt.',
   HUR: 'godz.',
@@ -36,6 +67,22 @@ const UNIT_REVERSE_MAP: Record<string, string> = {
   MTK: 'm²',
 }
 
+/**
+ * Parses an FA(3) XML document into the app's invoice shape.
+ *
+ * Applies the leniency rules described in the module block: amounts are derived
+ * when the issuer omitted them, and the official `P_13_*` / `P_14_*` summary
+ * totals take precedence over the sum of line items. Line items without a
+ * description (`P_7`) are skipped, since FA(3) uses `FaWiersz` for some
+ * non-item rows.
+ *
+ * @param xml Raw FA(3) document, as returned by `KsefApiClient.getInvoice`.
+ * @returns The parsed invoice. Missing optional fields become `''`, `null` or
+ *   `0` rather than throwing — a partially-populated invoice is more useful
+ *   than a failed import.
+ * @throws If the document has no recognisable `Faktura` root element, the only
+ *   condition treated as unparseable.
+ */
 export function parseFA3Xml(xml: string): ParsedKsefInvoice {
   const parser = new XMLParser({
     ignoreAttributes: false,
