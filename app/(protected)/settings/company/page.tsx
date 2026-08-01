@@ -1,15 +1,12 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { getUserCompanies, getDefaultCompanyId } from '@/lib/data/companies'
 import { isUserCompanyAdmin } from '@/lib/data/members'
+import { requirePageCompanyContext } from '@/lib/data/page-context'
 import { getKsefCredentials } from '@/lib/data/company-settings'
 import { AppShell } from '@/components/layout/app-shell'
 import { CompanyInfoSection } from '@/components/company-settings/company-info-section'
 import { KsefCredentialsSection } from '@/components/company-settings/ksef-credentials-section'
 import { KsefFetchSection } from '@/components/company-settings/ksef-fetch-section'
 import { DeleteCompanySection } from '@/components/company-settings/delete-company-section'
-import { getTranslations, getLocale } from 'next-intl/server'
-import type { Locale } from '@/lib/i18n/config'
+import { getTranslations } from 'next-intl/server'
 
 type Props = {
   searchParams: Promise<{ company?: string }>
@@ -17,31 +14,10 @@ type Props = {
 
 export default async function CompanySettingsPage({ searchParams }: Props) {
   const params = await searchParams
-  const supabase = await createClient()
   const t = await getTranslations()
-  const locale = (await getLocale()) as Locale
+  const { user, locale, companies, currentCompanyId, currentCompany } =
+    await requirePageCompanyContext(params.company)
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  const companies = await getUserCompanies(user.id)
-
-  if (companies.length === 0) {
-    redirect('/onboarding')
-  }
-
-  const currentCompanyId = await getDefaultCompanyId(companies, params.company || null)
-
-  if (!currentCompanyId) {
-    redirect('/onboarding')
-  }
-
-  const currentCompany = companies.find((c) => c.id === currentCompanyId)
   const isAdmin = await isUserCompanyAdmin(user.id, currentCompanyId)
 
   // Demo company — show unavailable message

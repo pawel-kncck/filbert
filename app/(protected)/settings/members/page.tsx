@@ -1,11 +1,8 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { getUserCompanies, getDefaultCompanyId } from '@/lib/data/companies'
 import { getCompanyMembers, isUserCompanyAdmin } from '@/lib/data/members'
+import { requirePageCompanyContext } from '@/lib/data/page-context'
 import { AppShell } from '@/components/layout/app-shell'
 import { MembersTable } from '@/components/members/members-table'
-import { getTranslations, getLocale } from 'next-intl/server'
-import type { Locale } from '@/lib/i18n/config'
+import { getTranslations } from 'next-intl/server'
 
 type Props = {
   searchParams: Promise<{ company?: string }>
@@ -13,31 +10,10 @@ type Props = {
 
 export default async function MembersSettingsPage({ searchParams }: Props) {
   const params = await searchParams
-  const supabase = await createClient()
   const t = await getTranslations()
-  const locale = (await getLocale()) as Locale
+  const { user, locale, companies, currentCompanyId, currentCompany } =
+    await requirePageCompanyContext(params.company)
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  const companies = await getUserCompanies(user.id)
-
-  if (companies.length === 0) {
-    redirect('/onboarding')
-  }
-
-  const currentCompanyId = await getDefaultCompanyId(companies, params.company || null)
-
-  if (!currentCompanyId) {
-    redirect('/onboarding')
-  }
-
-  const currentCompany = companies.find((c) => c.id === currentCompanyId)
   const isAdmin = await isUserCompanyAdmin(user.id, currentCompanyId)
   const members = await getCompanyMembers(currentCompanyId)
 

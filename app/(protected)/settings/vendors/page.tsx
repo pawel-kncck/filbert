@@ -1,7 +1,5 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { getUserCompanies, getDefaultCompanyId } from '@/lib/data/companies'
 import { isUserCompanyAdmin } from '@/lib/data/members'
+import { requirePageCompanyContext } from '@/lib/data/page-context'
 import { getVendors, getMissingVendorsCount, VENDORS_PAGE_SIZE } from '@/lib/data/vendors'
 import { AppShell } from '@/components/layout/app-shell'
 import { VendorsTable } from '@/components/vendors/vendors-table'
@@ -9,8 +7,7 @@ import { VendorFilters } from '@/components/vendors/vendor-filters'
 import { AddVendorButton } from '@/components/vendors/add-vendor-button'
 import { MissingVendorsAlert } from '@/components/vendors/missing-vendors-alert'
 import { Pagination } from '@/components/invoices/pagination'
-import { getTranslations, getLocale } from 'next-intl/server'
-import type { Locale } from '@/lib/i18n/config'
+import { getTranslations } from 'next-intl/server'
 
 type Props = {
   searchParams: Promise<{ company?: string; page?: string; search?: string }>
@@ -18,31 +15,10 @@ type Props = {
 
 export default async function VendorsSettingsPage({ searchParams }: Props) {
   const params = await searchParams
-  const supabase = await createClient()
   const t = await getTranslations()
-  const locale = (await getLocale()) as Locale
+  const { user, locale, companies, currentCompanyId, currentCompany } =
+    await requirePageCompanyContext(params.company)
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  const companies = await getUserCompanies(user.id)
-
-  if (companies.length === 0) {
-    redirect('/onboarding')
-  }
-
-  const currentCompanyId = await getDefaultCompanyId(companies, params.company || null)
-
-  if (!currentCompanyId) {
-    redirect('/onboarding')
-  }
-
-  const currentCompany = companies.find((c) => c.id === currentCompanyId)
   const isAdmin = await isUserCompanyAdmin(user.id, currentCompanyId)
 
   // Check if this is a demo company

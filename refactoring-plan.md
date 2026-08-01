@@ -107,6 +107,6 @@ Every layer is a copy-paste pair: API routes (3 pairs), `lib/data/customers.ts`/
 - [ ] 1.6 fat-route extraction
 - [ ] 1.7 Zod schema merge
 - [ ] 1.8 customers/vendors dedup
-- [ ] 1.9 page preamble helper
+- [x] 1.9 page preamble helper
 - [ ] Phase 2
 - [ ] Phase 3

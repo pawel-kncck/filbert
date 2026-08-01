@@ -1,8 +1,7 @@
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import { getUserCompanies, getDefaultCompanyId } from '@/lib/data/companies'
 import { getInvoiceById } from '@/lib/data/invoices'
+import { requirePageCompanyContext } from '@/lib/data/page-context'
 import { getInvoiceItems } from '@/lib/data/invoice-items'
 import { getKsefCredentialsForCompany } from '@/lib/data/ksef'
 import { AppShell } from '@/components/layout/app-shell'
@@ -10,8 +9,7 @@ import { InvoiceItemsTable } from '@/components/invoices/invoice-items-table'
 import { KsefPreviewButton } from '@/components/invoices/ksef-preview-button'
 import { KsefSendButton } from '@/components/invoices/ksef-send-button'
 import { KsefStatusBadge } from '@/components/invoices/ksef-status-badge'
-import { getTranslations, getLocale } from 'next-intl/server'
-import type { Locale } from '@/lib/i18n/config'
+import { getTranslations } from 'next-intl/server'
 import { formatCurrency, formatDateLong } from '@/lib/i18n/formatters'
 
 type Props = {
@@ -23,29 +21,8 @@ type Props = {
 export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
   const { id } = await params
   const { company } = await searchParams
-  const supabase = await createClient()
   const t = await getTranslations()
-  const locale = (await getLocale()) as Locale
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  const companies = await getUserCompanies(user.id)
-
-  if (companies.length === 0) {
-    redirect('/onboarding')
-  }
-
-  const currentCompanyId = await getDefaultCompanyId(companies, company || null)
-
-  if (!currentCompanyId) {
-    redirect('/onboarding')
-  }
+  const { user, locale, companies, currentCompanyId } = await requirePageCompanyContext(company)
 
   const invoice = await getInvoiceById(id, currentCompanyId)
 
