@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -144,14 +146,14 @@ export default function OnboardingPage() {
               >
                 {t('onboarding.companyName')}
               </label>
-              <input
+              <Input
                 id="companyName"
                 name="companyName"
                 type="text"
                 required
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                className="mt-1 text-base"
                 placeholder={t('onboarding.companyNamePlaceholder')}
               />
             </div>
@@ -163,7 +165,7 @@ export default function OnboardingPage() {
               >
                 NIP
               </label>
-              <input
+              <Input
                 id="nip"
                 name="nip"
                 type="text"
@@ -171,7 +173,7 @@ export default function OnboardingPage() {
                 value={nip}
                 onChange={handleNipChange}
                 maxLength={13}
-                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                className="mt-1 text-base"
                 placeholder="123-456-78-90"
               />
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
@@ -180,13 +182,9 @@ export default function OnboardingPage() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-          >
+          <Button type="submit" size="lg" disabled={loading} className="w-full">
             {loading ? t('onboarding.submitting') : t('common.continue')}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

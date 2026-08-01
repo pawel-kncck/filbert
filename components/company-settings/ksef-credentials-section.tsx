@@ -241,10 +241,12 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
                       credential.is_default ? t('actions.removeDefault') : t('actions.setDefault')
                     }
                   >
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => handleSetDefault(credential)}
-                      className="rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                      className="rounded"
                     >
                       <StarIcon
                         className={`h-4 w-4 ${
@@ -253,7 +255,7 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
                             : 'text-zinc-300 hover:text-yellow-500 dark:text-zinc-600'
                         }`}
                       />
-                    </button>
+                    </Button>
                   </Tooltip>
                 </TableCell>
                 <TableCell>
@@ -306,32 +308,36 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
                 <TableCell>
                   <div className="flex items-center gap-1">
                     <Tooltip label={t('actions.verify')}>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => handleVerify(credential)}
                         disabled={verifyingId === credential.id}
-                        className="rounded p-1 hover:bg-zinc-100 disabled:opacity-50 dark:hover:bg-zinc-700"
+                        className="rounded"
                       >
                         {verifyingId === credential.id ? (
                           <RefreshCwIcon className="h-4 w-4 animate-spin text-zinc-500" />
                         ) : (
                           <ShieldCheckIcon className="h-4 w-4 text-zinc-500 hover:text-blue-600" />
                         )}
-                      </button>
+                      </Button>
                     </Tooltip>
                     <Tooltip label={t('actions.delete')}>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => handleDelete(credential)}
                         disabled={deletingId === credential.id}
-                        className="rounded p-1 hover:bg-zinc-100 disabled:opacity-50 dark:hover:bg-zinc-700"
+                        className="rounded"
                       >
                         {deletingId === credential.id ? (
                           <RefreshCwIcon className="h-4 w-4 animate-spin text-zinc-500" />
                         ) : (
                           <Trash2Icon className="h-4 w-4 text-zinc-400 hover:text-red-600" />
                         )}
-                      </button>
+                      </Button>
                     </Tooltip>
                   </div>
                 </TableCell>

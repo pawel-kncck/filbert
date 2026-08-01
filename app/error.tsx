@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 
 export default function GlobalError({
   reset,
@@ -15,12 +16,9 @@ export default function GlobalError({
       <div className="mx-auto max-w-md text-center">
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">{t('title')}</h1>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{t('description')}</p>
-        <button
-          onClick={reset}
-          className="mt-6 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
-        >
+        <Button variant="inverse" onClick={reset} className="mt-6 rounded-lg">
           {t('tryAgain')}
-        </button>
+        </Button>
       </div>
     </div>
   )

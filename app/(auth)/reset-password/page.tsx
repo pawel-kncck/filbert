@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+
 import { createClient } from '@/lib/supabase/client'
 import { getAuthErrorKey } from '@/lib/utils/auth-errors'
 
@@ -98,12 +101,9 @@ export default function ResetPasswordPage() {
             <p className="mt-4 text-zinc-600 dark:text-zinc-400">
               {t('auth.resetPassword.success.message')}
             </p>
-            <button
-              onClick={() => router.push('/companies')}
-              className="mt-6 inline-block rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-            >
+            <Button onClick={() => router.push('/companies')} size="lg" className="mt-6">
               {t('auth.resetPassword.success.goToApp')}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -133,14 +133,14 @@ export default function ResetPasswordPage() {
               >
                 {t('auth.resetPassword.newPassword')}
               </label>
-              <input
+              <Input
                 id="password"
                 name="password"
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                className="mt-1 text-base"
                 placeholder={t('auth.signup.passwordHint')}
               />
             </div>
@@ -152,25 +152,21 @@ export default function ResetPasswordPage() {
               >
                 {t('auth.resetPassword.confirmNewPassword')}
               </label>
-              <input
+              <Input
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                className="mt-1 text-base"
               />
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={loading} size="lg" className="w-full">
             {loading ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

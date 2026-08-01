@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useFilterParams } from '@/lib/hooks/use-filter-params'
+import { Button } from '@/components/ui/button'
 import type { ContactEntity } from '@/lib/types/contacts'
 import { CONTACT_UI } from './config'
+import { Input } from '@/components/ui/input'
 
 type Props = {
   entity: ContactEntity
@@ -36,31 +38,22 @@ export function ContactFilters({ entity }: Props) {
           {t('common.search')}
         </label>
         <div className="mt-1 flex gap-2">
-          <input
+          <Input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t(`${config.namespace}.filters.searchPlaceholder`)}
-            className="block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
           />
-          <button
-            type="submit"
-            disabled={isPending}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={isPending}>
             {isPending ? '...' : t('common.search')}
-          </button>
+          </Button>
         </div>
       </form>
 
       {hasActiveFilters && (
-        <button
-          onClick={handleClearFilters}
-          disabled={isPending}
-          className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
-        >
+        <Button variant="outline" onClick={handleClearFilters} disabled={isPending}>
           {t('common.clearFilters')}
-        </button>
+        </Button>
       )}
     </div>
   )

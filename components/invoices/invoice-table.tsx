@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 import { Invoice } from '@/lib/types/database'
 import { useFormatters } from '@/lib/hooks/use-formatters'
 import { KsefPreviewModal } from './ksef-preview-modal'
@@ -139,12 +140,14 @@ export function InvoiceTable({ invoices, type }: Props) {
                   <div className="flex items-center justify-end gap-1">
                     {invoice.source === 'ksef' && invoice.ksef_reference && (
                       <>
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={(e) => {
                             e.stopPropagation()
                             setPreviewInvoice(invoice)
                           }}
-                          className="inline-flex items-center justify-center rounded-md p-1.5 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-white"
+                          className="dark:hover:bg-zinc-600 dark:hover:text-white"
                           title={t('invoices.preview.preview')}
                         >
                           <svg
@@ -166,13 +169,15 @@ export function InvoiceTable({ invoices, type }: Props) {
                               d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                             />
                           </svg>
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={(e) => {
                             e.stopPropagation()
                             window.open(`/api/invoices/${invoice.id}/xml`, '_blank')
                           }}
-                          className="inline-flex items-center justify-center rounded-md p-1.5 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-white"
+                          className="dark:hover:bg-zinc-600 dark:hover:text-white"
                           title="View XML"
                         >
                           <svg
@@ -188,16 +193,18 @@ export function InvoiceTable({ invoices, type }: Props) {
                               d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
                             />
                           </svg>
-                        </button>
+                        </Button>
                       </>
                     )}
                     {type === 'sales' && (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => {
                           e.stopPropagation()
                           router.push(`/sales/new?copy=${invoice.id}`)
                         }}
-                        className="inline-flex items-center justify-center rounded-md p-1.5 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-white"
+                        className="dark:hover:bg-zinc-600 dark:hover:text-white"
                         title={t('invoices.form.copy')}
                       >
                         <svg
@@ -213,7 +220,7 @@ export function InvoiceTable({ invoices, type }: Props) {
                             d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                           />
                         </svg>
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </td>

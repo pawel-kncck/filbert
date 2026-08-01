@@ -4,6 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+
 import { createClient } from '@/lib/supabase/client'
 import { getAuthErrorKey } from '@/lib/utils/auth-errors'
 
@@ -61,14 +64,14 @@ export default function LoginPage() {
               >
                 {t('common.email')}
               </label>
-              <input
+              <Input
                 id="email"
                 name="email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                className="mt-1 text-base"
                 placeholder="jan@firma.pl"
               />
             </div>
@@ -80,14 +83,14 @@ export default function LoginPage() {
               >
                 {t('common.password')}
               </label>
-              <input
+              <Input
                 id="password"
                 name="password"
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                className="mt-1 text-base"
               />
             </div>
           </div>
@@ -101,13 +104,9 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={loading} size="lg" className="w-full">
             {loading ? t('auth.login.submitting') : t('common.login')}
-          </button>
+          </Button>
 
           <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
             {t('auth.login.noAccount')}{' '}

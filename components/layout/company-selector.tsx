@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useCompany } from '@/components/providers/company-provider'
+import { Button } from '@/components/ui/button'
 
 export function CompanySelector() {
   const { companies, currentCompanyId, currentCompany, setCurrentCompanyId } = useCompany()
@@ -28,9 +29,10 @@ export function CompanySelector() {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <button
+      <Button
+        variant="outline"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600"
+        className="rounded-lg border-zinc-200 bg-white px-3 text-zinc-900 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600"
       >
         <span className="max-w-[200px] truncate">{currentCompany.name}</span>
         {currentCompany.is_demo && (
@@ -46,15 +48,17 @@ export function CompanySelector() {
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
-      </button>
+      </Button>
 
       {isOpen && (
         <div className="absolute left-0 z-50 mt-2 w-72 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-600 dark:bg-zinc-700">
           {companies.map((company) => (
-            <button
+            <Button
               key={company.id}
+              variant="ghost"
+              size="none"
               onClick={() => handleSelect(company.id)}
-              className={`flex w-full items-center justify-between px-4 py-2 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-600 ${
+              className={`w-full justify-between gap-0 rounded-none px-4 py-2 text-left text-sm text-inherit hover:bg-zinc-100 dark:text-inherit dark:hover:bg-zinc-600 ${
                 company.id === currentCompanyId ? 'bg-zinc-50 dark:bg-zinc-600' : ''
               }`}
             >
@@ -76,7 +80,7 @@ export function CompanySelector() {
                   />
                 </svg>
               )}
-            </button>
+            </Button>
           ))}
         </div>
       )}

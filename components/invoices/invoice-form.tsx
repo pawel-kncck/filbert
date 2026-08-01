@@ -4,6 +4,8 @@ import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { validateFA3 } from '@/lib/ksef/fa3-validator'
+import { Button } from '@/components/ui/button'
+import { Input, SelectInput } from '@/components/ui/input'
 import { normalizeNip } from '@/lib/validations/nip'
 import type { Invoice, InvoiceItem } from '@/lib/types/database'
 
@@ -235,16 +237,16 @@ export function InvoiceForm({
     }
   }
 
-  const inputBase =
-    'w-full rounded-md border bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:ring-1 focus:outline-none dark:bg-zinc-700 dark:text-white dark:placeholder:text-zinc-400'
-  const inputNormal = `${inputBase} border-zinc-300 focus:border-blue-500 focus:ring-blue-500 dark:border-zinc-600`
-  const inputError = `${inputBase} border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-500`
   const labelClass = 'block text-sm font-medium text-zinc-700 dark:text-zinc-300'
   const errorTextClass = 'mt-1 text-xs text-red-600 dark:text-red-400'
 
-  const inputClass = (field: string) => (fieldErrors[field] ? inputError : inputNormal)
-  const itemInputClass = (index: number, field: string) =>
-    fieldErrors[`items.${index}.${field}`] ? inputError : inputNormal
+  // The form's inputs predate `shadow-sm` and set an explicit placeholder colour.
+  const INPUT_CLASS = 'mt-1 shadow-none placeholder:text-zinc-400 dark:placeholder:text-zinc-400'
+  const fieldProps = (field: string) => ({
+    invalid: !!fieldErrors[field],
+    className: INPUT_CLASS,
+  })
+  const itemFieldProps = (index: number, field: string) => fieldProps(`items.${index}.${field}`)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -285,7 +287,7 @@ export function InvoiceForm({
             <label htmlFor="invoiceNumber" className={labelClass}>
               {t('invoiceNumber')} *
             </label>
-            <input
+            <Input
               id="invoiceNumber"
               type="text"
               value={invoiceNumber}
@@ -294,7 +296,7 @@ export function InvoiceForm({
                 clearFieldError('invoiceNumber')
               }}
               placeholder={t('invoiceNumberPlaceholder')}
-              className={`mt-1 ${inputClass('invoiceNumber')}`}
+              {...fieldProps('invoiceNumber')}
               maxLength={256}
             />
             {getFieldError('invoiceNumber') && (
@@ -305,7 +307,7 @@ export function InvoiceForm({
             <label htmlFor="issueDate" className={labelClass}>
               {t('issueDate')} *
             </label>
-            <input
+            <Input
               id="issueDate"
               type="date"
               value={issueDate}
@@ -313,7 +315,7 @@ export function InvoiceForm({
                 setIssueDate(e.target.value)
                 clearFieldError('issueDate')
               }}
-              className={`mt-1 ${inputClass('issueDate')}`}
+              {...fieldProps('issueDate')}
             />
             {getFieldError('issueDate') && (
               <p className={errorTextClass}>{getFieldError('issueDate')}</p>
@@ -323,19 +325,19 @@ export function InvoiceForm({
             <label htmlFor="currency" className={labelClass}>
               {t('currency')}
             </label>
-            <select
+            <SelectInput
               id="currency"
               value={currency}
               onChange={(e) => {
                 setCurrency(e.target.value)
                 clearFieldError('currency')
               }}
-              className={`mt-1 ${inputClass('currency')}`}
+              {...fieldProps('currency')}
             >
               <option value="PLN">PLN</option>
               <option value="EUR">EUR</option>
               <option value="USD">USD</option>
-            </select>
+            </SelectInput>
             {getFieldError('currency') && (
               <p className={errorTextClass}>{getFieldError('currency')}</p>
             )}
@@ -347,7 +349,7 @@ export function InvoiceForm({
             <label htmlFor="customerName" className={labelClass}>
               {t('customerName')} *
             </label>
-            <input
+            <Input
               id="customerName"
               type="text"
               value={customerName}
@@ -356,7 +358,7 @@ export function InvoiceForm({
                 clearFieldError('customerName')
               }}
               placeholder={t('customerNamePlaceholder')}
-              className={`mt-1 ${inputClass('customerName')}`}
+              {...fieldProps('customerName')}
               maxLength={256}
             />
             {getFieldError('customerName') && (
@@ -367,7 +369,7 @@ export function InvoiceForm({
             <label htmlFor="customerNip" className={labelClass}>
               {t('customerNip')}
             </label>
-            <input
+            <Input
               id="customerNip"
               type="text"
               value={customerNip}
@@ -376,7 +378,7 @@ export function InvoiceForm({
                 clearFieldError('customerNip')
               }}
               placeholder={t('customerNipPlaceholder')}
-              className={`mt-1 ${inputClass('customerNip')}`}
+              {...fieldProps('customerNip')}
               maxLength={13}
             />
             {getFieldError('customerNip') ? (
@@ -394,11 +396,7 @@ export function InvoiceForm({
           <h2 className="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             {t('items')}
           </h2>
-          <button
-            type="button"
-            onClick={addItem}
-            className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-          >
+          <Button type="button" size="sm" onClick={addItem} className="gap-1">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
@@ -408,7 +406,7 @@ export function InvoiceForm({
               />
             </svg>
             {t('addItem')}
-          </button>
+          </Button>
         </div>
 
         {getFieldError('items') && (
@@ -434,13 +432,15 @@ export function InvoiceForm({
                     #{index + 1}
                   </span>
                   {items.length > 1 && (
-                    <button
+                    <Button
                       type="button"
+                      variant="link"
+                      size="none"
                       onClick={() => removeItem(item.key)}
-                      className="text-xs text-red-600 hover:text-red-700 dark:text-red-400"
+                      className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-400"
                     >
                       {t('removeItem')}
-                    </button>
+                    </Button>
                   )}
                 </div>
 
@@ -449,12 +449,12 @@ export function InvoiceForm({
                     <label className="text-xs text-zinc-500 dark:text-zinc-400">
                       {t('description')} *
                     </label>
-                    <input
+                    <Input
                       type="text"
                       value={item.description}
                       onChange={(e) => updateItem(item.key, 'description', e.target.value)}
                       placeholder={t('descriptionPlaceholder')}
-                      className={`mt-1 ${itemInputClass(index, 'description')}`}
+                      {...itemFieldProps(index, 'description')}
                       maxLength={256}
                     />
                     {getItemFieldError(index, 'description') && (
@@ -465,13 +465,13 @@ export function InvoiceForm({
                     <label className="text-xs text-zinc-500 dark:text-zinc-400">
                       {t('quantity')} *
                     </label>
-                    <input
+                    <Input
                       type="number"
                       step="0.001"
                       min="0.001"
                       value={item.quantity}
                       onChange={(e) => updateItem(item.key, 'quantity', e.target.value)}
-                      className={`mt-1 ${itemInputClass(index, 'quantity')}`}
+                      {...itemFieldProps(index, 'quantity')}
                     />
                     {getItemFieldError(index, 'quantity') && (
                       <p className={errorTextClass}>{getItemFieldError(index, 'quantity')}</p>
@@ -479,11 +479,11 @@ export function InvoiceForm({
                   </div>
                   <div>
                     <label className="text-xs text-zinc-500 dark:text-zinc-400">{t('unit')}</label>
-                    <input
+                    <Input
                       type="text"
                       value={item.unit}
                       onChange={(e) => updateItem(item.key, 'unit', e.target.value)}
-                      className={`mt-1 ${itemInputClass(index, 'unit')}`}
+                      {...itemFieldProps(index, 'unit')}
                     />
                     {getItemFieldError(index, 'unit') && (
                       <p className={errorTextClass}>{getItemFieldError(index, 'unit')}</p>
@@ -493,13 +493,13 @@ export function InvoiceForm({
                     <label className="text-xs text-zinc-500 dark:text-zinc-400">
                       {t('unitPrice')} *
                     </label>
-                    <input
+                    <Input
                       type="number"
                       step="0.01"
                       min="0"
                       value={item.unit_price}
                       onChange={(e) => updateItem(item.key, 'unit_price', e.target.value)}
-                      className={`mt-1 ${itemInputClass(index, 'unit_price')}`}
+                      {...itemFieldProps(index, 'unit_price')}
                     />
                     {getItemFieldError(index, 'unit_price') && (
                       <p className={errorTextClass}>{getItemFieldError(index, 'unit_price')}</p>
@@ -512,16 +512,16 @@ export function InvoiceForm({
                     <label className="text-xs text-zinc-500 dark:text-zinc-400">
                       {t('vatRate')}
                     </label>
-                    <select
+                    <SelectInput
                       value={item.vat_rate}
                       onChange={(e) => updateItem(item.key, 'vat_rate', e.target.value)}
-                      className={`mt-1 ${itemInputClass(index, 'vat_rate')}`}
+                      {...itemFieldProps(index, 'vat_rate')}
                     >
                       <option value="23">23%</option>
                       <option value="8">8%</option>
                       <option value="5">5%</option>
                       <option value="0">0%</option>
-                    </select>
+                    </SelectInput>
                     {getItemFieldError(index, 'vat_rate') && (
                       <p className={errorTextClass}>{getItemFieldError(index, 'vat_rate')}</p>
                     )}
@@ -574,20 +574,17 @@ export function InvoiceForm({
 
       {/* Actions */}
       <div className="flex items-center justify-end gap-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={() => router.push(`/sales?company=${companyId}`)}
-          className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600"
+          className="bg-white dark:bg-zinc-700 dark:hover:bg-zinc-600"
         >
           {t('cancel')}
-        </button>
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-        >
+        </Button>
+        <Button type="submit" disabled={saving}>
           {saving ? t('saving') : t('save')}
-        </button>
+        </Button>
       </div>
     </form>
   )

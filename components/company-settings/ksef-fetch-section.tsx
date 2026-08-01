@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { Input, SelectInput } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 type Props = {
   companyId: string
@@ -112,12 +114,12 @@ export function KsefFetchSection({ companyId, hasCredentials, hasDefaultCredenti
             >
               {t('dateFrom')}
             </label>
-            <input
+            <Input
               id="ksef-date-from"
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+              className="mt-1"
             />
           </div>
           <div>
@@ -127,12 +129,12 @@ export function KsefFetchSection({ companyId, hasCredentials, hasDefaultCredenti
             >
               {t('dateTo')}
             </label>
-            <input
+            <Input
               id="ksef-date-to"
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+              className="mt-1"
             />
           </div>
         </div>
@@ -144,24 +146,20 @@ export function KsefFetchSection({ companyId, hasCredentials, hasDefaultCredenti
           >
             {t('type')}
           </label>
-          <select
+          <SelectInput
             id="ksef-type"
             value={type}
             onChange={(e) => setType(e.target.value as 'sales' | 'purchase')}
-            className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+            className="mt-1"
           >
             <option value="purchase">{t('typePurchases')}</option>
             <option value="sales">{t('typeSales')}</option>
-          </select>
+          </SelectInput>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-        >
+        <Button type="submit" disabled={loading}>
           {loading ? t('fetching') : t('button')}
-        </button>
+        </Button>
       </form>
     </div>
   )

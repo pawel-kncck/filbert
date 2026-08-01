@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { ContactEntity } from '@/lib/types/contacts'
 import { CONTACT_UI } from './config'
+import { Button } from '@/components/ui/button'
 
 type Props = {
   entity: ContactEntity
@@ -52,13 +53,9 @@ export function MissingContactsAlert({ entity, missingCount, companyId }: Props)
         <p className="text-sm text-amber-800 dark:text-amber-200">
           {t('missingAlert.message', { count: missingCount })}
         </p>
-        <button
-          onClick={handleSync}
-          disabled={loading}
-          className="shrink-0 rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
-        >
+        <Button variant="warning" onClick={handleSync} disabled={loading}>
           {loading ? '...' : t('missingAlert.import')}
-        </button>
+        </Button>
       </div>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>

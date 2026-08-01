@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { KeyIcon, FileTextIcon, CheckCircleIcon, XCircleIcon, LoaderIcon } from 'lucide-react'
+import { Input, SelectInput } from '@/components/ui/input'
 
 type AuthMethod = 'token' | 'certificate'
 type CertificateFormat = 'pkcs12' | 'pem'
@@ -266,21 +267,23 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
                 {t('token')}
               </label>
               <div className="relative mt-1">
-                <input
+                <Input
                   id="ksef-token"
                   type={showToken ? 'text' : 'password'}
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                   placeholder={t('tokenPlaceholder')}
-                  className="block w-full rounded-md border border-zinc-300 px-3 py-2 pr-10 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                  className="pr-10"
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="none"
                   onClick={() => setShowToken(!showToken)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+                  className="absolute inset-y-0 right-0 pr-3 text-zinc-500 hover:bg-transparent hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-transparent dark:hover:text-zinc-300"
                 >
                   <EyeIcon open={showToken} />
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -358,21 +361,23 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
                     {t('certificatePassword')}
                   </label>
                   <div className="relative mt-1">
-                    <input
+                    <Input
                       id="ksef-cert-password"
                       type={showCertPassword ? 'text' : 'password'}
                       value={certificatePassword}
                       onChange={(e) => setCertificatePassword(e.target.value)}
                       placeholder={t('certificatePasswordPlaceholder')}
-                      className="block w-full rounded-md border border-zinc-300 px-3 py-2 pr-10 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                      className="pr-10"
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="none"
                       onClick={() => setShowCertPassword(!showCertPassword)}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+                      className="absolute inset-y-0 right-0 pr-3 text-zinc-500 hover:bg-transparent hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-transparent dark:hover:text-zinc-300"
                     >
                       <EyeIcon open={showCertPassword} />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </>
@@ -429,21 +434,23 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
                     {t('privateKeyPassword')}
                   </label>
                   <div className="relative mt-1">
-                    <input
+                    <Input
                       id="ksef-pem-password"
                       type={showCertPassword ? 'text' : 'password'}
                       value={certificatePassword}
                       onChange={(e) => setCertificatePassword(e.target.value)}
                       placeholder={t('privateKeyPasswordPlaceholder')}
-                      className="block w-full rounded-md border border-zinc-300 px-3 py-2 pr-10 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                      className="pr-10"
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="none"
                       onClick={() => setShowCertPassword(!showCertPassword)}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+                      className="absolute inset-y-0 right-0 pr-3 text-zinc-500 hover:bg-transparent hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-transparent dark:hover:text-zinc-300"
                     >
                       <EyeIcon open={showCertPassword} />
-                    </button>
+                    </Button>
                   </div>
                   <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                     {t('privateKeyPasswordHint')}
@@ -558,16 +565,16 @@ function EnvironmentSelector({
       >
         {t('environment')}
       </label>
-      <select
+      <SelectInput
         id="ksef-environment"
         value={environment}
         onChange={(e) => onChange(e.target.value as 'test' | 'demo' | 'prod')}
-        className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+        className="mt-1"
       >
         <option value="test">{t('environments.test')}</option>
         <option value="demo">{t('environments.demo')}</option>
         <option value="prod">{t('environments.prod')}</option>
-      </select>
+      </SelectInput>
     </div>
   )
 }
