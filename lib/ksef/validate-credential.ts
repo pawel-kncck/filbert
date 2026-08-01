@@ -3,6 +3,7 @@ import type { Database, KsefCredentials } from '@/lib/types/database'
 import { KsefAuthError } from './auth'
 import { KsefApiClient } from './api-client'
 import { authenticateKsefClient } from './authenticate-client'
+import { ksefError } from './logger'
 import type { KsefEnvironment } from './types'
 
 /**
@@ -128,7 +129,7 @@ export async function validateCertificateCredential(
     }
 
     const detail = error instanceof Error ? error.message : 'Unknown error'
-    console.error('[KSeF Credentials] Certificate auth failed:', detail)
+    ksefError('KSeF Credentials', 'Certificate auth failed:', detail)
     return { valid: false, error: `Failed to validate certificate credentials: ${detail}` }
   }
 }

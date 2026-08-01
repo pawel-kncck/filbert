@@ -1,5 +1,24 @@
+/**
+ * Flattens a raw GUS registry record into the shape the company forms consume.
+ *
+ * @module
+ */
 import type { GusCompanyData, GusFormattedResult } from './types'
 
+/**
+ * Composes the registry's separate address columns into one display string and
+ * derives the entity's active flag.
+ *
+ * Address assembly follows Polish convention — `Street 12/3, 00-001 Warszawa` —
+ * and omits each part that the registry left blank, so a record with no street
+ * or no postal code still produces a sensible line rather than stray
+ * separators. Registered entities frequently lack a street (rural addresses
+ * carry only a building number), which is why the number stands alone in that
+ * case.
+ *
+ * `isActive` is the absence of an activity end date: GUS records closure by
+ * setting `activityEndDate`, not by a status flag.
+ */
 export function formatGusResult(data: GusCompanyData): GusFormattedResult {
   const addressParts: string[] = []
 

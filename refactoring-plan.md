@@ -97,6 +97,99 @@ Every layer is a copy-paste pair: API routes (3 pairs), `lib/data/customers.ts`/
 
 ---
 
+## Phase 4 — FA(3) builder field-mapping defects
+
+Found 2026-08-01 while adding the Phase 3.2 doc blocks, by cross-checking
+`lib/ksef/fa3-xml-builder.ts` against `docs/ksef/FA3_FIELD_MAPPING.md` and
+`docs/ksef/schemat_FA(3)_v1-0E.xsd`. Both are currently recorded in `@remarks` in the
+builder and **not fixed** — they change what is transmitted to KSeF, so they were kept out
+of a documentation-only PR.
+
+**This is a correctness phase, not a refactor.** It affects invoices filed with the Polish
+tax authority. Treat the XSD as authoritative, and confirm the intended pricing mode
+(below) before changing any emission.
+
+### 4.1 `P_11A` carries the VAT amount, but the field means gross
+
+`lib/ksef/fa3-xml-builder.ts:120`:
+
+```ts
+<P_11A>${formatAmount(item.vat_amount)}</P_11A>   // writes VAT into a gross field
+```
+
+Evidence:
+
+- XSD annotation for `P_11A`: _"Wartość sprzedaży brutto"_ (gross sales value).
+- `FA3_FIELD_MAPPING.md` line ~155: `P_11A` → `gross_amount`, "Gross line total".
+- `lib/ksef/fa3-xml-parser.ts` reads `P_11A` as `grossAmount`.
+
+So an invoice Filbert builds and then reads back through its own parser derives the wrong
+gross. `P_11Vat` — where the VAT line total belongs — is never emitted at all.
+
+**Caveat to resolve first.** Both `P_11A` and `P_11Vat` are `minOccurs="0"`, and the XSD's
+annotation for `P_11Vat` appears to be copy-pasted from `P_11A` (identical text), so the
+schema alone does not settle which field holds VAT. The mapping doc and the parser agree it
+is `P_11Vat`; confirm against the official FA(3) specification before relying on it.
+The builder emits `P_9A`/`P_11` (net pricing mode), and `P_11A` is documented as applying
+"w przypadku zastosowania art. 106e ust. 7 i 8" — the gross-pricing case — so **dropping
+`P_11A` entirely may be more correct than populating it.** Decide between:
+
+- (a) emit `P_11Vat` with `vat_amount` and drop `P_11A`, or
+- (b) emit `P_11A` with the line's gross and `P_11Vat` with the VAT.
+
+### 4.2 The VAT summary always uses the 23% band, and misuses `P_14_1W`
+
+`lib/ksef/fa3-xml-builder.ts:127–132` groups items by VAT rate, then emits the **same three
+elements for every group**:
+
+```ts
+<P_13_1>{net}</P_13_1>      // P_13_1 is specifically the standard rate
+<P_14_1>{vat}</P_14_1>      // P_14_1 likewise
+<P_14_1W>{rate}</P_14_1W>   // a rate integer written into a monetary field
+```
+
+Three distinct problems:
+
+1. **Wrong band.** Per the XSD, `P_13_1`/`P_14_1` are the standard rate (23%/22%),
+   `P_13_2`/`P_14_2` the first reduced rate (8%/7%), `P_13_3`/`P_14_3` the second (5%).
+   A single-rate 8% invoice is currently filed as though it were 23%.
+2. **Schema-invalid when multi-rate.** Neither `P_13_1` nor `P_14_1` declares `maxOccurs`,
+   so each may appear **at most once**. An invoice spanning two VAT rates emits the pair
+   twice and should be rejected by schema validation — meaning multi-rate invoices likely
+   cannot be sent at all today, rather than being filed with wrong figures. Worth
+   confirming against a real send, since it determines whether this is a silent-corruption
+   bug or a hard blocker.
+3. **`P_14_1W` misused.** It is `TKwotowy` (a monetary amount) and means the standard-rate
+   VAT _converted to PLN when the invoice is issued in a foreign currency_ — not a rate
+   label. The builder writes `"23"`/`"8"` into it. It is `minOccurs="0"`; for PLN invoices
+   it should simply be omitted.
+
+**Fix shape:** map each VAT rate to its band index (23→`_1`, 8→`_2`, 5→`_3`, 0→the
+zero-rate/exempt fields — check the XSD for which), emit each band at most once, and drop
+`P_14_1W` unless `invoice.currency !== 'PLN'`.
+
+### 4.3 Verification
+
+Neither defect is currently covered by a test — which is why both survived.
+
+- Add round-trip tests: `buildFA3Xml` → `parseFA3Xml` → assert net/VAT/gross and per-item
+  amounts match the source invoice. This would have caught 4.1 directly.
+- Add a multi-rate fixture (23% + 8% + 5% lines) and a single-rate non-23% fixture.
+- Validate builder output against `docs/ksef/schemat_FA(3)_v1-0E.xsd` in a test — this is
+  the check that catches 4.2 and any future field misuse. `lib/ksef/fa3-validator.ts`
+  validates the _input_ shape via Zod, not the emitted XML, so it does not cover this.
+- Send one invoice per rate configuration to the KSeF **test** environment before
+  considering the phase done.
+
+### 4.4 Then update the docs
+
+Once fixed, remove the `@remarks` blocks from `lib/ksef/fa3-xml-builder.ts` and, if the
+mapping table needs correcting, update `docs/ksef/FA3_FIELD_MAPPING.md` — its "Line Items"
+and "Building XML" sections both describe the intended behaviour rather than the current
+behaviour.
+
+---
+
 ## Progress
 
 - [x] 1.1 formatters adoption
@@ -113,4 +206,12 @@ Every layer is a copy-paste pair: API routes (3 pairs), `lib/data/customers.ts`/
   - [x] 2.2 missing primitives (Label, FormField, Alert, EmptyState, Spinner, ConfirmDialog)
   - [x] 2.3 dialog + table primitive adoption
   - [x] 2.4 split oversized components
-- [ ] Phase 3
+- [x] Phase 3
+  - [x] 3.1 JSDoc for most-imported modules (`lib/api/middleware.ts`, all of `lib/data/`, `lib/ksef/api-client.ts`, `lib/gus/`)
+  - [x] 3.2 FA(3) builder/parser file-level doc blocks (point at `docs/ksef/FA3_FIELD_MAPPING.md`)
+  - [x] 3.3 logging hygiene (`lib/ksef/logger.ts`, gated by `KSEF_DEBUG`)
+- [ ] Phase 4 — FA(3) builder field-mapping defects (**correctness; affects filed invoices**)
+  - [ ] 4.1 `P_11A` / `P_11Vat` — resolve pricing mode, then fix emission
+  - [ ] 4.2 VAT summary bands + `P_14_1W` misuse
+  - [ ] 4.3 round-trip + XSD-validation tests, test-environment send
+  - [ ] 4.4 remove the `@remarks` blocks and correct `FA3_FIELD_MAPPING.md`

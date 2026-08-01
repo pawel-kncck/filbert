@@ -1,15 +1,39 @@
+/**
+ * Company membership lookup and selection of the "current" company.
+ *
+ * Server-only: reads request cookies via `@/lib/supabase/server` and
+ * `next/headers`. RLS on `user_companies` and `companies` scopes reads to the
+ * caller; the `userId` argument narrows within that, it does not grant access.
+ *
+ * @module
+ */
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import * as Sentry from '@sentry/nextjs'
 
+/** A company the user can open, annotated with their role in it. */
 export type CompanyWithRole = {
   id: string
   name: string
+  /** Polish tax ID, 10 digits. */
   nip: string
+  /** Demo companies are readable by every signed-in user. */
   is_demo: boolean
+  /** Absent only if the membership row lacked a role; demo companies get `'viewer'`. */
   role?: 'admin' | 'member' | 'viewer'
 }
 
+/**
+ * Lists the companies a user can open: their active memberships, plus every
+ * demo company.
+ *
+ * Demo companies are appended with the `viewer` role and de-duplicated against
+ * real memberships, so a user who genuinely belongs to a demo company keeps
+ * their actual role. Pending (non-`active`) memberships are excluded — those
+ * users are sent to `/pending`.
+ *
+ * @throws The underlying Postgres error, after reporting it to Sentry.
+ */
 export async function getUserCompanies(userId: string): Promise<CompanyWithRole[]> {
   const supabase = await createClient()
 
@@ -62,6 +86,23 @@ export async function getUserCompanies(userId: string): Promise<CompanyWithRole[
   return userCompanies
 }
 
+/**
+ * Resolves which company a page should open, in precedence order:
+ *
+ * 1. `requestedCompanyId` (the `?company=` URL param), if the user has access
+ * 2. the `selectedCompany` cookie, if the user still has access
+ * 3. the first non-demo company
+ * 4. the first company of any kind
+ *
+ * Both the param and the cookie are checked against `companies` before use, so
+ * a stale cookie or a hand-edited URL falls through to the default rather than
+ * selecting a company the user cannot open.
+ *
+ * @param companies The caller's accessible companies, from {@link getUserCompanies}.
+ * @param requestedCompanyId Value of the `company` search param, or `null`.
+ * @returns The chosen company id, or `null` when the user has no companies —
+ *   which callers treat as "redirect to onboarding".
+ */
 export async function getDefaultCompanyId(
   companies: CompanyWithRole[],
   requestedCompanyId: string | null

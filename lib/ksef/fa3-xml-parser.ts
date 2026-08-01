@@ -1,4 +1,33 @@
+/**
+ * Parses FA(3) invoice XML downloaded from KSeF into the app's invoice shape.
+ *
+ * **Field reference: `docs/ksef/FA3_FIELD_MAPPING.md`.** FA(3) field names are
+ * positional (`P_7`, `P_11`, `P_13_1`…) and carry no meaning on their own —
+ * consult that document before touching a field here. Its "Parsing Notes"
+ * section describes the amount-derivation and summary-vs-items rules this file
+ * implements, and "Common Issues" covers the failure modes they exist to
+ * handle. The authoritative schema is `docs/ksef/schemat_FA(3)_v1-0E.xsd`;
+ * `lib/ksef/fa3-xml-builder.ts` writes the same format.
+ *
+ * This parser is deliberately lenient, because it consumes documents produced
+ * by every other vendor's software, not just ours:
+ *
+ * - **Amounts are derived when absent.** An invoice may be priced net (`P_9A`,
+ *   `P_11`) or gross (`P_9B`, `P_11A`), and may omit `P_11Vat`. Missing values
+ *   are reconstructed from whichever combination is present plus the VAT rate,
+ *   rather than defaulting to zero.
+ * - **Summary totals win over line sums.** The `P_13_*` / `P_14_*` summary
+ *   fields are the official totals, so they are preferred; item sums are the
+ *   fallback when the summary is absent or zero.
+ * - **The root element is located flexibly** (`Faktura`, a namespaced variant,
+ *   or the first object node), since namespace prefixes vary by issuer.
+ *
+ * Set `KSEF_DEBUG` to trace field-by-field extraction; the traces include full
+ * invoice contents and are off by default (see `./logger`).
+ */
 import { XMLParser } from 'fast-xml-parser'
+
+import { ksefDebug } from './logger'
 
 export type ParsedKsefItem = {
   position: number
@@ -26,6 +55,10 @@ export type ParsedKsefInvoice = {
   items: ParsedKsefItem[]
 }
 
+/**
+ * UN/ECE Recommendation 20 codes back to app unit labels — the inverse of
+ * `UNIT_MAP` in `fa3-xml-builder.ts`. Unknown codes pass through unchanged.
+ */
 const UNIT_REVERSE_MAP: Record<string, string> = {
   C62: 'szt.',
   HUR: 'godz.',
@@ -34,6 +67,22 @@ const UNIT_REVERSE_MAP: Record<string, string> = {
   MTK: 'm²',
 }
 
+/**
+ * Parses an FA(3) XML document into the app's invoice shape.
+ *
+ * Applies the leniency rules described in the module block: amounts are derived
+ * when the issuer omitted them, and the official `P_13_*` / `P_14_*` summary
+ * totals take precedence over the sum of line items. Line items without a
+ * description (`P_7`) are skipped, since FA(3) uses `FaWiersz` for some
+ * non-item rows.
+ *
+ * @param xml Raw FA(3) document, as returned by `KsefApiClient.getInvoice`.
+ * @returns The parsed invoice. Missing optional fields become `''`, `null` or
+ *   `0` rather than throwing — a partially-populated invoice is more useful
+ *   than a failed import.
+ * @throws If the document has no recognisable `Faktura` root element, the only
+ *   condition treated as unparseable.
+ */
 export function parseFA3Xml(xml: string): ParsedKsefInvoice {
   const parser = new XMLParser({
     ignoreAttributes: false,
@@ -45,26 +94,26 @@ export function parseFA3Xml(xml: string): ParsedKsefInvoice {
   })
 
   const doc = parser.parse(xml)
-  console.log('[FA3 Parser] Parsed doc keys:', Object.keys(doc))
+  ksefDebug('FA3 Parser', 'Parsed doc keys:', Object.keys(doc))
 
   const faktura = doc.Faktura || doc['ns0:Faktura'] || Object.values(doc).find(isObject)
 
   if (!faktura) {
-    console.log('[FA3 Parser] Full doc:', JSON.stringify(doc, null, 2).substring(0, 2000))
+    ksefDebug('FA3 Parser', 'Full doc:', JSON.stringify(doc, null, 2).substring(0, 2000))
     throw new Error('Invalid FA(3) XML: missing Faktura root element')
   }
 
-  console.log('[FA3 Parser] Faktura keys:', Object.keys(faktura))
+  ksefDebug('FA3 Parser', 'Faktura keys:', Object.keys(faktura))
 
   const podmiot1 = faktura.Podmiot1 || {}
   const podmiot2 = faktura.Podmiot2 || {}
   const fa = faktura.Fa || {}
 
-  console.log('[FA3 Parser] Fa keys:', Object.keys(fa))
-  console.log('[FA3 Parser] Fa.P_15 (gross):', fa.P_15)
-  console.log('[FA3 Parser] Fa.P_13_1 (net 23%):', fa.P_13_1)
-  console.log('[FA3 Parser] Fa.P_14_1 (vat 23%):', fa.P_14_1)
-  console.log('[FA3 Parser] FaWiersz:', JSON.stringify(fa.FaWiersz, null, 2)?.substring(0, 1000))
+  ksefDebug('FA3 Parser', 'Fa keys:', Object.keys(fa))
+  ksefDebug('FA3 Parser', 'Fa.P_15 (gross):', fa.P_15)
+  ksefDebug('FA3 Parser', 'Fa.P_13_1 (net 23%):', fa.P_13_1)
+  ksefDebug('FA3 Parser', 'Fa.P_14_1 (vat 23%):', fa.P_14_1)
+  ksefDebug('FA3 Parser', 'FaWiersz:', JSON.stringify(fa.FaWiersz, null, 2)?.substring(0, 1000))
 
   const vendorId = podmiot1.DaneIdentyfikacyjne || {}
   const buyerId = podmiot2.DaneIdentyfikacyjne || {}
@@ -75,22 +124,24 @@ export function parseFA3Xml(xml: string): ParsedKsefInvoice {
   const items: ParsedKsefItem[] = itemList
     .filter((w: Record<string, unknown>) => w && w.P_7)
     .map((w: Record<string, unknown>, index: number) => {
-      console.log('[FA3 Parser] Line item fields:', Object.keys(w))
-      console.log(
-        '[FA3 Parser] P_11 (net):',
+      ksefDebug('FA3 Parser', 'Line item fields:', Object.keys(w))
+      ksefDebug(
+        'FA3 Parser',
+        'P_11 (net):',
         w.P_11,
         '| P_11A (gross):',
         w.P_11A,
         '| P_11Vat (vat):',
         w.P_11Vat
       )
-      console.log(
-        '[FA3 Parser] P_9A (unit price net):',
+      ksefDebug(
+        'FA3 Parser',
+        'P_9A (unit price net):',
         w.P_9A,
         '| P_9B (unit price gross):',
         w.P_9B
       )
-      console.log('[FA3 Parser] P_12 (vat rate):', w.P_12)
+      ksefDebug('FA3 Parser', 'P_12 (vat rate):', w.P_12)
 
       // FA(3) schema:
       // P_11 = net amount (wartość netto)
@@ -133,8 +184,9 @@ export function parseFA3Xml(xml: string): ParsedKsefInvoice {
         grossAmount = Math.round((netAmount + vatAmount) * 100) / 100
       }
 
-      console.log(
-        '[FA3 Parser] Calculated: net=',
+      ksefDebug(
+        'FA3 Parser',
+        'Calculated: net=',
         netAmount,
         'vat=',
         vatAmount,
@@ -182,14 +234,16 @@ export function parseFA3Xml(xml: string): ParsedKsefInvoice {
     toNumber(fa.P_14_4) +
     toNumber(fa.P_14_5)
 
-  console.log(
-    '[FA3 Parser] Net from items:',
+  ksefDebug(
+    'FA3 Parser',
+    'Net from items:',
     netAmountFromItems,
     '| Net from summary (P_13_*):',
     netAmountFromSummary
   )
-  console.log(
-    '[FA3 Parser] VAT from items:',
+  ksefDebug(
+    'FA3 Parser',
+    'VAT from items:',
     vatAmountFromItems,
     '| VAT from summary (P_14_*):',
     vatAmountFromSummary
@@ -201,7 +255,7 @@ export function parseFA3Xml(xml: string): ParsedKsefInvoice {
   const vatAmount = vatAmountFromSummary > 0 ? vatAmountFromSummary : vatAmountFromItems
   const grossAmount = toNumber(fa.P_15) || Math.round((netAmount + vatAmount) * 100) / 100
 
-  console.log('[FA3 Parser] Final: net=', netAmount, 'vat=', vatAmount, 'gross=', grossAmount)
+  ksefDebug('FA3 Parser', 'Final: net=', netAmount, 'vat=', vatAmount, 'gross=', grossAmount)
 
   const result = {
     invoiceNumber: String(fa.P_2 || ''),
@@ -217,11 +271,17 @@ export function parseFA3Xml(xml: string): ParsedKsefInvoice {
     items,
   }
 
-  console.log('[FA3 Parser] ========== PARSED RESULT ==========')
-  console.log('[FA3 Parser] netAmount:', result.netAmount)
-  console.log('[FA3 Parser] vatAmount:', result.vatAmount)
-  console.log('[FA3 Parser] grossAmount:', result.grossAmount)
-  console.log('[FA3 Parser] items count:', items.length)
+  ksefDebug(
+    'FA3 Parser',
+    'Parsed result: net=',
+    result.netAmount,
+    'vat=',
+    result.vatAmount,
+    'gross=',
+    result.grossAmount,
+    '| items:',
+    items.length
+  )
 
   return result
 }

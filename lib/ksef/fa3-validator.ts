@@ -1,3 +1,11 @@
+/**
+ * Pre-flight FA(3) validation, run before an invoice is built and sent.
+ *
+ * Field constraints come from `docs/ksef/FA3_FIELD_MAPPING.md` and the schema
+ * in `docs/ksef/schemat_FA(3)_v1-0E.xsd`; the Zod rules themselves live in
+ * `lib/validations/ksef-fa3.ts`. This module only adapts them into
+ * field-keyed, translatable errors for the invoice form.
+ */
 import { fa3InvoiceSchema } from '@/lib/validations/ksef-fa3'
 
 export type FA3ValidationError = {

@@ -1,16 +1,27 @@
 import { publicEncrypt, constants, createHash, X509Certificate } from 'node:crypto'
 
+import { ksefDebug, describeSecret } from './logger'
+
 /**
  * Encrypts a KSeF authorization token with RSA-OAEP for the v2 auth flow.
  * Plaintext format: `{token}|{timestampMs}` encoded as UTF-8.
+ *
+ * @param token The raw KSeF authorization token. This is the long-lived
+ *   user-supplied credential (stored encrypted at rest) — it must never be
+ *   logged, not even truncated.
  */
 export function encryptKsefToken(token: string, timestampMs: number, publicKeyPem: string): string {
   // Format: token|timestamp (standard KSeF format)
   const plaintext = Buffer.from(`${token}|${timestampMs}`, 'utf-8')
-  console.log('[KSeF Crypto] Plaintext format:', `${token.substring(0, 10)}...|${timestampMs}`)
-  console.log('[KSeF Crypto] Plaintext length:', plaintext.length)
-
-  console.log('[KSeF Crypto] Public key starts with:', publicKeyPem.substring(0, 60))
+  ksefDebug(
+    'KSeF Crypto',
+    'Encrypting token:',
+    describeSecret(token),
+    '| timestampMs:',
+    timestampMs,
+    '| plaintext length:',
+    plaintext.length
+  )
 
   // KSeF uses RSA-OAEP with SHA-256
   const encrypted = publicEncrypt(
@@ -23,7 +34,7 @@ export function encryptKsefToken(token: string, timestampMs: number, publicKeyPe
   )
 
   const result = encrypted.toString('base64')
-  console.log('[KSeF Crypto] Encrypted result starts with:', result.substring(0, 40))
+  ksefDebug('KSeF Crypto', 'Ciphertext length:', result.length)
   return result
 }
 
