@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { normalizeNip, isValidNip } from '@/lib/validations/nip'
 import type { GusFormattedResult } from '@/lib/gus/types'
 
 type NipLookupState = {
@@ -17,8 +18,8 @@ export function useNipLookup() {
   })
 
   const lookup = useCallback(async (nip: string) => {
-    const cleanNip = nip.replace(/[-\s]/g, '')
-    if (!/^\d{10}$/.test(cleanNip)) {
+    const cleanNip = normalizeNip(nip)
+    if (!isValidNip(cleanNip)) {
       setState({ loading: false, error: 'gus.errors.invalidNip', data: null })
       return
     }

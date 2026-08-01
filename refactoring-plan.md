@@ -105,7 +105,7 @@ Every layer is a copy-paste pair: API routes (3 pairs), `lib/data/customers.ts`/
 - [x] 1.4 status-route cert bug + authenticate-client adoption
 - [x] 1.5 middleware consistency
 - [ ] 1.6 fat-route extraction
-- [ ] 1.7 Zod schema merge
+- [x] 1.7 Zod schema merge (NIP helper adoption in customers/vendors routes lands with 1.8)
 - [ ] 1.8 customers/vendors dedup
 - [x] 1.9 page preamble helper
 - [ ] Phase 2

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireUserAuth, isApiError, apiError } from '@/lib/api/middleware'
 import { checkRateLimit } from '@/lib/api/rate-limit'
+import { normalizeNip, isValidNip } from '@/lib/validations/nip'
 import { lookupNip, GusApiError, GUS_ERROR_HTTP_STATUS } from '@/lib/gus'
 import type { GusEnvironment } from '@/lib/gus'
 
@@ -13,8 +14,8 @@ export async function GET(request: NextRequest) {
     return apiError('INVALID_NIP', 'NIP parameter is required', 400)
   }
 
-  const cleanNip = nip.replace(/[-\s]/g, '')
-  if (!/^\d{10}$/.test(cleanNip)) {
+  const cleanNip = normalizeNip(nip)
+  if (!isValidNip(cleanNip)) {
     return apiError('INVALID_NIP', 'NIP must be exactly 10 digits', 400)
   }
 

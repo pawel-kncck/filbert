@@ -58,62 +58,66 @@ export const fa3ItemSchema = z
     }
   })
 
-export const fa3InvoiceSchema = z
-  .object({
-    invoice_number: z
-      .string()
-      .min(1, 'fa3.invoiceNumberRequired')
-      .max(256, 'fa3.invoiceNumberMaxLength'),
-    issue_date: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, 'fa3.issueDateFormat')
-      .refine(
-        (val) => {
-          const date = new Date(val + 'T00:00:00')
-          const today = new Date()
-          today.setHours(23, 59, 59, 999)
-          return date <= today
-        },
-        { message: 'fa3.issueDateFuture' }
-      ),
-    customer_name: z
-      .string()
-      .min(1, 'fa3.customerNameRequired')
-      .max(256, 'fa3.customerNameMaxLength'),
-    customer_nip: z
-      .string()
-      .nullable()
-      .optional()
-      .refine(
-        (val) => {
-          if (!val) return true
-          return /^\d{10}$/.test(val)
-        },
-        { message: 'fa3.invalidNip' }
-      ),
-    currency: z.enum(['PLN', 'EUR', 'USD'], {
-      message: 'fa3.invalidCurrency',
-    }),
-    items: z.array(fa3ItemSchema).min(1, 'fa3.atLeastOneItem'),
-  })
-  .superRefine((invoice, ctx) => {
-    const itemsNetSum = invoice.items.reduce((sum, item) => sum + item.net_amount, 0)
-    const itemsVatSum = invoice.items.reduce((sum, item) => sum + item.vat_amount, 0)
-    const itemsGrossSum = invoice.items.reduce((sum, item) => sum + item.gross_amount, 0)
+/**
+ * Base invoice shape without cross-field total checks. Extended by
+ * `createInvoiceSchema` in ./invoice.ts, so keep field rules here.
+ */
+export const fa3InvoiceBaseSchema = z.object({
+  invoice_number: z
+    .string()
+    .min(1, 'fa3.invoiceNumberRequired')
+    .max(256, 'fa3.invoiceNumberMaxLength'),
+  issue_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'fa3.issueDateFormat')
+    .refine(
+      (val) => {
+        const date = new Date(val + 'T00:00:00')
+        const today = new Date()
+        today.setHours(23, 59, 59, 999)
+        return date <= today
+      },
+      { message: 'fa3.issueDateFuture' }
+    ),
+  customer_name: z
+    .string()
+    .min(1, 'fa3.customerNameRequired')
+    .max(256, 'fa3.customerNameMaxLength'),
+  customer_nip: z
+    .string()
+    .nullable()
+    .optional()
+    .refine(
+      (val) => {
+        if (!val) return true
+        return /^\d{10}$/.test(val)
+      },
+      { message: 'fa3.invalidNip' }
+    ),
+  currency: z.enum(['PLN', 'EUR', 'USD'], {
+    message: 'fa3.invalidCurrency',
+  }),
+  items: z.array(fa3ItemSchema).min(1, 'fa3.atLeastOneItem'),
+})
 
-    const roundedNet = Math.round(itemsNetSum * 100) / 100
-    const roundedVat = Math.round(itemsVatSum * 100) / 100
-    const roundedGross = Math.round(itemsGrossSum * 100) / 100
+export const fa3InvoiceSchema = fa3InvoiceBaseSchema.superRefine((invoice, ctx) => {
+  const itemsNetSum = invoice.items.reduce((sum, item) => sum + item.net_amount, 0)
+  const itemsVatSum = invoice.items.reduce((sum, item) => sum + item.vat_amount, 0)
+  const itemsGrossSum = invoice.items.reduce((sum, item) => sum + item.gross_amount, 0)
 
-    // P_15: gross_amount must equal net + vat
-    const expectedGross = Math.round((roundedNet + roundedVat) * 100) / 100
-    if (Math.abs(roundedGross - expectedGross) > 0.01) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'fa3.grossMismatch',
-        path: ['items'],
-      })
-    }
-  })
+  const roundedNet = Math.round(itemsNetSum * 100) / 100
+  const roundedVat = Math.round(itemsVatSum * 100) / 100
+  const roundedGross = Math.round(itemsGrossSum * 100) / 100
+
+  // P_15: gross_amount must equal net + vat
+  const expectedGross = Math.round((roundedNet + roundedVat) * 100) / 100
+  if (Math.abs(roundedGross - expectedGross) > 0.01) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'fa3.grossMismatch',
+      path: ['items'],
+    })
+  }
+})
 
 export type FA3InvoiceInput = z.infer<typeof fa3InvoiceSchema>
