@@ -8,9 +8,10 @@ import {
 } from '@/lib/api/middleware'
 import { KsefAuthError } from '@/lib/ksef/auth'
 import { KsefApiClient } from '@/lib/ksef/api-client'
-import { decryptPrivateKey } from '@/lib/ksef/certificate-crypto'
+import { authenticateKsefClient } from '@/lib/ksef/authenticate-client'
 import { parseCertificateUpload } from '@/lib/ksef/certificate-upload'
-import { isKsefEnvironment, type KsefEnvironment } from '@/lib/ksef/types'
+import { isKsefEnvironment } from '@/lib/ksef/types'
+import type { KsefCredentials } from '@/lib/types/database'
 
 export async function POST(
   request: NextRequest,
@@ -70,26 +71,18 @@ async function reverifyExistingCredential(
     return badRequest('Credential not found')
   }
 
-  const env = credential.environment as KsefEnvironment
-  const client = new KsefApiClient(env)
+  if (credential.auth_method === 'token' && !credential.token) {
+    return NextResponse.json({ valid: false, error: 'No token stored for this credential' })
+  }
+  if (
+    credential.auth_method === 'certificate' &&
+    (!credential.certificate_pem || !credential.encrypted_private_key)
+  ) {
+    return NextResponse.json({ valid: false, error: 'No certificate stored for this credential' })
+  }
 
   try {
-    // Authenticate based on auth method
-    if (credential.auth_method === 'token') {
-      if (!credential.token) {
-        return NextResponse.json({ valid: false, error: 'No token stored for this credential' })
-      }
-      await client.authenticate(nip, credential.token)
-    } else {
-      if (!credential.certificate_pem || !credential.encrypted_private_key) {
-        return NextResponse.json({
-          valid: false,
-          error: 'No certificate stored for this credential',
-        })
-      }
-      const privateKeyPem = decryptPrivateKey(credential.encrypted_private_key)
-      await client.authenticateWithCert(nip, credential.certificate_pem, privateKeyPem)
-    }
+    const client = await authenticateKsefClient(credential as KsefCredentials, nip)
 
     // Query permissions
     const permissions = await client.queryPersonalPermissions(nip)

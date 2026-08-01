@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireMemberAuth, isApiError, apiError, unauthorized } from '@/lib/api/middleware'
 import { getKsefCredentialsForCompany, updateInvoiceKsefStatus } from '@/lib/data/ksef'
-import { KsefApiClient, KsefApiError } from '@/lib/ksef/api-client'
+import { authenticateKsefClient } from '@/lib/ksef/authenticate-client'
+import { KsefApiError } from '@/lib/ksef/api-client'
 import * as Sentry from '@sentry/nextjs'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -35,10 +36,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return apiError('BAD_REQUEST', 'KSeF credentials not configured', 400)
   }
 
-  if (!credentials.token) {
-    return apiError('BAD_REQUEST', 'KSeF token not configured for this company', 400)
-  }
-
   const { data: company } = await auth.supabase
     .from('companies')
     .select('nip')
@@ -49,10 +46,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return apiError('NOT_FOUND', 'Company not found', 404)
   }
 
-  const client = new KsefApiClient(credentials.environment)
-
   try {
-    await client.authenticate(company.nip, credentials.token)
+    const client = await authenticateKsefClient(credentials, company.nip)
 
     const invoices = await client.fetchInvoices({
       subjectType: 'subject1',
