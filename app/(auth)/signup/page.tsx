@@ -3,8 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+
 import { createClient } from '@/lib/supabase/client'
 import { getAuthErrorKey } from '@/lib/utils/auth-errors'
+import { Alert } from '@/components/ui/alert'
+import { FormField } from '@/components/ui/form-field'
 
 export default function SignupPage() {
   const t = useTranslations()
@@ -86,76 +91,54 @@ export default function SignupPage() {
 
         <form onSubmit={handleSignup} className="mt-8 space-y-6">
           {error && (
-            <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/50 dark:text-red-200">
+            <Alert variant="error" size="md">
               {error}
-            </div>
+            </Alert>
           )}
 
           <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                {t('common.email')}
-              </label>
-              <input
+            <FormField label={t('common.email')} htmlFor="email">
+              <Input
                 id="email"
                 name="email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                className="mt-1 text-base"
                 placeholder="jan@firma.pl"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                {t('common.password')}
-              </label>
-              <input
+            <FormField label={t('common.password')} htmlFor="password">
+              <Input
                 id="password"
                 name="password"
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                className="mt-1 text-base"
                 placeholder={t('auth.signup.passwordHint')}
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                {t('auth.signup.confirmPassword')}
-              </label>
-              <input
+            <FormField label={t('auth.signup.confirmPassword')} htmlFor="confirmPassword">
+              <Input
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                className="mt-1 text-base"
               />
-            </div>
+            </FormField>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={loading} size="lg" className="w-full">
             {loading ? t('auth.signup.submitting') : t('common.signup')}
-          </button>
+          </Button>
 
           <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
             {t('auth.signup.hasAccount')}{' '}

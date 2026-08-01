@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Member } from '@/lib/data/members'
+import { Button } from '@/components/ui/button'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type Props = {
   member: Member
@@ -17,6 +19,7 @@ export function MemberActions({ member, companyId, currentUserId, isCurrentUserA
   const t = useTranslations('members')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { confirm, confirmDialog } = useConfirmDialog()
 
   const isCurrentUser = member.user_id === currentUserId
   const isPending = member.status === 'pending'
@@ -66,20 +69,22 @@ export function MemberActions({ member, companyId, currentUserId, isCurrentUserA
     return (
       <div className="flex items-center gap-2">
         {error && <span className="text-sm text-red-600">{error}</span>}
-        <button
+        <Button
+          variant="success"
+          size="sm"
           onClick={() => handleAction('approve')}
           disabled={loading}
-          className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
         >
           {loading ? '...' : t('actions.approve')}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="danger"
+          size="sm"
           onClick={() => handleAction('reject')}
           disabled={loading}
-          className="rounded-md border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
         >
           {t('actions.reject')}
-        </button>
+        </Button>
       </div>
     )
   }
@@ -98,14 +103,16 @@ export function MemberActions({ member, companyId, currentUserId, isCurrentUserA
         <option value="viewer">{t('roles.viewer')}</option>
       </select>
       {!isCurrentUser && (
-        <button
-          onClick={() => {
-            if (confirm(t('actions.removeConfirm'))) {
+        <Button
+          variant="subtle"
+          size="icon"
+          onClick={async () => {
+            if (await confirm({ description: t('actions.removeConfirm') })) {
               handleAction('remove')
             }
           }}
           disabled={loading}
-          className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600 disabled:opacity-50 dark:hover:bg-zinc-700"
+          className="hover:text-red-600"
           title={t('actions.removeMember')}
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,8 +123,9 @@ export function MemberActions({ member, companyId, currentUserId, isCurrentUserA
               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
             />
           </svg>
-        </button>
+        </Button>
       )}
+      {confirmDialog}
     </div>
   )
 }

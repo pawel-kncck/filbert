@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTransition } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 
 type Props = {
   currentPage: number
@@ -66,13 +67,14 @@ export function Pagination({
       </p>
 
       <div className="flex items-center gap-1">
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => goToPage(currentPage - 1)}
           disabled={currentPage === 1 || isPending}
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
         >
           {t('previous')}
-        </button>
+        </Button>
 
         {pages.map((page, i) =>
           page === 'ellipsis' ? (
@@ -80,28 +82,26 @@ export function Pagination({
               ...
             </span>
           ) : (
-            <button
+            <Button
               key={page}
+              variant={page === currentPage ? 'primary' : 'outline'}
+              size="sm"
               onClick={() => goToPage(page)}
               disabled={isPending}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-                page === currentPage
-                  ? 'bg-blue-600 text-white'
-                  : 'border border-zinc-300 text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700'
-              }`}
             >
               {page}
-            </button>
+            </Button>
           )
         )}
 
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => goToPage(currentPage + 1)}
           disabled={currentPage === totalPages || isPending}
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
         >
           {t('next')}
-        </button>
+        </Button>
       </div>
     </div>
   )

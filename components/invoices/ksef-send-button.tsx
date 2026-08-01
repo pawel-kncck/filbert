@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { Invoice } from '@/lib/types/database'
+import { Button } from '@/components/ui/button'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type Props = {
   invoice: Invoice
@@ -16,6 +18,7 @@ export function KsefSendButton({ invoice, hasCredentials }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { confirm, confirmDialog } = useConfirmDialog()
 
   // Don't show if not sales, already has reference, or already pending
   if (invoice.type !== 'sales' || invoice.ksef_reference || invoice.ksef_status === 'pending') {
@@ -27,7 +30,7 @@ export function KsefSendButton({ invoice, hasCredentials }: Props) {
   }
 
   const handleSend = async () => {
-    if (!confirm(t('confirmMessage'))) return
+    if (!(await confirm({ description: t('confirmMessage'), variant: 'primary' }))) return
 
     setLoading(true)
     setError(null)
@@ -64,10 +67,12 @@ export function KsefSendButton({ invoice, hasCredentials }: Props) {
 
   return (
     <div className="inline-flex flex-col items-start gap-1">
-      <button
+      <Button
+        variant="success"
+        size="sm"
         onClick={handleSend}
         disabled={loading}
-        className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+        className="bg-emerald-600 hover:bg-emerald-700"
       >
         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -78,8 +83,9 @@ export function KsefSendButton({ invoice, hasCredentials }: Props) {
           />
         </svg>
         {loading ? t('sending') : t('button')}
-      </button>
+      </Button>
       {error && <span className="text-xs text-red-600 dark:text-red-400">{error}</span>}
+      {confirmDialog}
     </div>
   )
 }

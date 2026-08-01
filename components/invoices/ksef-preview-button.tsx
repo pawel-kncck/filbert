@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { Invoice, InvoiceItem } from '@/lib/types/database'
 import { KsefPreviewModal } from './ksef-preview-modal'
+import { Button } from '@/components/ui/button'
 
 type Props = {
   invoice: Invoice
@@ -20,10 +21,7 @@ export function KsefPreviewButton({ invoice, items }: Props) {
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-      >
+      <Button size="sm" onClick={() => setIsOpen(true)}>
         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
@@ -39,7 +37,7 @@ export function KsefPreviewButton({ invoice, items }: Props) {
           />
         </svg>
         {t('preview')}
-      </button>
+      </Button>
       {isOpen && (
         <KsefPreviewModal invoice={invoice} items={items} onClose={() => setIsOpen(false)} />
       )}

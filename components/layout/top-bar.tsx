@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { CompanySelector } from './company-selector'
 import { LanguageSwitcher } from '../language-switcher'
 import type { Locale } from '@/lib/i18n/config'
+import { Button } from '@/components/ui/button'
 
 type Props = {
   userEmail: string
@@ -22,12 +23,9 @@ export function TopBar({ userEmail, currentLocale }: Props) {
           <LanguageSwitcher currentLocale={currentLocale} />
           <span className="text-sm text-zinc-600 dark:text-zinc-400">{userEmail}</span>
           <form action="/api/auth/logout" method="POST">
-            <button
-              type="submit"
-              className="rounded-md px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-700"
-            >
+            <Button type="submit" variant="ghost" size="sm" className="font-normal">
               {t('logout')}
-            </button>
+            </Button>
           </form>
         </div>
       </div>

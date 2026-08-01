@@ -3,8 +3,11 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useFilterParams } from '@/lib/hooks/use-filter-params'
+import { Button } from '@/components/ui/button'
 import type { ContactEntity } from '@/lib/types/contacts'
 import { CONTACT_UI } from './config'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 type Props = {
   entity: ContactEntity
@@ -32,35 +35,24 @@ export function ContactFilters({ entity }: Props) {
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800 sm:flex-row sm:items-end">
       <form onSubmit={handleSearchSubmit} className="flex-1">
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          {t('common.search')}
-        </label>
+        <Label>{t('common.search')}</Label>
         <div className="mt-1 flex gap-2">
-          <input
+          <Input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t(`${config.namespace}.filters.searchPlaceholder`)}
-            className="block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
           />
-          <button
-            type="submit"
-            disabled={isPending}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={isPending}>
             {isPending ? '...' : t('common.search')}
-          </button>
+          </Button>
         </div>
       </form>
 
       {hasActiveFilters && (
-        <button
-          onClick={handleClearFilters}
-          disabled={isPending}
-          className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
-        >
+        <Button variant="outline" onClick={handleClearFilters} disabled={isPending}>
           {t('common.clearFilters')}
-        </button>
+        </Button>
       )}
     </div>
   )

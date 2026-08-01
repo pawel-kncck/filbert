@@ -14,6 +14,10 @@ import { NipLookupButton } from '@/components/shared/nip-lookup-button'
 import type { Contact, ContactEntity } from '@/lib/types/contacts'
 import type { GusFormattedResult } from '@/lib/gus/types'
 import { CONTACT_UI } from './config'
+import { Button } from '@/components/ui/button'
+import { Input, Textarea } from '@/components/ui/input'
+import { Alert } from '@/components/ui/alert'
+import { FormField } from '@/components/ui/form-field'
 
 type Props = {
   entity: ContactEntity
@@ -111,37 +115,26 @@ export function ContactFormDialog({ entity, open, onOpenChange, companyId, conta
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-              {error}
-            </div>
-          )}
+          {error && <Alert>{error}</Alert>}
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              {t('form.name')} *
-            </label>
-            <input
+          <FormField label={t('form.name')} required>
+            <Input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t('form.namePlaceholder')}
               required
-              className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+              className="mt-1"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              {t('form.nip')}
-            </label>
+          <FormField label={t('form.nip')}>
             <div className="mt-1 flex gap-2">
-              <input
+              <Input
                 type="text"
                 value={nip}
                 onChange={(e) => setNip(e.target.value)}
                 placeholder={t('form.nipPlaceholder')}
-                className="block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
               />
               <NipLookupButton
                 nip={nip}
@@ -149,76 +142,56 @@ export function ContactFormDialog({ entity, open, onOpenChange, companyId, conta
                 onError={handleLookupError}
               />
             </div>
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              {t('form.address')}
-            </label>
-            <input
+          <FormField label={t('form.address')}>
+            <Input
               type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder={t('form.addressPlaceholder')}
-              className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+              className="mt-1"
             />
-          </div>
+          </FormField>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                {t('form.email')}
-              </label>
-              <input
+            <FormField label={t('form.email')}>
+              <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t('form.emailPlaceholder')}
-                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                className="mt-1"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                {t('form.phone')}
-              </label>
-              <input
+            </FormField>
+            <FormField label={t('form.phone')}>
+              <Input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder={t('form.phonePlaceholder')}
-                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                className="mt-1"
               />
-            </div>
+            </FormField>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              {t('form.notes')}
-            </label>
-            <textarea
+          <FormField label={t('form.notes')}>
+            <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={t('form.notesPlaceholder')}
               rows={3}
-              className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+              className="mt-1"
             />
-          </div>
+          </FormField>
 
           <DialogFooter>
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               {t('form.cancel')}
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-            >
+            </Button>
+            <Button type="submit" disabled={loading}>
               {loading ? t('form.saving') : t('form.save')}
-            </button>
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

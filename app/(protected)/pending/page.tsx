@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
 
 export default function PendingPage() {
   const router = useRouter()
@@ -100,19 +101,17 @@ export default function PendingPage() {
         </div>
 
         <div className="flex flex-col gap-3">
-          <button
-            onClick={handleCheckStatus}
-            disabled={checking}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-          >
+          <Button size="lg" onClick={handleCheckStatus} disabled={checking} className="w-full">
             {checking ? t('pending.checking') : t('pending.checkStatus')}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
             onClick={handleLogout}
-            className="w-full rounded-md border border-zinc-300 px-4 py-2 text-zinc-700 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            className="w-full focus-visible:ring-zinc-500"
           >
             {t('common.logout')}
-          </button>
+          </Button>
         </div>
 
         <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">

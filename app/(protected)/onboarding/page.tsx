@@ -4,6 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Alert } from '@/components/ui/alert'
+import { FormField } from '@/components/ui/form-field'
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -131,39 +135,27 @@ export default function OnboardingPage() {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           {error && (
-            <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/50 dark:text-red-200">
+            <Alert variant="error" size="md">
               {error}
-            </div>
+            </Alert>
           )}
 
           <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="companyName"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                {t('onboarding.companyName')}
-              </label>
-              <input
+            <FormField label={t('onboarding.companyName')} htmlFor="companyName">
+              <Input
                 id="companyName"
                 name="companyName"
                 type="text"
                 required
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                className="mt-1 text-base"
                 placeholder={t('onboarding.companyNamePlaceholder')}
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label
-                htmlFor="nip"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                NIP
-              </label>
-              <input
+            <FormField label="NIP" htmlFor="nip" hint={t('onboarding.nipHint')}>
+              <Input
                 id="nip"
                 name="nip"
                 type="text"
@@ -171,22 +163,15 @@ export default function OnboardingPage() {
                 value={nip}
                 onChange={handleNipChange}
                 maxLength={13}
-                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                className="mt-1 text-base"
                 placeholder="123-456-78-90"
               />
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                {t('onboarding.nipHint')}
-              </p>
-            </div>
+            </FormField>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-          >
+          <Button type="submit" size="lg" disabled={loading} className="w-full">
             {loading ? t('onboarding.submitting') : t('common.continue')}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

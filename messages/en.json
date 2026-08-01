@@ -8,6 +8,8 @@
     "loading": "Loading...",
     "save": "Save",
     "cancel": "Cancel",
+    "confirm": "Confirm",
+    "confirmTitle": "Are you sure?",
     "continue": "Continue",
     "back": "Back",
     "open": "Open",
@@ -482,7 +484,7 @@
         "lastVerified": "Last Verified",
         "actions": "Actions",
         "never": "Never",
-        "noExpiry": "\u2014"
+        "noExpiry": "—"
       },
       "status": {
         "valid": "Connected",

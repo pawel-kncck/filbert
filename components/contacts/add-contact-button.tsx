@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import type { ContactEntity } from '@/lib/types/contacts'
 import { ContactFormDialog } from './contact-form-dialog'
 import { CONTACT_UI } from './config'
+import { Button } from '@/components/ui/button'
 
 type Props = {
   entity: ContactEntity
@@ -18,12 +19,7 @@ export function AddContactButton({ entity, companyId }: Props) {
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-      >
-        {t(config.addLabelKey)}
-      </button>
+      <Button onClick={() => setOpen(true)}>{t(config.addLabelKey)}</Button>
 
       <ContactFormDialog entity={entity} open={open} onOpenChange={setOpen} companyId={companyId} />
     </>

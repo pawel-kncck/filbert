@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { Invoice } from '@/lib/types/database'
 import { useFormatters } from '@/lib/hooks/use-formatters'
+import { Button } from '@/components/ui/button'
 
 type Props = {
   invoices: Invoice[]
@@ -75,11 +76,7 @@ export function ExportButton({ invoices, type, companyName }: Props) {
   if (invoices.length === 0) return null
 
   return (
-    <button
-      onClick={exportToCsv}
-      disabled={isExporting}
-      className="flex items-center gap-2 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
-    >
+    <Button variant="outline" onClick={exportToCsv} disabled={isExporting}>
       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
@@ -89,6 +86,6 @@ export function ExportButton({ invoices, type, companyName }: Props) {
         />
       </svg>
       {isExporting ? t('exporting') : t('exportCsv')}
-    </button>
+    </Button>
   )
 }
