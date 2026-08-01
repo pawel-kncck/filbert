@@ -32,6 +32,9 @@
 # supabase
 supabase/.temp/
 
+# local reference material (not for the repo)
+docs/ksef/openapi.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*
