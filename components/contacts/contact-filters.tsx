@@ -3,9 +3,16 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useFilterParams } from '@/lib/hooks/use-filter-params'
+import type { ContactEntity } from '@/lib/types/contacts'
+import { CONTACT_UI } from './config'
 
-export function VendorFilters() {
-  const { isPending, getParam, updateParams, clearParams } = useFilterParams('/settings/vendors')
+type Props = {
+  entity: ContactEntity
+}
+
+export function ContactFilters({ entity }: Props) {
+  const config = CONTACT_UI[entity]
+  const { isPending, getParam, updateParams, clearParams } = useFilterParams(config.settingsPath)
   const t = useTranslations()
 
   const [search, setSearch] = useState(getParam('search'))
@@ -33,7 +40,7 @@ export function VendorFilters() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('vendors.filters.searchPlaceholder')}
+            placeholder={t(`${config.namespace}.filters.searchPlaceholder`)}
             className="block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
           />
           <button
