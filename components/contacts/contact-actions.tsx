@@ -7,6 +7,7 @@ import type { Contact, ContactEntity } from '@/lib/types/contacts'
 import { ContactFormDialog } from './contact-form-dialog'
 import { CONTACT_UI } from './config'
 import { Button } from '@/components/ui/button'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type Props = {
   entity: ContactEntity
@@ -22,6 +23,7 @@ export function ContactActions({ entity, contact, companyId, isAdmin }: Props) {
   const [editOpen, setEditOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { confirm, confirmDialog } = useConfirmDialog()
 
   const handleShowInvoices = () => {
     router.push(`${config.invoiceListPath}?search=${encodeURIComponent(contact.name)}`)
@@ -32,7 +34,7 @@ export function ContactActions({ entity, contact, companyId, isAdmin }: Props) {
   }
 
   const handleDelete = async () => {
-    if (!confirm(t('actions.deleteConfirm'))) return
+    if (!(await confirm({ description: t('actions.deleteConfirm') }))) return
 
     setLoading(true)
     setError(null)
@@ -147,6 +149,7 @@ export function ContactActions({ entity, contact, companyId, isAdmin }: Props) {
         companyId={companyId}
         contact={contact}
       />
+      {confirmDialog}
     </>
   )
 }

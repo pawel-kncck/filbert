@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Member } from '@/lib/data/members'
 import { Button } from '@/components/ui/button'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type Props = {
   member: Member
@@ -18,6 +19,7 @@ export function MemberActions({ member, companyId, currentUserId, isCurrentUserA
   const t = useTranslations('members')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { confirm, confirmDialog } = useConfirmDialog()
 
   const isCurrentUser = member.user_id === currentUserId
   const isPending = member.status === 'pending'
@@ -104,8 +106,8 @@ export function MemberActions({ member, companyId, currentUserId, isCurrentUserA
         <Button
           variant="subtle"
           size="icon"
-          onClick={() => {
-            if (confirm(t('actions.removeConfirm'))) {
+          onClick={async () => {
+            if (await confirm({ description: t('actions.removeConfirm') })) {
               handleAction('remove')
             }
           }}
@@ -123,6 +125,7 @@ export function MemberActions({ member, companyId, currentUserId, isCurrentUserA
           </svg>
         </Button>
       )}
+      {confirmDialog}
     </div>
   )
 }

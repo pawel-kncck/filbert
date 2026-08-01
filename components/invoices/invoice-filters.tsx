@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useFilterParams } from '@/lib/hooks/use-filter-params'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 type Props = {
   type: 'sales' | 'purchase'
@@ -43,9 +44,7 @@ export function InvoiceFilters({ type }: Props) {
     <div className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800 sm:flex-row sm:items-end">
       {/* Search */}
       <form onSubmit={handleSearchSubmit} className="flex-1">
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          {t('common.search')}
-        </label>
+        <Label>{t('common.search')}</Label>
         <div className="mt-1 flex gap-2">
           <Input
             type="text"
@@ -62,9 +61,7 @@ export function InvoiceFilters({ type }: Props) {
       {/* Date range */}
       <div className="flex gap-2">
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t('common.from')}
-          </label>
+          <Label>{t('common.from')}</Label>
           <Input
             type="date"
             value={dateFrom}
@@ -73,9 +70,7 @@ export function InvoiceFilters({ type }: Props) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t('common.to')}
-          </label>
+          <Label>{t('common.to')}</Label>
           <Input
             type="date"
             value={dateTo}

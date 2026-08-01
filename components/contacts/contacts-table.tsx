@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import type { Contact, ContactEntity } from '@/lib/types/contacts'
 import { ContactActions } from './contact-actions'
 import { CONTACT_UI } from './config'
+import { EmptyState, EmptyStateIcon, EmptyStateDescription } from '@/components/ui/empty-state'
 
 type Props = {
   entity: ContactEntity
@@ -18,22 +19,10 @@ export function ContactsTable({ entity, contacts, companyId, isAdmin }: Props) {
 
   if (contacts.length === 0) {
     return (
-      <div className="rounded-lg border border-zinc-200 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-800">
-        <svg
-          className="mx-auto h-12 w-12 text-zinc-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d={config.emptyIconPath}
-          />
-        </svg>
-        <p className="mt-2 text-zinc-600 dark:text-zinc-400">{t('table.empty')}</p>
-      </div>
+      <EmptyState>
+        <EmptyStateIcon path={config.emptyIconPath} />
+        <EmptyStateDescription className="text-base">{t('table.empty')}</EmptyStateDescription>
+      </EmptyState>
     )
   }
 

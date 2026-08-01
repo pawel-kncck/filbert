@@ -26,6 +26,8 @@ import {
   ShieldCheckIcon,
 } from 'lucide-react'
 import { Tooltip } from '@/components/ui/tooltip'
+import { Alert } from '@/components/ui/alert'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type Props = {
   companyId: string
@@ -42,6 +44,7 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const { confirm, confirmDialog } = useConfirmDialog()
 
   const handleAddSuccess = () => {
     router.refresh()
@@ -104,7 +107,7 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
   }
 
   const handleDelete = async (credential: KsefCredentials) => {
-    if (!confirm(t('actions.deleteConfirm'))) return
+    if (!(await confirm({ description: t('actions.deleteConfirm') }))) return
 
     setDeletingId(credential.id)
     setError(null)
@@ -202,16 +205,12 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
         </Button>
       </div>
 
-      {error && (
-        <div className="mx-4 mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-          {error}
-        </div>
-      )}
+      {error && <Alert className="mx-4 mt-4">{error}</Alert>}
 
       {success && (
-        <div className="mx-4 mt-4 rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
+        <Alert variant="success" className="mx-4 mt-4">
           {success}
-        </div>
+        </Alert>
       )}
 
       {credentials.length === 0 ? (
@@ -353,6 +352,7 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
         onOpenChange={setIsModalOpen}
         onSuccess={handleAddSuccess}
       />
+      {confirmDialog}
     </div>
   )
 }

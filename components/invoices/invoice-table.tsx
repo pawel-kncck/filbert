@@ -8,6 +8,12 @@ import { Invoice } from '@/lib/types/database'
 import { useFormatters } from '@/lib/hooks/use-formatters'
 import { KsefPreviewModal } from './ksef-preview-modal'
 import { KsefStatusBadge } from './ksef-status-badge'
+import {
+  EmptyState,
+  EmptyStateIcon,
+  EmptyStateTitle,
+  EmptyStateDescription,
+} from '@/components/ui/empty-state'
 
 type Props = {
   invoices: Invoice[]
@@ -22,29 +28,15 @@ export function InvoiceTable({ invoices, type }: Props) {
 
   if (invoices.length === 0) {
     return (
-      <div className="rounded-lg border border-zinc-200 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-800">
-        <svg
-          className="mx-auto h-12 w-12 text-zinc-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        <h3 className="mt-4 text-lg font-medium text-zinc-900 dark:text-white">
-          {t('invoices.table.empty')}
-        </h3>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <EmptyState>
+        <EmptyStateIcon path="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <EmptyStateTitle>{t('invoices.table.empty')}</EmptyStateTitle>
+        <EmptyStateDescription>
           {type === 'sales'
             ? t('invoices.sales.emptyMessage')
             : t('invoices.purchases.emptyMessage')}
-        </p>
-      </div>
+        </EmptyStateDescription>
+      </EmptyState>
     )
   }
 

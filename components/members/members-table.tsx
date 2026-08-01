@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { Member } from '@/lib/data/members'
 import { useFormatters } from '@/lib/hooks/use-formatters'
 import { MemberActions } from './member-actions'
+import { EmptyState, EmptyStateDescription } from '@/components/ui/empty-state'
 
 type Props = {
   members: Member[]
@@ -36,9 +37,9 @@ export function MembersTable({ members, companyId, currentUserId, isCurrentUserA
 
   if (members.length === 0) {
     return (
-      <div className="rounded-lg border border-zinc-200 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-800">
-        <p className="text-zinc-600 dark:text-zinc-400">{t('noMembers')}</p>
-      </div>
+      <EmptyState>
+        <EmptyStateDescription className="mt-0 text-base">{t('noMembers')}</EmptyStateDescription>
+      </EmptyState>
     )
   }
 

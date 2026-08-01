@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Alert } from '@/components/ui/alert'
 
 type Props = {
   companyId: string
@@ -82,19 +84,12 @@ export function DeleteCompanySection({ companyId, companyName }: Props) {
           <div className="space-y-4">
             <p className="text-sm text-zinc-600 dark:text-zinc-400">{t('confirmMessage')}</p>
 
-            {error && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-                {error}
-              </div>
-            )}
+            {error && <Alert>{error}</Alert>}
 
             <div>
-              <label
-                htmlFor="confirm-company-name"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
+              <Label htmlFor="confirm-company-name">
                 {t('confirmLabel', { name: companyName })}
-              </label>
+              </Label>
               <Input
                 id="confirm-company-name"
                 type="text"

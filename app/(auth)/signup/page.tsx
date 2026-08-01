@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 
 import { createClient } from '@/lib/supabase/client'
 import { getAuthErrorKey } from '@/lib/utils/auth-errors'
+import { Alert } from '@/components/ui/alert'
+import { FormField } from '@/components/ui/form-field'
 
 export default function SignupPage() {
   const t = useTranslations()
@@ -89,19 +91,13 @@ export default function SignupPage() {
 
         <form onSubmit={handleSignup} className="mt-8 space-y-6">
           {error && (
-            <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/50 dark:text-red-200">
+            <Alert variant="error" size="md">
               {error}
-            </div>
+            </Alert>
           )}
 
           <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                {t('common.email')}
-              </label>
+            <FormField label={t('common.email')} htmlFor="email">
               <Input
                 id="email"
                 name="email"
@@ -112,15 +108,9 @@ export default function SignupPage() {
                 className="mt-1 text-base"
                 placeholder="jan@firma.pl"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                {t('common.password')}
-              </label>
+            <FormField label={t('common.password')} htmlFor="password">
               <Input
                 id="password"
                 name="password"
@@ -131,15 +121,9 @@ export default function SignupPage() {
                 className="mt-1 text-base"
                 placeholder={t('auth.signup.passwordHint')}
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                {t('auth.signup.confirmPassword')}
-              </label>
+            <FormField label={t('auth.signup.confirmPassword')} htmlFor="confirmPassword">
               <Input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -149,7 +133,7 @@ export default function SignupPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="mt-1 text-base"
               />
-            </div>
+            </FormField>
           </div>
 
           <Button type="submit" disabled={loading} size="lg" className="w-full">

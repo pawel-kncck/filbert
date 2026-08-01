@@ -16,6 +16,8 @@ import type { GusFormattedResult } from '@/lib/gus/types'
 import { CONTACT_UI } from './config'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
+import { Alert } from '@/components/ui/alert'
+import { FormField } from '@/components/ui/form-field'
 
 type Props = {
   entity: ContactEntity
@@ -113,16 +115,9 @@ export function ContactFormDialog({ entity, open, onOpenChange, companyId, conta
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-              {error}
-            </div>
-          )}
+          {error && <Alert>{error}</Alert>}
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              {t('form.name')} *
-            </label>
+          <FormField label={t('form.name')} required>
             <Input
               type="text"
               value={name}
@@ -131,12 +126,9 @@ export function ContactFormDialog({ entity, open, onOpenChange, companyId, conta
               required
               className="mt-1"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              {t('form.nip')}
-            </label>
+          <FormField label={t('form.nip')}>
             <div className="mt-1 flex gap-2">
               <Input
                 type="text"
@@ -150,12 +142,9 @@ export function ContactFormDialog({ entity, open, onOpenChange, companyId, conta
                 onError={handleLookupError}
               />
             </div>
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              {t('form.address')}
-            </label>
+          <FormField label={t('form.address')}>
             <Input
               type="text"
               value={address}
@@ -163,13 +152,10 @@ export function ContactFormDialog({ entity, open, onOpenChange, companyId, conta
               placeholder={t('form.addressPlaceholder')}
               className="mt-1"
             />
-          </div>
+          </FormField>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                {t('form.email')}
-              </label>
+            <FormField label={t('form.email')}>
               <Input
                 type="email"
                 value={email}
@@ -177,11 +163,8 @@ export function ContactFormDialog({ entity, open, onOpenChange, companyId, conta
                 placeholder={t('form.emailPlaceholder')}
                 className="mt-1"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                {t('form.phone')}
-              </label>
+            </FormField>
+            <FormField label={t('form.phone')}>
               <Input
                 type="tel"
                 value={phone}
@@ -189,13 +172,10 @@ export function ContactFormDialog({ entity, open, onOpenChange, companyId, conta
                 placeholder={t('form.phonePlaceholder')}
                 className="mt-1"
               />
-            </div>
+            </FormField>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              {t('form.notes')}
-            </label>
+          <FormField label={t('form.notes')}>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -203,7 +183,7 @@ export function ContactFormDialog({ entity, open, onOpenChange, companyId, conta
               rows={3}
               className="mt-1"
             />
-          </div>
+          </FormField>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -8,6 +8,8 @@
     "loading": "Ładowanie...",
     "save": "Zapisz",
     "cancel": "Anuluj",
+    "confirm": "Potwierdź",
+    "confirmTitle": "Czy na pewno?",
     "continue": "Kontynuuj",
     "back": "Powrót",
     "open": "Otwórz",
@@ -482,7 +484,7 @@
         "lastVerified": "Ostatnia weryfikacja",
         "actions": "Akcje",
         "never": "Nigdy",
-        "noExpiry": "\u2014"
+        "noExpiry": "—"
       },
       "status": {
         "valid": "Połączono",

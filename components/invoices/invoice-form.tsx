@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl'
 import { validateFA3 } from '@/lib/ksef/fa3-validator'
 import { Button } from '@/components/ui/button'
 import { Input, SelectInput } from '@/components/ui/input'
+import { FormField, FieldError } from '@/components/ui/form-field'
+import { Alert } from '@/components/ui/alert'
 import { normalizeNip } from '@/lib/validations/nip'
 import type { Invoice, InvoiceItem } from '@/lib/types/database'
 
@@ -237,9 +239,6 @@ export function InvoiceForm({
     }
   }
 
-  const labelClass = 'block text-sm font-medium text-zinc-700 dark:text-zinc-300'
-  const errorTextClass = 'mt-1 text-xs text-red-600 dark:text-red-400'
-
   // The form's inputs predate `shadow-sm` and set an explicit placeholder colour.
   const INPUT_CLASS = 'mt-1 shadow-none placeholder:text-zinc-400 dark:placeholder:text-zinc-400'
   const fieldProps = (field: string) => ({
@@ -252,7 +251,7 @@ export function InvoiceForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Error summary banner */}
       {error && (
-        <div className="rounded-md bg-red-50 p-4 dark:bg-red-900/30">
+        <Alert size="md" className="bg-red-50 text-inherit dark:bg-red-900/30">
           <div className="flex">
             <svg
               className="h-5 w-5 shrink-0 text-red-400"
@@ -277,16 +276,18 @@ export function InvoiceForm({
               )}
             </div>
           </div>
-        </div>
+        </Alert>
       )}
 
       {/* Invoice header fields */}
       <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
         <div className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <label htmlFor="invoiceNumber" className={labelClass}>
-              {t('invoiceNumber')} *
-            </label>
+          <FormField
+            label={t('invoiceNumber')}
+            htmlFor="invoiceNumber"
+            error={getFieldError('invoiceNumber')}
+            required
+          >
             <Input
               id="invoiceNumber"
               type="text"
@@ -299,14 +300,13 @@ export function InvoiceForm({
               {...fieldProps('invoiceNumber')}
               maxLength={256}
             />
-            {getFieldError('invoiceNumber') && (
-              <p className={errorTextClass}>{getFieldError('invoiceNumber')}</p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="issueDate" className={labelClass}>
-              {t('issueDate')} *
-            </label>
+          </FormField>
+          <FormField
+            label={t('issueDate')}
+            htmlFor="issueDate"
+            error={getFieldError('issueDate')}
+            required
+          >
             <Input
               id="issueDate"
               type="date"
@@ -317,14 +317,8 @@ export function InvoiceForm({
               }}
               {...fieldProps('issueDate')}
             />
-            {getFieldError('issueDate') && (
-              <p className={errorTextClass}>{getFieldError('issueDate')}</p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="currency" className={labelClass}>
-              {t('currency')}
-            </label>
+          </FormField>
+          <FormField label={t('currency')} htmlFor="currency" error={getFieldError('currency')}>
             <SelectInput
               id="currency"
               value={currency}
@@ -338,17 +332,16 @@ export function InvoiceForm({
               <option value="EUR">EUR</option>
               <option value="USD">USD</option>
             </SelectInput>
-            {getFieldError('currency') && (
-              <p className={errorTextClass}>{getFieldError('currency')}</p>
-            )}
-          </div>
+          </FormField>
         </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="customerName" className={labelClass}>
-              {t('customerName')} *
-            </label>
+          <FormField
+            label={t('customerName')}
+            htmlFor="customerName"
+            error={getFieldError('customerName')}
+            required
+          >
             <Input
               id="customerName"
               type="text"
@@ -361,14 +354,13 @@ export function InvoiceForm({
               {...fieldProps('customerName')}
               maxLength={256}
             />
-            {getFieldError('customerName') && (
-              <p className={errorTextClass}>{getFieldError('customerName')}</p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="customerNip" className={labelClass}>
-              {t('customerNip')}
-            </label>
+          </FormField>
+          <FormField
+            label={t('customerNip')}
+            htmlFor="customerNip"
+            error={getFieldError('customerNip')}
+            hint={t('nipHint')}
+          >
             <Input
               id="customerNip"
               type="text"
@@ -381,12 +373,7 @@ export function InvoiceForm({
               {...fieldProps('customerNip')}
               maxLength={13}
             />
-            {getFieldError('customerNip') ? (
-              <p className={errorTextClass}>{getFieldError('customerNip')}</p>
-            ) : (
-              <p className="mt-1 text-xs text-zinc-500">{t('nipHint')}</p>
-            )}
-          </div>
+          </FormField>
         </div>
       </div>
 
@@ -458,7 +445,7 @@ export function InvoiceForm({
                       maxLength={256}
                     />
                     {getItemFieldError(index, 'description') && (
-                      <p className={errorTextClass}>{getItemFieldError(index, 'description')}</p>
+                      <FieldError>{getItemFieldError(index, 'description')}</FieldError>
                     )}
                   </div>
                   <div>
@@ -474,7 +461,7 @@ export function InvoiceForm({
                       {...itemFieldProps(index, 'quantity')}
                     />
                     {getItemFieldError(index, 'quantity') && (
-                      <p className={errorTextClass}>{getItemFieldError(index, 'quantity')}</p>
+                      <FieldError>{getItemFieldError(index, 'quantity')}</FieldError>
                     )}
                   </div>
                   <div>
@@ -486,7 +473,7 @@ export function InvoiceForm({
                       {...itemFieldProps(index, 'unit')}
                     />
                     {getItemFieldError(index, 'unit') && (
-                      <p className={errorTextClass}>{getItemFieldError(index, 'unit')}</p>
+                      <FieldError>{getItemFieldError(index, 'unit')}</FieldError>
                     )}
                   </div>
                   <div>
@@ -502,7 +489,7 @@ export function InvoiceForm({
                       {...itemFieldProps(index, 'unit_price')}
                     />
                     {getItemFieldError(index, 'unit_price') && (
-                      <p className={errorTextClass}>{getItemFieldError(index, 'unit_price')}</p>
+                      <FieldError>{getItemFieldError(index, 'unit_price')}</FieldError>
                     )}
                   </div>
                 </div>
@@ -523,7 +510,7 @@ export function InvoiceForm({
                       <option value="0">0%</option>
                     </SelectInput>
                     {getItemFieldError(index, 'vat_rate') && (
-                      <p className={errorTextClass}>{getItemFieldError(index, 'vat_rate')}</p>
+                      <FieldError>{getItemFieldError(index, 'vat_rate')}</FieldError>
                     )}
                   </div>
                   <div>

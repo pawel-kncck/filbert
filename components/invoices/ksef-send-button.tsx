@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { Invoice } from '@/lib/types/database'
 import { Button } from '@/components/ui/button'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type Props = {
   invoice: Invoice
@@ -17,6 +18,7 @@ export function KsefSendButton({ invoice, hasCredentials }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { confirm, confirmDialog } = useConfirmDialog()
 
   // Don't show if not sales, already has reference, or already pending
   if (invoice.type !== 'sales' || invoice.ksef_reference || invoice.ksef_status === 'pending') {
@@ -28,7 +30,7 @@ export function KsefSendButton({ invoice, hasCredentials }: Props) {
   }
 
   const handleSend = async () => {
-    if (!confirm(t('confirmMessage'))) return
+    if (!(await confirm({ description: t('confirmMessage'), variant: 'primary' }))) return
 
     setLoading(true)
     setError(null)
@@ -83,6 +85,7 @@ export function KsefSendButton({ invoice, hasCredentials }: Props) {
         {loading ? t('sending') : t('button')}
       </Button>
       {error && <span className="text-xs text-red-600 dark:text-red-400">{error}</span>}
+      {confirmDialog}
     </div>
   )
 }

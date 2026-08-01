@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Alert } from '@/components/ui/alert'
+import { FormField } from '@/components/ui/form-field'
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -133,19 +135,13 @@ export default function OnboardingPage() {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           {error && (
-            <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/50 dark:text-red-200">
+            <Alert variant="error" size="md">
               {error}
-            </div>
+            </Alert>
           )}
 
           <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="companyName"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                {t('onboarding.companyName')}
-              </label>
+            <FormField label={t('onboarding.companyName')} htmlFor="companyName">
               <Input
                 id="companyName"
                 name="companyName"
@@ -156,15 +152,9 @@ export default function OnboardingPage() {
                 className="mt-1 text-base"
                 placeholder={t('onboarding.companyNamePlaceholder')}
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label
-                htmlFor="nip"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                NIP
-              </label>
+            <FormField label="NIP" htmlFor="nip" hint={t('onboarding.nipHint')}>
               <Input
                 id="nip"
                 name="nip"
@@ -176,10 +166,7 @@ export default function OnboardingPage() {
                 className="mt-1 text-base"
                 placeholder="123-456-78-90"
               />
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                {t('onboarding.nipHint')}
-              </p>
-            </div>
+            </FormField>
           </div>
 
           <Button type="submit" size="lg" disabled={loading} className="w-full">

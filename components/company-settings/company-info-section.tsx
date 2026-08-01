@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Alert } from '@/components/ui/alert'
 
 type Props = {
   companyId: string
@@ -63,22 +65,12 @@ export function CompanyInfoSection({ companyId, companyName, companyNip, isAdmin
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
       <div className="space-y-4">
-        {error && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-            {error}
-          </div>
-        )}
+        {error && <Alert>{error}</Alert>}
 
-        {success && (
-          <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
-            {t('nameUpdated')}
-          </div>
-        )}
+        {success && <Alert variant="success">{t('nameUpdated')}</Alert>}
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t('companyName')}
-          </label>
+          <Label>{t('companyName')}</Label>
           {editing ? (
             <div className="mt-1 flex items-center gap-2">
               <Input type="text" value={name} onChange={(e) => setName(e.target.value)} />
@@ -114,9 +106,7 @@ export function CompanyInfoSection({ companyId, companyName, companyNip, isAdmin
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t('nip')}
-          </label>
+          <Label>{t('nip')}</Label>
           <div className="mt-1 flex items-center gap-2">
             <p className="text-sm text-zinc-900 dark:text-white">{companyNip}</p>
             <span className="text-xs text-zinc-500 dark:text-zinc-400">{t('nipReadOnly')}</span>

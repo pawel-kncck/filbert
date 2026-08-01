@@ -13,6 +13,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { KeyIcon, FileTextIcon, CheckCircleIcon, XCircleIcon, LoaderIcon } from 'lucide-react'
 import { Input, SelectInput } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Alert } from '@/components/ui/alert'
 
 type AuthMethod = 'token' | 'certificate'
 type CertificateFormat = 'pkcs12' | 'pem'
@@ -260,12 +262,7 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
         {step === 'configure' && authMethod === 'token' && (
           <div className="space-y-4 py-4">
             <div>
-              <label
-                htmlFor="ksef-token"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                {t('token')}
-              </label>
+              <Label htmlFor="ksef-token">{t('token')}</Label>
               <div className="relative mt-1">
                 <Input
                   id="ksef-token"
@@ -289,11 +286,7 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
 
             <EnvironmentSelector environment={environment} onChange={setEnvironment} t={t} />
 
-            {error && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-                {error}
-              </div>
-            )}
+            {error && <Alert>{error}</Alert>}
           </div>
         )}
 
@@ -301,11 +294,9 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
           <div className="space-y-4 py-4">
             {/* Certificate format selector */}
             <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                {t('certificateFormatLabel')}
-              </label>
+              <Label>{t('certificateFormatLabel')}</Label>
               <div className="mt-2 flex gap-4">
-                <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                <Label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
                   <input
                     type="radio"
                     name="certFormat"
@@ -315,8 +306,8 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
                     className="text-blue-600 focus:ring-blue-500"
                   />
                   {t('formatPkcs12')}
-                </label>
-                <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                </Label>
+                <Label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
                   <input
                     type="radio"
                     name="certFormat"
@@ -326,7 +317,7 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
                     className="text-blue-600 focus:ring-blue-500"
                   />
                   {t('formatPem')}
-                </label>
+                </Label>
               </div>
             </div>
 
@@ -334,12 +325,7 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
             {certificateFormat === 'pkcs12' && (
               <>
                 <div>
-                  <label
-                    htmlFor="ksef-certificate"
-                    className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                  >
-                    {t('certificateFile')}
-                  </label>
+                  <Label htmlFor="ksef-certificate">{t('certificateFile')}</Label>
                   <input
                     ref={fileInputRef}
                     id="ksef-certificate"
@@ -354,12 +340,7 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="ksef-cert-password"
-                    className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                  >
-                    {t('certificatePassword')}
-                  </label>
+                  <Label htmlFor="ksef-cert-password">{t('certificatePassword')}</Label>
                   <div className="relative mt-1">
                     <Input
                       id="ksef-cert-password"
@@ -387,12 +368,7 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
             {certificateFormat === 'pem' && (
               <>
                 <div>
-                  <label
-                    htmlFor="ksef-certificate-pem"
-                    className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                  >
-                    {t('certificateFilePem')}
-                  </label>
+                  <Label htmlFor="ksef-certificate-pem">{t('certificateFilePem')}</Label>
                   <input
                     ref={fileInputRef}
                     id="ksef-certificate-pem"
@@ -407,12 +383,7 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="ksef-private-key"
-                    className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                  >
-                    {t('privateKeyFile')}
-                  </label>
+                  <Label htmlFor="ksef-private-key">{t('privateKeyFile')}</Label>
                   <input
                     ref={keyFileInputRef}
                     id="ksef-private-key"
@@ -427,12 +398,7 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="ksef-pem-password"
-                    className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                  >
-                    {t('privateKeyPassword')}
-                  </label>
+                  <Label htmlFor="ksef-pem-password">{t('privateKeyPassword')}</Label>
                   <div className="relative mt-1">
                     <Input
                       id="ksef-pem-password"
@@ -461,11 +427,7 @@ export function KsefAddCredentialModal({ companyId, open, onOpenChange, onSucces
 
             <EnvironmentSelector environment={environment} onChange={setEnvironment} t={t} />
 
-            {error && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-                {error}
-              </div>
-            )}
+            {error && <Alert>{error}</Alert>}
           </div>
         )}
 
@@ -559,12 +521,7 @@ function EnvironmentSelector({
 }) {
   return (
     <div>
-      <label
-        htmlFor="ksef-environment"
-        className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-      >
-        {t('environment')}
-      </label>
+      <Label htmlFor="ksef-environment">{t('environment')}</Label>
       <SelectInput
         id="ksef-environment"
         value={environment}

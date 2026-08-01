@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 import { createClient } from '@/lib/supabase/client'
+import { Alert } from '@/components/ui/alert'
+import { FormField } from '@/components/ui/form-field'
 
 export default function ForgotPasswordPage() {
   const t = useTranslations()
@@ -69,18 +71,12 @@ export default function ForgotPasswordPage() {
 
         <form onSubmit={handleResetPassword} className="mt-8 space-y-6">
           {error && (
-            <div className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/50 dark:text-red-200">
+            <Alert variant="error" size="md">
               {error}
-            </div>
+            </Alert>
           )}
 
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            >
-              {t('common.email')}
-            </label>
+          <FormField label={t('common.email')} htmlFor="email">
             <Input
               id="email"
               name="email"
@@ -91,7 +87,7 @@ export default function ForgotPasswordPage() {
               className="mt-1 text-base"
               placeholder="jan@firma.pl"
             />
-          </div>
+          </FormField>
 
           <Button type="submit" disabled={loading} size="lg" className="w-full">
             {loading ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}

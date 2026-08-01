@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Input, SelectInput } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Alert } from '@/components/ui/alert'
+import { FormField } from '@/components/ui/form-field'
 
 type Props = {
   companyId: string
@@ -91,29 +93,19 @@ export function KsefFetchSection({ companyId, hasCredentials, hasDefaultCredenti
       <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{t('title')}</h2>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{t('description')}</p>
 
-      {error && (
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-          {error}
-        </div>
-      )}
+      {error && <Alert className="mt-4">{error}</Alert>}
 
       {result && (
-        <div className="mt-4 rounded-md bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
+        <Alert variant="success" className="mt-4">
           {result.imported > 0 || result.skipped > 0
             ? t('result', { imported: result.imported, skipped: result.skipped })
             : t('noResults')}
-        </div>
+        </Alert>
       )}
 
       <form onSubmit={handleFetch} className="mt-4 space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label
-              htmlFor="ksef-date-from"
-              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            >
-              {t('dateFrom')}
-            </label>
+          <FormField label={t('dateFrom')} htmlFor="ksef-date-from">
             <Input
               id="ksef-date-from"
               type="date"
@@ -121,14 +113,8 @@ export function KsefFetchSection({ companyId, hasCredentials, hasDefaultCredenti
               onChange={(e) => setDateFrom(e.target.value)}
               className="mt-1"
             />
-          </div>
-          <div>
-            <label
-              htmlFor="ksef-date-to"
-              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            >
-              {t('dateTo')}
-            </label>
+          </FormField>
+          <FormField label={t('dateTo')} htmlFor="ksef-date-to">
             <Input
               id="ksef-date-to"
               type="date"
@@ -136,16 +122,10 @@ export function KsefFetchSection({ companyId, hasCredentials, hasDefaultCredenti
               onChange={(e) => setDateTo(e.target.value)}
               className="mt-1"
             />
-          </div>
+          </FormField>
         </div>
 
-        <div>
-          <label
-            htmlFor="ksef-type"
-            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-          >
-            {t('type')}
-          </label>
+        <FormField label={t('type')} htmlFor="ksef-type">
           <SelectInput
             id="ksef-type"
             value={type}
@@ -155,7 +135,7 @@ export function KsefFetchSection({ companyId, hasCredentials, hasDefaultCredenti
             <option value="purchase">{t('typePurchases')}</option>
             <option value="sales">{t('typeSales')}</option>
           </SelectInput>
-        </div>
+        </FormField>
 
         <Button type="submit" disabled={loading}>
           {loading ? t('fetching') : t('button')}

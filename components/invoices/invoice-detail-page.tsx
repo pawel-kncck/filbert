@@ -11,6 +11,7 @@ import { KsefSendButton } from '@/components/invoices/ksef-send-button'
 import { KsefStatusBadge } from '@/components/invoices/ksef-status-badge'
 import { getTranslations } from 'next-intl/server'
 import { formatCurrency, formatDateLong } from '@/lib/i18n/formatters'
+import { Alert } from '@/components/ui/alert'
 
 type Props = {
   type: 'sales' | 'purchase'
@@ -116,9 +117,7 @@ export async function InvoiceDetailPage({ type, params, searchParams }: Props) {
           )}
 
           {invoice.ksef_status === 'error' && invoice.ksef_error && (
-            <div className="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-              {invoice.ksef_error}
-            </div>
+            <Alert className="mt-3">{invoice.ksef_error}</Alert>
           )}
         </div>
 
