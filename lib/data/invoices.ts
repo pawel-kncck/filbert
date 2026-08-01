@@ -1,19 +1,56 @@
+/**
+ * Invoice reads and writes against the `invoices` / `invoice_items` tables.
+ *
+ * Server-only (see `lib/data/README` conventions): every function here either
+ * calls `createClient()` from `@/lib/supabase/server`, which reads request
+ * cookies, or takes a server client as its first argument. Importing from a
+ * client component will fail at build time.
+ *
+ * **RLS.** `invoices` is row-level-secured to the companies the caller belongs
+ * to, so the `companyId` arguments below are a narrowing filter rather than the
+ * access control — a company the caller cannot see yields an empty result, not
+ * another company's rows. Callers that need an explicit 403/404 should go
+ * through `requireMemberAuth` / `requireInvoiceAccess` in `lib/api/middleware`.
+ *
+ * **Errors.** Read failures are reported to Sentry and rethrown, so callers see
+ * a real exception rather than silently-empty data. `createInvoiceWithItems` is
+ * the exception: it returns a result object, because its failures are usually
+ * user-correctable (duplicate invoice number) and belong in a 400, not a 500.
+ *
+ * @module
+ */
 import { createClient } from '@/lib/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { Database, Invoice } from '@/lib/types/database'
 import type { CreateInvoiceInput } from '@/lib/validations/invoice'
 import * as Sentry from '@sentry/nextjs'
 
+/** Rounds to 2 decimal places — money is stored to the grosz. */
 const roundMoney = (value: number) => Math.round(value * 100) / 100
 
+/** Success carries the created row; failure carries a message fit for a 400. */
 export type CreateInvoiceWithItemsResult =
   | { ok: true; invoice: Invoice }
   | { ok: false; message: string }
 
 /**
- * Creates a sales invoice with its item rows. The insert is not
- * transactional (no RPC yet): if item insertion fails, the invoice row
- * is deleted as compensation.
+ * Creates a sales invoice together with its line items.
+ *
+ * Invoice-level `net_amount` / `vat_amount` / `gross_amount` are derived by
+ * summing the items, not taken from the input, so the header always agrees with
+ * the lines. Both levels are rounded to 2dp.
+ *
+ * **Not transactional.** Supabase's REST interface cannot span two inserts, and
+ * there is no RPC for this yet, so a failed item insert is followed by a
+ * compensating delete of the invoice row. That window is small but real: if the
+ * process dies between the two writes, an invoice with no items survives.
+ * Moving this into a Postgres function would close it.
+ *
+ * @param supabase Request-scoped server client — passed in rather than created
+ *   here so the route's already-authenticated client is reused.
+ * @param input Validated payload (see `createInvoiceSchema`).
+ * @param vendor Issuing company's name and NIP, copied onto the invoice so it
+ *   reflects the details as of issue time rather than following later edits.
  */
 export async function createInvoiceWithItems(
   supabase: SupabaseClient<Database>,
@@ -75,22 +112,46 @@ export async function createInvoiceWithItems(
   return { ok: true, invoice }
 }
 
+/** Filter state for the invoice list, mirrored in the page's URL params. */
 export type InvoiceFilters = {
+  /** Case-insensitive substring match on invoice number, vendor or customer name. */
   search?: string
+  /** Inclusive lower bound on `issue_date` (ISO `YYYY-MM-DD`). */
   dateFrom?: string
+  /** Inclusive upper bound on `issue_date` (ISO `YYYY-MM-DD`). */
   dateTo?: string
 }
 
+/** One page of invoices plus totals computed over the whole filtered set. */
 export type InvoiceQueryResult = {
+  /** The requested page only — at most {@link PAGE_SIZE} rows. */
   invoices: Invoice[]
+  /** Rows matching the filters across all pages; use for the page count. */
   totalCount: number
+  /** Sums over the entire filtered set, not just the returned page. */
   totalNet: number
   totalVat: number
   totalGross: number
 }
 
+/** Rows per page. Shared with the pagination UI so both agree on page count. */
 export const PAGE_SIZE = 25
 
+/**
+ * Fetches one page of invoices plus totals for the full filtered set.
+ *
+ * Two queries are issued: a paginated one for the rows, and an unpaginated one
+ * for the amounts, so the totals reflect every matching invoice rather than the
+ * 25 on screen. The totals query fetches all matching amount columns and sums
+ * them in JS — fine at current volumes, but worth moving to an aggregate RPC if
+ * a company's invoice count grows large.
+ *
+ * @param companyId Company to scope to. RLS still applies (see the module note).
+ * @param type `'sales'` or `'purchase'` — the two list pages.
+ * @param options.page 1-based page number; defaults to the first page.
+ * @param options.filters Search and date-range filters, applied to both queries.
+ * @throws The underlying Postgres error, after reporting it to Sentry.
+ */
 export async function getInvoices(
   companyId: string,
   type: 'sales' | 'purchase',
@@ -176,6 +237,14 @@ export async function getInvoices(
   }
 }
 
+/**
+ * Fetches a single invoice scoped to a company.
+ *
+ * @returns The invoice, or `null` when no row matches — which covers both
+ *   "does not exist" and "not visible under RLS". Callers render a 404 for
+ *   either; the two are deliberately indistinguishable.
+ * @throws Any error other than "no rows", after reporting it to Sentry.
+ */
 export async function getInvoiceById(
   invoiceId: string,
   companyId: string
@@ -200,6 +269,18 @@ export async function getInvoiceById(
   return data
 }
 
+/**
+ * Fetches every invoice matching the filters, bypassing pagination, for CSV
+ * export.
+ *
+ * Deliberately unpaginated — the export must cover the user's whole filtered
+ * selection, not the visible page. There is no upper bound on the row count, so
+ * a company with a very large history will produce a correspondingly large
+ * response; if that becomes a problem, stream or chunk rather than silently
+ * capping, which would produce a quietly incomplete export.
+ *
+ * @throws The underlying Postgres error, after reporting it to Sentry.
+ */
 export async function getAllInvoicesForExport(
   companyId: string,
   type: 'sales' | 'purchase',

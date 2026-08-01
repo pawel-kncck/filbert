@@ -1,3 +1,13 @@
+/**
+ * Vendor-facing wrappers over the shared contact helpers in `./contacts.ts`.
+ *
+ * `customers` and `vendors` are structurally identical, so the queries live in
+ * one place and this module binds them to the `'vendor'` entity and renames
+ * the result field for call sites. Behaviour — RLS scoping, pagination, error
+ * handling — is documented on the underlying functions.
+ *
+ * @module
+ */
 import type { Vendor } from '@/lib/types/database'
 import {
   getContacts,

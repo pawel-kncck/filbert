@@ -114,6 +114,6 @@ Every layer is a copy-paste pair: API routes (3 pairs), `lib/data/customers.ts`/
   - [x] 2.3 dialog + table primitive adoption
   - [x] 2.4 split oversized components
 - [ ] Phase 3
-  - [ ] 3.1 JSDoc for most-imported modules
+  - [x] 3.1 JSDoc for most-imported modules (`lib/api/middleware.ts`, all of `lib/data/`, `lib/ksef/api-client.ts`, `lib/gus/`)
   - [ ] 3.2 FA(3) builder/parser file-level doc blocks
   - [x] 3.3 logging hygiene (`lib/ksef/logger.ts`, gated by `KSEF_DEBUG`)
