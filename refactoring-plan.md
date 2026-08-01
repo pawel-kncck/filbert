@@ -111,6 +111,6 @@ Every layer is a copy-paste pair: API routes (3 pairs), `lib/data/customers.ts`/
 - [ ] Phase 2
   - [x] 2.1 `Button` + `Input` adoption
   - [x] 2.2 missing primitives (Label, FormField, Alert, EmptyState, Spinner, ConfirmDialog)
-  - [ ] 2.3 dialog + table primitive adoption
+  - [x] 2.3 dialog + table primitive adoption
   - [ ] 2.4 split oversized components
 - [ ] Phase 3

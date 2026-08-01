@@ -218,7 +218,7 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
           <p className="text-zinc-500 dark:text-zinc-400">{t('noCredentials')}</p>
         </div>
       ) : (
-        <Table>
+        <Table containerClassName="rounded-none border-0 bg-transparent dark:bg-transparent">
           <TableHeader>
             <TableRow>
               <TableHead className="w-10">{t('table.default')}</TableHead>

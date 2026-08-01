@@ -9,6 +9,14 @@ import { useFormatters } from '@/lib/hooks/use-formatters'
 import { KsefPreviewModal } from './ksef-preview-modal'
 import { KsefStatusBadge } from './ksef-status-badge'
 import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table'
+import {
   EmptyState,
   EmptyStateIcon,
   EmptyStateTitle,
@@ -45,74 +53,60 @@ export function InvoiceTable({ invoices, type }: Props) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-      <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
-        <thead className="bg-zinc-50 dark:bg-zinc-700/50">
-          <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              {t('invoices.table.invoiceNumber')}
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              {t('invoices.table.date')}
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t('invoices.table.invoiceNumber')}</TableHead>
+            <TableHead>{t('invoices.table.date')}</TableHead>
+            <TableHead>
               {type === 'sales' ? t('invoices.table.buyer') : t('invoices.table.seller')}
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              NIP
-            </th>
-            <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              {t('invoices.table.net')}
-            </th>
-            <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              {t('invoices.table.vat')}
-            </th>
-            <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              {t('invoices.table.gross')}
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              {t('invoices.table.ksef')}
-            </th>
+            </TableHead>
+            <TableHead>NIP</TableHead>
+            <TableHead className="text-right">{t('invoices.table.net')}</TableHead>
+            <TableHead className="text-right">{t('invoices.table.vat')}</TableHead>
+            <TableHead className="text-right">{t('invoices.table.gross')}</TableHead>
+            <TableHead>{t('invoices.table.ksef')}</TableHead>
             {(type === 'sales' ||
               invoices.some((inv) => inv.source === 'ksef' && inv.ksef_reference)) && (
-              <th className="sticky right-0 bg-zinc-50 px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:bg-zinc-700/50 dark:text-zinc-400">
+              <TableHead className="sticky right-0 bg-zinc-50 text-right dark:bg-zinc-700/50">
                 {t('common.actions')}
-              </th>
+              </TableHead>
             )}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-700">
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {invoices.map((invoice) => (
-            <tr
+            <TableRow
               key={invoice.id}
               onClick={() => handleRowClick(invoice.id)}
               className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700/50"
             >
-              <td className="max-w-[120px] truncate whitespace-nowrap px-4 py-3 text-sm font-medium text-zinc-900 dark:text-white">
+              <TableCell className="max-w-[120px] truncate whitespace-nowrap font-medium text-zinc-900 dark:text-white">
                 {invoice.invoice_number}
-              </td>
-              <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-zinc-600 dark:text-zinc-400">
                 {formatDate(invoice.issue_date)}
-              </td>
-              <td
-                className="max-w-[150px] truncate px-4 py-3 text-sm text-zinc-900 dark:text-white"
+              </TableCell>
+              <TableCell
+                className="max-w-[150px] truncate text-zinc-900 dark:text-white"
                 title={type === 'sales' ? invoice.customer_name : invoice.vendor_name}
               >
                 {type === 'sales' ? invoice.customer_name : invoice.vendor_name}
-              </td>
-              <td className="whitespace-nowrap px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-zinc-600 dark:text-zinc-400">
                 {type === 'sales' ? invoice.customer_nip || '-' : invoice.vendor_nip || '-'}
-              </td>
-              <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-zinc-900 dark:text-white">
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-right text-zinc-900 dark:text-white">
                 {formatCurrency(invoice.net_amount, invoice.currency)}
-              </td>
-              <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-zinc-600 dark:text-zinc-400">
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-right text-zinc-600 dark:text-zinc-400">
                 {formatCurrency(invoice.vat_amount, invoice.currency)}
-              </td>
-              <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-zinc-900 dark:text-white">
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-right font-medium text-zinc-900 dark:text-white">
                 {formatCurrency(invoice.gross_amount, invoice.currency)}
-              </td>
-              <td className="whitespace-nowrap px-4 py-3 text-sm">
+              </TableCell>
+              <TableCell className="whitespace-nowrap">
                 {invoice.ksef_status ? (
                   <KsefStatusBadge
                     status={invoice.ksef_status}
@@ -126,9 +120,9 @@ export function InvoiceTable({ invoices, type }: Props) {
                 ) : (
                   <span className="text-zinc-400">-</span>
                 )}
-              </td>
+              </TableCell>
               {(type === 'sales' || (invoice.source === 'ksef' && invoice.ksef_reference)) && (
-                <td className="sticky right-0 whitespace-nowrap bg-white px-4 py-3 text-right text-sm dark:bg-zinc-800">
+                <TableCell className="sticky right-0 whitespace-nowrap bg-white text-right dark:bg-zinc-800">
                   <div className="flex items-center justify-end gap-1">
                     {invoice.source === 'ksef' && invoice.ksef_reference && (
                       <>
@@ -215,16 +209,16 @@ export function InvoiceTable({ invoices, type }: Props) {
                       </Button>
                     )}
                   </div>
-                </td>
+                </TableCell>
               )}
-            </tr>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
 
       {previewInvoice && (
         <KsefPreviewModal invoice={previewInvoice} onClose={() => setPreviewInvoice(null)} />
       )}
-    </div>
+    </>
   )
 }
