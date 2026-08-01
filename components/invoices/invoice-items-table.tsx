@@ -1,10 +1,15 @@
 import { InvoiceItem } from '@/lib/types/database'
 import { getTranslations } from 'next-intl/server'
+import type { Locale } from '@/lib/i18n/config'
+import {
+  formatCurrency as formatCurrencyIn,
+  formatNumber as formatNumberIn,
+} from '@/lib/i18n/formatters'
 
 type Props = {
   items: InvoiceItem[]
   currency: string
-  locale: string
+  locale: Locale
 }
 
 export async function InvoiceItemsTable({ items, currency, locale }: Props) {
@@ -14,19 +19,8 @@ export async function InvoiceItemsTable({ items, currency, locale }: Props) {
 
   const t = await getTranslations('invoices.items')
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale === 'pl' ? 'pl-PL' : 'en-US', {
-      style: 'currency',
-      currency,
-    }).format(amount)
-  }
-
-  const formatNumber = (value: number, decimals: number) => {
-    return new Intl.NumberFormat(locale === 'pl' ? 'pl-PL' : 'en-US', {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    }).format(value)
-  }
+  const formatCurrency = (amount: number) => formatCurrencyIn(amount, locale, currency)
+  const formatNumber = (value: number, decimals: number) => formatNumberIn(value, locale, decimals)
 
   const totalNet = items.reduce((sum, item) => sum + Number(item.net_amount), 0)
   const totalVat = items.reduce((sum, item) => sum + Number(item.vat_amount), 0)

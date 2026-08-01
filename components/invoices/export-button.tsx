@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { Invoice } from '@/lib/types/database'
+import { useFormatters } from '@/lib/hooks/use-formatters'
 
 type Props = {
   invoices: Invoice[]
@@ -14,11 +15,9 @@ export function ExportButton({ invoices, type, companyName }: Props) {
   const [isExporting, setIsExporting] = useState(false)
   const t = useTranslations('invoices.export')
   const locale = useLocale()
+  const { formatDate } = useFormatters()
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(locale === 'pl' ? 'pl-PL' : 'en-US')
-  }
-
+  // CSV format contract: plain decimal with locale-specific separator, no currency symbol
   const formatCurrency = (amount: number) => {
     return amount.toFixed(2).replace('.', locale === 'pl' ? ',' : '.')
   }

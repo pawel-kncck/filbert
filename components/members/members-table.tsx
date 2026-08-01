@@ -1,7 +1,8 @@
 'use client'
 
-import { useTranslations, useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { Member } from '@/lib/data/members'
+import { useFormatters } from '@/lib/hooks/use-formatters'
 import { MemberActions } from './member-actions'
 
 type Props = {
@@ -14,15 +15,10 @@ type Props = {
 export function MembersTable({ members, companyId, currentUserId, isCurrentUserAdmin }: Props) {
   const t = useTranslations('members')
   const tCommon = useTranslations('common')
-  const locale = useLocale()
+  const { formatDate: formatDateIn } = useFormatters()
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(locale === 'pl' ? 'pl-PL' : 'en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  }
+  const formatDate = (dateString: string) =>
+    formatDateIn(dateString, { year: 'numeric', month: 'short', day: 'numeric' })
 
   const statusLabels: Record<string, { label: string; className: string }> = {
     active: {

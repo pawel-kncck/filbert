@@ -99,7 +99,7 @@ Every layer is a copy-paste pair: API routes (3 pairs), `lib/data/customers.ts`/
 
 ## Progress
 
-- [ ] 1.1 formatters adoption
+- [x] 1.1 formatters adoption
 - [ ] 1.2 auth.ts dedup
 - [ ] 1.3 certificate upload parsing
 - [ ] 1.4 status-route cert bug + authenticate-client adoption

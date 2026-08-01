@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { KsefCredentials } from '@/lib/types/database'
+import { useFormatters } from '@/lib/hooks/use-formatters'
 import {
   Table,
   TableHeader,
@@ -175,13 +176,7 @@ export function KsefCredentialsSection({ companyId, credentials }: Props) {
     }
   }
 
-  const formatDate = (date: string) => {
-    try {
-      return new Date(date).toLocaleDateString()
-    } catch {
-      return date
-    }
-  }
+  const { formatDate } = useFormatters()
 
   const PERMISSION_KEYS = [
     'InvoiceRead',
